@@ -1,0 +1,82 @@
+X You can't restart the existing discovery threads, so you'll need to create them right before they start (we don't necessarily know when they die)
+X Limit the number of devices published to 27 so users can't publish any more.
+X Create readme
+X Add standard (successful) logging (starting discovery, stopping, device publish count, etc)
+• Create Github repo
+• Change help URL to point to Github repo
+• Update blog post to point to the Github repo as an interim solution
+• Add multiple interfaces to allow for more than 27 devices (see socket.gethostbyname_ex(socket.gethostname()) which returns a list of active IP addresses)
+
+
+Notes:
+
+Example JSON returned for a device list query:
+
+{
+    "1": {
+        "pointsymbol": {  # NOT NEEDED
+            "1": "none",
+            "3": "none",
+            "2": "none",
+            "5": "none",
+            "4": "none",
+            "7": "none",
+            "6": "none",
+            "8": "none"
+        },
+        "state": {	# ALL OF THESE MUST BE PRESENT
+            "on": false,
+            "xy": [
+                0.4589,
+                0.4103
+            ],
+            "alert": "none",
+            "reachable": true,
+            "bri": 255,
+            "hue": 14924,
+            "colormode": "hs",
+            "ct": 365,
+            "effect": "none",
+            "sat": 143
+        },
+        "swversion": "66010820",	# CAN BE WHATEVER
+        "name": "Kitchen Sink Lights",
+        "manufacturername": "Philips",	# CAN BE WHATEVER
+        "uniqueid": "a1:ab:64:43:09:5a:5b:27-0b",	# CAN BE WHATEVER
+        "type": "Extended color light",	# CAN BE WHATEVER
+        "modelid": "LCT001"	# MUST BE THIS VALUE
+    },
+    "0": {
+        "pointsymbol": {
+            "1": "none",
+            "3": "none",
+            "2": "none",
+            "5": "none",
+            "4": "none",
+            "7": "none",
+            "6": "none",
+            "8": "none"
+        },
+        "state": {
+            "on": false,
+            "xy": [
+                0.4589,
+                0.4103
+            ],
+            "alert": "none",
+            "reachable": true,
+            "bri": 255,
+            "hue": 14924,
+            "colormode": "hs",
+            "ct": 365,
+            "effect": "none",
+            "sat": 143
+        },
+        "swversion": "66010820",
+        "name": "Front Door Lock",
+        "manufacturername": "Philips",
+        "uniqueid": "90:7c:8c:9d:51:1f:97:92-0b",
+        "type": "Extended color light",
+        "modelid": "LCT001"
+    }
+}
