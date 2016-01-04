@@ -1,15 +1,3 @@
-X You can't restart the existing discovery threads, so you'll need to create them right before they start (we don't necessarily know when they die)
-X Limit the number of devices published to 27 so users can't publish any more.
-X Create readme
-X Add standard (successful) logging (starting discovery, stopping, device publish count, etc)
-• Create Github repo
-• Change help URL to point to Github repo
-• Update blog post to point to the Github repo as an interim solution
-• Add multiple interfaces to allow for more than 27 devices (see socket.gethostbyname_ex(socket.gethostname()) which returns a list of active IP addresses)
-
-
-Notes:
-
 Example JSON returned for a device list query:
 
 {
