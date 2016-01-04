@@ -72,9 +72,9 @@ information: it only needs to do it long enough for Alexa to finish the device
 discovery process.
 
 A quick description of how discovery works: the Hue Bridge uses a technology 
-called UPNP to broadcast it’s presence and information about it’s devices on 
+called UPNP to broadcast its presence and information about its devices on 
 your local network. This broadcast is what Alexa will look for when performing 
-it’s device discovery. However, UPNP may be use by other apps and plugins on 
+its device discovery. However, UPNP may be use by other apps and plugins on 
 your Mac (the Sonos plugin uses it also). But different processes on the same 
 Mac can’t run their own UPNP broadcast. So, we limit the amount of time that 
 the discovery runs so as to minimize the potential for conflict. At this time, 
@@ -130,6 +130,12 @@ plugin. We recommend only turning on debugging if you’re asked to by someone
 trying to help with a specific issue. The Show thread debugging option is
 particularly chatty and will spew a lot of information so that one should really
 only be enabled when specifically asked.
+
+Troubleshooting
+------------
+We've created a forum for getting help with the plugin. Start by posting your
+question there to see if anyone can help before filing an issue here on GitHub. 
+We're not closely monitoring the issues here but are monitoring the forums.
 
 Contributing
 ------------
