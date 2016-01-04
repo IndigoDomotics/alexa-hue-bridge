@@ -1,0 +1,16 @@
+<PluginConfig>
+	<Field id="topLabel" type="label" fontSize="small" fontColor="darkgray">
+		<Label>If you are having problems with the plugin, you can enable extra logging in the Event Log window by checking this button. Use with caution.</Label>
+	</Field>
+	<Field type="checkbox" id="showDebugInfo">
+		<Label>Enable debuging:</Label>
+		<Description>(not recommended)</Description>
+	</Field>
+	<Field type="checkbox" id="showThreadDebugInfo" enabledBindingId="showDebugInfo">
+		<Label>Enable thread debugging:</Label>
+		<Description>(really not recommended)</Description>
+	</Field>
+	<Field id="bottomLabel" type="label" fontSize="small" fontColor="darkgray" alignWithControl="true">
+		<Label>This is for advanced problems only - it will fill up your log with a lot of information. You should only do this if asked by someone trying to help with a specific issue.</Label>
+	</Field>
+</PluginConfig>
