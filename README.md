@@ -69,19 +69,20 @@ This dialog allows you to specify the length of time that the plugin will
 broadcast the discovery information that Alexa will look for to find your
 devices. Enter the number of minutes that the plugin should broadcast this
 information: it only needs to do it long enough for Alexa to finish the device
-discovery process[1].
+discovery process.
 
-[1]: The Hue Bridge uses a technology called UPNP to broadcast it’s presence
-and information about it’s devices on your local network. This broadcast is what
-Alexa will look for when performing it’s device discovery. However, UPNP may be
-use by other apps and plugins on your Mac (the Sonos plugin uses it also). But
-different processes on the same Mac can’t run their own UPNP broadcast. So, we
-limit the amount of time that the discovery runs so as to minimize the potential
-for conflict. At this time, if you’re using the Sonos plugin or any other app
-that performs UPNP broadcasts, you’ll need to disable them while doing
-discovery. Once Alexa finds your devices, there is no longer any need to
-broadcast. You can also stop the discovery process by selecting the
-*Plugins-\>Alexa-Hue Bridge-\>Stop Discovery* menu item (or associated Action).
+A quick description of how discovery works: the Hue Bridge uses a technology 
+called UPNP to broadcast it’s presence and information about it’s devices on 
+your local network. This broadcast is what Alexa will look for when performing 
+it’s device discovery. However, UPNP may be use by other apps and plugins on 
+your Mac (the Sonos plugin uses it also). But different processes on the same 
+Mac can’t run their own UPNP broadcast. So, we limit the amount of time that 
+the discovery runs so as to minimize the potential for conflict. At this time, 
+if you’re using the Sonos plugin or any other app that performs UPNP broadcasts, 
+you’ll need to disable them while doing discovery. Once Alexa finds your 
+devices, there is no longer any need to broadcast. You can also stop the 
+discovery process by selecting the *Plugins-\>Alexa-Hue Bridge-\>Stop Discovery* 
+menu item (or associated Action).
 
 Starting discovery (and stopping it) are also available as actions, so if you
 can start (and stop if necessary) discovery from Triggers, Schedules, etc.
