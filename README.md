@@ -133,7 +133,7 @@ only be enabled when specifically asked.
 
 Troubleshooting
 ------------
-We've created a forum for getting help with the plugin. Start by posting your
+We've created a [topic on our forums](<http://forums.indigodomo.com/viewtopic.php?f=65&t=15374>) for getting help with the plugin. Start by posting your
 question there to see if anyone can help before filing an issue here on GitHub. 
 We're not closely monitoring the issues here but are monitoring the forums.
 
