@@ -398,7 +398,7 @@ class Plugin(indigo.PluginBase):
             self.debugLog(u"startDiscovery props validated")
             # If the broadcaster and responder threads are not already running, create new ones and start them
             if not self.broadcaster or (self.broadcaster and not self.broadcaster.is_alive()):
-                self.debugLog(u"broadcaster thread is not alive")
+                self.debugLog(u"broadcaster thread is not alive, starting it")
                 self.broadcaster = Broadcaster(self.host, self.port, self.threadDebugLog, int(action.props["expireMinutes"]))
                 try:
                     self.broadcaster.start()
@@ -407,7 +407,7 @@ class Plugin(indigo.PluginBase):
                     self.errorLog(u"Start Discovery action failed: broadcaster thread couldn't start. Try restarting the plugin.")
                     return
             if not self.responder or (self.responder and not self.responder.is_alive()):
-                self.debugLog(u"responder thread is not alive")
+                self.debugLog(u"responder thread is not alive, starting it")
                 self.responder = Responder(self.host, self.port, self.threadDebugLog, int(action.props["expireMinutes"]))
                 try:
                     self.responder.start()

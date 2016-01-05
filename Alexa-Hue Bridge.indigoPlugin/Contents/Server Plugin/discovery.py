@@ -111,6 +111,7 @@ class Responder(threading.Thread):
         self._host = host
         self._port = port
         self.debug_log = debug_log
+        self.debug_log("Responder.__init__ is running")
         self._timeout = timeout
         response_data = {"server_ip": host, 
                          "server_port": port, 
@@ -118,6 +119,7 @@ class Responder(threading.Thread):
         self.response_packet = response_packet % response_data
 
     def run(self):
+        self.debug_log("Responder.run called")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.bind(('', UPNP_PORT))
         sock.setsockopt(socket.IPPROTO_IP, 
