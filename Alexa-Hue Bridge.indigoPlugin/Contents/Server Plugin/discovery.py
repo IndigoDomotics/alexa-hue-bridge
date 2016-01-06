@@ -105,11 +105,12 @@ class Broadcaster(threading.Thread):
         self._timeout = timeout
 
 class Responder(threading.Thread):
-    def __init__(self, host, port, debug_log, timeout=TIMEOUT):
+    def __init__(self, host, port, debug_log, error_log, timeout=TIMEOUT):
         threading.Thread.__init__(self)
         self.interrupted = False
         self._host = host
         self._port = port
+        self.error_log = error_log
         self.debug_log = debug_log
         self.debug_log("Responder.__init__ is running")
         self._timeout = timeout
@@ -121,27 +122,35 @@ class Responder(threading.Thread):
     def run(self):
         self.debug_log("Responder.run called")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        sock.bind(('', UPNP_PORT))
-        sock.setsockopt(socket.IPPROTO_IP, 
-                        socket.IP_ADD_MEMBERSHIP, 
-                        socket.inet_aton(BCAST_IP) + socket.inet_aton(self._host))
-        sock.settimeout(1)
-        start_time = time.time()
-        end_time = start_time + (self._timeout * 60)
-        while True:
-            try:
-                data, addr = sock.recvfrom(1024)
-                if time.time() > end_time:
-                    self.debug_log("Responder thread timed out")
-                    self.stop()
-                    raise socket.error
-            except socket.error:
-                if self.interrupted:
-                    sock.close()
-                    return
-            else:
-                if M_SEARCH_REQ_MATCH in data:
-                    self.respond(addr)
+        try:
+            sock.bind(('', UPNP_PORT))
+            sock.setsockopt(socket.IPPROTO_IP,
+                            socket.IP_ADD_MEMBERSHIP,
+                            socket.inet_aton(BCAST_IP) + socket.inet_aton(self._host))
+            sock.settimeout(1)
+            start_time = time.time()
+            end_time = start_time + (self._timeout * 60)
+            while True:
+                try:
+                    data, addr = sock.recvfrom(1024)
+                    if time.time() > end_time:
+                        self.debug_log("Responder thread timed out")
+                        self.stop()
+                        raise socket.error
+                except socket.error:
+                    if self.interrupted:
+                        sock.close()
+                        return
+                else:
+                    if M_SEARCH_REQ_MATCH in data:
+                        self.respond(addr)
+        except socket.error, (value, message):
+            # This is the exception thrown when someone else has bound to the UPNP port, so write some errors and
+            # stop the thread (which really isn't needed, but it logs a nice stop debug message).
+            if value == 48:
+                self.error_log(u"Responder startup failed because another app or plugin is using the UPNP port.")
+                self.error_log(u"Open a terminal window and type 'lsof -i :%i' to see a list of processes that have bound to that port and quit those applications." % UPNP_PORT)
+                self.stop()
 
     def stop(self):
         self.debug_log("Responder thread stopped")

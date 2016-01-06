@@ -84,6 +84,16 @@ devices, there is no longer any need to broadcast. You can also stop the
 discovery process by selecting the *Plugins-\>Alexa-Hue Bridge-\>Stop Discovery* 
 menu item (or associated Action).
 
+You can find out if other plugins or applications have the UPNP port open by 
+doing the following command in a terminal window:
+
+    lsof -i :1900
+    
+The output will show you any processes (IndigoPluginHost or or otherwise) that 
+have the port open. In order for discovery to work, you'll need to temporarily 
+quit those apps. You can start them back up after Alexa has discovered your 
+devices.
+
 Starting discovery (and stopping it) are also available as actions, so if you
 can start (and stop if necessary) discovery from Triggers, Schedules, etc.
 

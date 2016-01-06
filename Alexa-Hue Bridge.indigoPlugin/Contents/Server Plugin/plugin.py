@@ -408,7 +408,7 @@ class Plugin(indigo.PluginBase):
                     return
             if not self.responder or (self.responder and not self.responder.is_alive()):
                 self.debugLog(u"responder thread is not alive, starting it")
-                self.responder = Responder(self.host, self.port, self.threadDebugLog, int(action.props["expireMinutes"]))
+                self.responder = Responder(self.host, self.port, self.threadDebugLog, self.errorLog, int(action.props["expireMinutes"]))
                 try:
                     self.responder.start()
                 except:
