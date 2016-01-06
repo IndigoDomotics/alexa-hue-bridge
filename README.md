@@ -188,3 +188,14 @@ Here's the plugin ID in case you need to programmatically restart the plugin or
 start/stop discovery:
 
 **Plugin ID**: com.indigodomo.opensource.alexa-hue-bridge
+
+Things that are known to use the UPNP port (1900)
+---------
+
+The primary issue that users experience is with port conflicts on the UPNP port - several Mac apps open that port as part of a UPNP process. The plugin only needs to use the port while the Alexa is discovering devices, but during that time no other app can have port bound. This is a list of things users have found on their Macs that use that port. It is by no means an exhaustive list.
+
+- The Sonos Indigo Plugin
+- MythTV
+- Sighthound Video
+
+Feel free to add more, or report any other conflicts you find on [the forum thread](<http://forums.indigodomo.com/viewtopic.php?f=65&t=15374>) and we'll add it here.
