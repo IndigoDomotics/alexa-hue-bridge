@@ -147,6 +147,10 @@ We've created a [topic on our forums](<http://forums.indigodomo.com/viewtopic.ph
 question there to see if anyone can help before filing an issue here on GitHub. 
 We're not closely monitoring the issues here but are monitoring the forums.
 
+We've noticed that sometimes when we tapped the Discover devices button in the Alexa iOS app and it shows the progress bar, but when it's done Alexa herself says nothing on the Echo (she usually says either she didn't find or found devices). Using the voice command "Alexa, discover devices" when that happened results in an immediate reply that she couldn't and to try later. We've found that a force quit the Alexa app on the iOS device followed by started it back up and hitting the Discover devices button may get it working again.
+
+So, there appears to be a bug with the Alexa iOS app (there are actually quite a few) that can cause discovery to fail, and once it gets into that state a force-quit restart cycle seems to clear it.
+
 Contributing
 ------------
 
