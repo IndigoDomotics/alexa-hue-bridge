@@ -188,7 +188,7 @@ developers published these projects so that we could build upon them.
 License
 -------
 
-This project is licensed using the [Unlicense](<http://unlicense.org/>). 
+This project is licensed using [Unlicense](<http://unlicense.org/>). 
 
 
 Plugin ID
