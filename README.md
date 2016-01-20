@@ -185,6 +185,12 @@ loosely on work from the [hue-upnp
 project](<https://github.com/sagen/hue-upnp>). We’re grateful that these
 developers published these projects so that we could build upon them.
 
+License
+-------
+
+This project is licensed using the [Unlicense](<http://unlicense.org/>). 
+
+
 Plugin ID
 ---------
 
