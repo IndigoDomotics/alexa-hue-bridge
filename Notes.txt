@@ -2,7 +2,7 @@ Example JSON returned for a device list query:
 
 {
     "1": {
-        "pointsymbol": {  # NOT NEEDED
+        "pointsymbol": {  # MAY BE REQUIRED
             "1": "none",
             "3": "none",
             "2": "none",
@@ -27,11 +27,11 @@ Example JSON returned for a device list query:
             "effect": "none",
             "sat": 143
         },
-        "swversion": "66010820",	# CAN BE WHATEVER
+        "swversion": "66010820",	# MAY BE REQUIRED
         "name": "Kitchen Sink Lights",
-        "manufacturername": "Philips",	# CAN BE WHATEVER
+        "manufacturername": "Philips",	# MAY BE REQUIRED
         "uniqueid": "a1:ab:64:43:09:5a:5b:27-0b",	# CAN BE WHATEVER
-        "type": "Extended color light",	# CAN BE WHATEVER
+        "type": "Extended color light",	# MAY BE REQUIRED
         "modelid": "LCT001"	# MUST BE THIS VALUE
     },
     "0": {

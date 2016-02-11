@@ -5,6 +5,7 @@
 import socket
 import json
 import traceback
+import uuid
 
 from hue_listener import Httpd
 from discovery import Broadcaster, Responder
@@ -29,13 +30,20 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
         self.debug = self.pluginPrefs.get("showDebugInfo", False)
+        if "uuid" not in pluginPrefs:
+            pluginPrefs["uuid"] = str(uuid.uuid1())
+        self.uuid = pluginPrefs["uuid"]
         self.debugLog(u"Debugging enabled")
         self.threadDebug = self.pluginPrefs.get("showThreadDebugInfo", False)
         self.threadDebugLog(u"Thread debugging enabled")
         # Add the webserver object - we'll start and stop it in the startup/shutdown methods below.
         self.host = self.pluginPrefs.get("host", "auto")
         if self.host == "auto":
-            self.host = socket.gethostbyname(socket.gethostname())
+            try:
+                self.host = socket.gethostbyname(socket.gethostname())
+            except socket.gaierror:
+                self.errorLog("Computer has no host name specified. Check the Sharing system preference and restart the plugin once the name is resolved.")
+                self.host = None
         self.port = self.pluginPrefs.get("port", "auto")
         if self.port == "auto":
             self.port = 8177
@@ -51,8 +59,13 @@ class Plugin(indigo.PluginBase):
         indigo.PluginBase.__del__(self)
 
     def startup(self):
-        indigo.server.log(u"Starting hue bridge web server")
-        self.webServer.start()
+        indigo.server.log(u"Starting hue bridge web server and discovery threads")
+        if self.host:
+            self.webServer.start()
+            self.broadcaster = Broadcaster(self.host, self.port, self.threadDebugLog, self.uuid)
+            self.broadcaster.start()
+            self.responder = Responder(self.host, self.port, self.threadDebugLog, self.errorLog, self.uuid)
+            self.responder.start()
 
     def shutdown(self):
         self.debugLog(u"Shutting down hue bridge web server")
@@ -268,10 +281,10 @@ class Plugin(indigo.PluginBase):
         if typeId == "startDiscovery":
             try:
                 amount = int(valuesDict["expireMinutes"])
-                if amount not in range(1, 11):
+                if amount not in range(0, 11):
                     raise
             except:
-                errorsDict["amount"] = "Amount must be a positive integer from 1 to 10"
+                errorsDict["amount"] = "Amount must be a positive integer from 0 to 10"
         if len(errorsDict) > 0:
             return (False, valuesDict, errorsDict)
         return (True, valuesDict)
@@ -309,6 +322,16 @@ class Plugin(indigo.PluginBase):
         if ALT_NAME_KEY in dev.pluginProps:
             name = dev.pluginProps[ALT_NAME_KEY]
         return {
+            "pointsymbol": {
+                "1": "none",
+                "3": "none",
+                "2": "none",
+                "5": "none",
+                "4": "none",
+                "7": "none",
+                "6": "none",
+                "8": "none",
+            },
             "state": {
                 "on": dev.onState,
                 "xy": [0.4589, 0.4103],
@@ -321,11 +344,11 @@ class Plugin(indigo.PluginBase):
                 "effect": "none",
                 "sat": 143
             },
-            "swversion": indigo.server.version,
+            "swversion": "6601820",
             "name": name.encode('ascii', 'ignore'),
-            "manufacturername": "Indigo Alexa Hue Bridge",
+            "manufacturername": "Philips",
             "uniqueid": str(dev.id),
-            "type": dev.model.encode('ascii', 'ignore'),
+            "type": "Extended color light",
             "modelid": "LCT001"
         }
 
@@ -399,7 +422,7 @@ class Plugin(indigo.PluginBase):
             # If the broadcaster and responder threads are not already running, create new ones and start them
             if not self.broadcaster or (self.broadcaster and not self.broadcaster.is_alive()):
                 self.debugLog(u"broadcaster thread is not alive, starting it")
-                self.broadcaster = Broadcaster(self.host, self.port, self.threadDebugLog, int(action.props["expireMinutes"]))
+                self.broadcaster = Broadcaster(self.host, self.port, self.threadDebugLog, self.uuid, int(action.props["expireMinutes"]))
                 try:
                     self.broadcaster.start()
                 except:
@@ -408,7 +431,7 @@ class Plugin(indigo.PluginBase):
                     return
             if not self.responder or (self.responder and not self.responder.is_alive()):
                 self.debugLog(u"responder thread is not alive, starting it")
-                self.responder = Responder(self.host, self.port, self.threadDebugLog, self.errorLog, int(action.props["expireMinutes"]))
+                self.responder = Responder(self.host, self.port, self.threadDebugLog, self.errorLog, self.uuid, int(action.props["expireMinutes"]))
                 try:
                     self.responder.start()
                 except:

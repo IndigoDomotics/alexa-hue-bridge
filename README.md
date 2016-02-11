@@ -5,18 +5,15 @@ This plugin will emulate a Philips Hue bridge for the purpose of publishing up
 to 27 devices to any Amazon Alexa device (Echo, FireTV, etc.). The 27 device
 limit appears to be a limitation in Amazon's Alexa implementation so there's
 nothing that we can do about it. If you reach that limit, consider using a
-[Device
-Group](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface#device_groups>)
-in the [Virtual Devices
-interface](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface>)
+[Device Group](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface#device_groups>)
+in the [Virtual Devices interface](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface>)
 to group devices that you generally control together into a single device and
 publish that. This is a good way to create “scenes” that you can turn on/off
 rather than control each device individually.
 
 This plugin is **not intended to be an officially supported** Alexa integration,
 but rather as a stop-gap until Indigo Domotics can evaluate how best to
-officially support Alexa devices. See our [blog post on the
-subject](<http://www.indigodomo.com/blog/2015/10/28/amazon-echo-and-indigo/>)
+officially support Alexa devices. See our [blog post on the subject](<http://www.indigodomo.com/blog/2015/10/28/amazon-echo-and-indigo/>)
 and the Terms section below for more information.
 
 Usage
@@ -57,32 +54,32 @@ or save confirmations.
 
 Once you’re finished adding/editing/deleting published devices, click the
 *Close* button. At this point, the plugin knows about the devices, but Alexa
-doesn’t. You need to tell Alexa to discover devices. But first, you need to
-start the discovery process (which is analogous to pressing the button on the
-Hue Bridge, which Alexa will tell you to do). Select the *Plugins-\>Alexa-Hue
-Bridge-\>Start Discovery…* menu item, and you’ll see the *Start Discovery*
-dialog:
+doesn’t. You need to tell Alexa to discover devices. By default, you can 
+just tell Alexa to discover your devices either by saying that or by 
+using the Alexa app.
 
-![](<doc-images/start-discovery.png>)
+In prior releases of the 
+plugin, you needed to specifically start the discovery process. This is now 
+done automatically and it runs forever. Thanks to a comment from another 
+Indigo user, we've added a switch which allows us to open the UPNP response 
+port in a shared mode - so any other app that opens the same port in the 
+same way will also work concurrently.
 
-This dialog allows you to specify the length of time that the plugin will
-broadcast the discovery information that Alexa will look for to find your
-devices. Enter the number of minutes that the plugin should broadcast this
-information: it only needs to do it long enough for Alexa to finish the device
-discovery process.
+However, there may be other apps/plugins that don't open the port shared, 
+and those may still require this plugin to not be in discover mode. You 
+can stop discovery and then start it back up using menu items on the 
+plugin's menu. You can also stop the 
+discovery process by selecting the *Plugins-\>Alexa-Hue Bridge-\>Stop Discovery* 
+menu item (or associated Action) and start it by selecting the 
+*Plugins-\>Alexa-Hue Bridge-\>Start Discovery*
 
 A quick description of how discovery works: the Hue Bridge uses a technology 
 called UPNP to broadcast its presence and information about its devices on 
 your local network. This broadcast is what Alexa will look for when performing 
 its device discovery. However, UPNP may be use by other apps and plugins on 
 your Mac (the Sonos plugin uses it also). But different processes on the same 
-Mac can’t run their own UPNP broadcast. So, we limit the amount of time that 
-the discovery runs so as to minimize the potential for conflict. At this time, 
-if you’re using the Sonos plugin or any other app that performs UPNP broadcasts, 
-you’ll need to disable them while doing discovery. Once Alexa finds your 
-devices, there is no longer any need to broadcast. You can also stop the 
-discovery process by selecting the *Plugins-\>Alexa-Hue Bridge-\>Stop Discovery* 
-menu item (or associated Action).
+Mac can’t run their own UPNP responders unless they open them in a special 
+way. This may be the reason you'd need to stop/start discovery yourself.
 
 You can find out if other plugins or applications have the UPNP port open by 
 doing the following command in a terminal window:
@@ -90,7 +87,7 @@ doing the following command in a terminal window:
     lsof -i :1900
     
 The output will show you any processes (IndigoPluginHost or or otherwise) that 
-have the port open. In order for discovery to work, you'll need to temporarily 
+have the port open. In order for discovery to work, you may need to temporarily 
 quit those apps. You can start them back up after Alexa has discovered your 
 devices.
 
@@ -121,10 +118,8 @@ with the standard Alexa commands for home automation:
 Alexa’s vocabulary for home automation is currently limited to turn on, turn
 off, and dim. We’re filtering the device list in the Manage Devices dialog to
 only show devices that have an on/off state, so things like thermostats and
-(most) sensors can’t be added. However, you can use the [Virtual On/Off
-Device](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface#virtual_on_off_devices>)
-type in the [Virtual Devices
-interface](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface>)
+(most) sensors can’t be added. However, you can use the [Virtual On/Off Device](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface#virtual_on_off_devices>)
+type in the [Virtual Devices interface](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface>)
 to create your own custom on/off devices that can do pretty much anything you
 want. For example, you could create a Virtual On/Off Device with an ON action
 group that sets a thermostat in one way, and the OFF action group would set it
@@ -181,8 +176,7 @@ Amazon or Philips can change the protocol at any time.
 
 This plugin is a derivative work from a couple of different sources: the
 [hueAndMe project](<https://github.com/johnray/hueAndM>), which is itself based
-loosely on work from the [hue-upnp
-project](<https://github.com/sagen/hue-upnp>). We’re grateful that these
+loosely on work from the [hue-upnp project](<https://github.com/sagen/hue-upnp>). We’re grateful that these
 developers published these projects so that we could build upon them.
 
 License
@@ -202,7 +196,10 @@ start/stop discovery:
 Things that are known to use the UPNP port (1900)
 ---------
 
-The primary issue that users experience is with port conflicts on the UPNP port - several Mac apps open that port as part of a UPNP process. The plugin only needs to use the port while the Alexa is discovering devices, but during that time no other app can have port bound. This is a list of things users have found on their Macs that use that port. It is by no means an exhaustive list.
+The primary issue that users experience is with port conflicts on the UPNP port - several Mac apps open that port as 
+part of a UPNP process. The plugin only needs to use the port while the Alexa is discovering devices, but during that 
+time other apps may have a problem. This is a list of things users have found on their Macs that use that port. It 
+is by no means an exhaustive list.
 
 - The Sonos Indigo Plugin
 - MythTV

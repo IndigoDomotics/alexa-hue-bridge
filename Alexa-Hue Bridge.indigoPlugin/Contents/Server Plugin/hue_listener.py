@@ -14,7 +14,7 @@ DESCRIPTION_XML = """<?xml version="1.0"?>
 		<major>1</major>
 		<minor>0</minor>
 	</specVersion>
-	<URLBase>http://{ip}:{port}/</URLBase>
+	<URLBase>http://%(host)s:%(port)i/</URLBase>
 	<device>
 		<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
 		<friendlyName>Alexa Hue Bridge</friendlyName>
@@ -25,7 +25,7 @@ DESCRIPTION_XML = """<?xml version="1.0"?>
 		<modelNumber>929000226503</modelNumber>
 		<modelURL>http://www.meethue.com</modelURL>
 		<serialNumber>001788101fe2</serialNumber>
-		<UDN>uuid:2f402f80-da50-11e1-9b23-001788101fe2</UDN>
+		<UDN>uuid:%(uuid)s</UDN>
 		<presentationURL>index.html</presentationURL>
 		<iconList>
 			<icon>
@@ -63,7 +63,7 @@ ICON_BIG = "iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAYAAAA5ZDbSAAAAB3RJTUUH3AgNBw4nVfRr
 # Utility methods
 ########################################
 def get_response(request_string):
-    PLUGIN.threadDebugLog("get_response request_string: %s" % request_string)
+    PLUGIN.threadDebugLog("hue_listener.get_response request string: " + request_string)
     # get device list
     get_match = re.search(r'(\/[^\s^\/]+)$',request_string)
     if get_match:
@@ -72,22 +72,23 @@ def get_response(request_string):
         request_file=""
     if request_file == "" or request_file == "/":
         request_file = "/index.html"
-    #print "Get request: "+request_string+", just the file: "+request_file
+    PLUGIN.threadDebugLog("hue_listener.get_response request file: " + request_file)
     if re.search(r'/lights$',request_string):
-        PLUGIN.threadDebugLog("Discovery request, returning the full list of devices in Hue JSON format")
-        #return json.dumps(hue_devices)
+        PLUGIN.threadDebugLog("hue_listener.get_response: discovery request, returning the full list of devices in Hue JSON format")
         return PLUGIN.getHueDeviceJSON()
 
     # Get individual device status - I'm actually not sure what the last two cases are for, but this is taken directly
     # from the source script so I just left it in.
     get_device_match = re.search(r'/lights/([0-9]+)$',request_string)
     if get_device_match:
-        #return json.dumps(hue_devices[str(get_device_match.group(1))])
+        PLUGIN.threadDebugLog("hue_listener.get_response: found /lights/ in request string: %s" % request_string)
         return PLUGIN.getHueDeviceJSON(int(get_device_match.group(1)))
     elif request_file in FILE_LIST:
+        PLUGIN.threadDebugLog("hue_listener.get_response: serving from a local file: %s" % request_file)
         if request_file == "/description.xml":
-            PLUGIN.threadDebugLog("get_response: returning file description.xml with data:\n%s" % DESCRIPTION_XML % {'uuid': uuid.uuid1()})
-            return DESCRIPTION_XML % {'uuid': uuid.uuid1()}
+            desc_xml = DESCRIPTION_XML % {'host': PLUGIN.host, 'port': PLUGIN.port, 'uuid': PLUGIN.uuid}
+            PLUGIN.threadDebugLog("get_response: returning file description.xml with data:\n%s" % desc_xml)
+            return desc_xml
         elif request_file == "/hue_logo_0.png":
             return ICON_SMALL.decode('base64')
         elif request_file == "/hue_logo_3.png":
@@ -97,7 +98,7 @@ def get_response(request_string):
         else:
             return "HTTP/1.1 404 Not Found"
     elif re.search(r'/api/[^\/]+$',request_string):
-        #print "full request"
+        PLUGIN.threadDebugLog("hue_listener.get_response: found /api/ in request string: %s" % request_string)
         return "{}"
     else:
         return "{}"
@@ -165,5 +166,5 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
         if type is None:
             type = "application/json"
         self.request.sendall("Content-type: "+type+"\r\n\r\n")
-        #print "Sent content type: "+type
+        PLUGIN.threadDebugLog("HttpdRequestHandler.send_headers: Sent content type: "+type)
 

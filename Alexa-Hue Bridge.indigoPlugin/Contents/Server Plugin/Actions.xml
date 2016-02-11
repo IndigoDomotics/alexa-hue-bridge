@@ -4,11 +4,11 @@
         <Name>Start Discovery</Name>
         <CallbackMethod>startDiscovery</CallbackMethod>
         <ConfigUI>
-            <Field id="expireMinutes" type="textfield" defaultValue="1">
+            <Field id="expireMinutes" type="textfield" defaultValue="0">
                 <Label>Expiration in minutes:</Label>
             </Field>
             <Field id="expireMinutesLabel" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>This is the number of minutes the discovery process will broadcast and Alexa devices will find Indigo devices when you say "Alexa, discover devices". It must be a whole number from 1 to 10 minutes. During this time, other apps on your Mac will not be able to use UPNP.</Label>
+                <Label>This is the number of minutes the discovery process will broadcast and Alexa devices will find Indigo devices when you say "Alexa, discover devices". It must be a whole number from 0 to 10 minutes. During this time, other apps on your Mac may not be able to use UPNP. If you specify 0, discovery will run until you explicitly stop it.</Label>
             </Field>
         </ConfigUI>
     </Action>
