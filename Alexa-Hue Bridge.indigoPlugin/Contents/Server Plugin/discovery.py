@@ -153,7 +153,7 @@ class Responder(threading.Thread):
             # stop the thread (which really isn't needed, but it logs a nice stop debug message).
             if value == 48:
                 self.error_log(u"Responder startup failed because another app or plugin is using the UPNP port.")
-                self.error_log(u"Open a terminal window and type 'lsof -i :%i' to see a list of processes that have bound to that port and quit those applications." % UPNP_PORT)
+                self.error_log(u"Open a terminal window and type 'sudo lsof -i :%i' to see a list of processes that have bound to that port and quit those applications." % UPNP_PORT)
                 self.stop()
 
     def stop(self):
