@@ -84,7 +84,7 @@ way. This may be the reason you'd need to stop/start discovery yourself.
 You can find out if other plugins or applications have the UPNP port open by 
 doing the following command in a terminal window:
 
-    lsof -i :1900
+    sudo lsof -i :1900
     
 The output will show you any processes (IndigoPluginHost or or otherwise) that 
 have the port open. In order for discovery to work, you may need to temporarily 
