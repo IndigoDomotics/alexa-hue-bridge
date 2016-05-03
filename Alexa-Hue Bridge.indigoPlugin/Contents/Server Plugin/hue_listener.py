@@ -140,7 +140,10 @@ class Httpd(threading.Thread):
 
     def stop(self):
         PLUGIN.threadDebugLog("Httpd.stop called")
-        self.server.shutdown()
+        if self.server:
+            self.server.shutdown()
+        else:
+            PLUGIN.threadDebugLog("Httpd socket was not running...")
 
 class HttpdRequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
