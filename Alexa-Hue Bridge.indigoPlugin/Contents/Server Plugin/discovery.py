@@ -76,7 +76,7 @@ class Broadcaster(threading.Thread):
                 if self.interrupted:
                     sock.close()
                     return
-            self.debug_log("Broadcaster.run: sending broadcast")
+            #self.debug_log("Broadcaster.run: sending broadcast")
 
     def stop(self):
         self.debug_log("Broadcaster thread stopped")

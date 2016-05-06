@@ -79,6 +79,9 @@ class Plugin(indigo.PluginBase):
         if self.threadDebug and self.debug:
             indigo.server.log(type=self.pluginDisplayName + u" Thread Debug", message=msg)
 
+    def infoLog(self, msg):
+        indigo.server.log(type=self.pluginDisplayName, message=msg)
+
     ########################################
     # Prefs dialog methods
     ########################################

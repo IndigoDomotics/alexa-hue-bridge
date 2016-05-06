@@ -3,7 +3,7 @@ import SocketServer
 import mimetypes
 import re
 import json
-import uuid
+import time
 
 PLUGIN = None
 FILE_LIST = ["/description.xml", "/index.html", "/hue_logo_0.png", "/hue_logo_3.png"]
@@ -134,14 +134,30 @@ class Httpd(threading.Thread):
 
     def run(self):
         PLUGIN.threadDebugLog("Httpd.run called")
-        self.server = SocketServer.ThreadingTCPServer((self.host, self.port), HttpdRequestHandler)
-        self.server.allow_reuse_address = True
-        self.server.serve_forever()
+        retryCount = 3
+        while retryCount:
+            try:
+                PLUGIN.threadDebugLog("Httpd.run SocketServer.ThreadingTCPServer")
+                self.server = SocketServer.ThreadingTCPServer((self.host, self.port), HttpdRequestHandler)
+                self.server.allow_reuse_address = True
+                PLUGIN.threadDebugLog("Httpd.run calling server.serve_forever()")
+                self.server.serve_forever()
+                retryCount = 0
+            except SocketServer.socket.error as exc:
+                if exc.args[0] != 48:
+                    raise
+                PLUGIN.errorLog("HTTP port %i already in use - waiting 15 seconds to try again (will retry %i more times)" % (self.port, retryCount))
+                time.sleep(15)
+                retryCount -= 1
+            except Exception, e:
+                PLUGIN.threadDebugLog("Exception in HTTPD run method:\n%s" % str(e))
+                raise
 
     def stop(self):
         PLUGIN.threadDebugLog("Httpd.stop called")
         if self.server:
             self.server.shutdown()
+            PLUGIN.infoLog("HTTP server stopped...")
         else:
             PLUGIN.threadDebugLog("Httpd socket was not running...")
 
