@@ -130,14 +130,6 @@ class Plugin(indigo.PluginBase):
 
         self.generalLogger.debug(u"shutdown called")
 
-    # def threadDebugLog(self, msg):
-    #     if self.threadDebug and self.debug:
-    #         indigo.server.log(type=self.pluginDisplayName + u" Thread Debug", message=msg)
-
-    # def infoLog(self, msg):
-    #     indigo.server.log(type=self.pluginDisplayName, message=msg)
-
-
     ########################################
     # Prefs dialog methods
     ########################################
@@ -149,21 +141,6 @@ class Plugin(indigo.PluginBase):
 
     def closedPrefsConfigUi(self, valuesDict, userCancelled):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
-        # Since the dialog closed we want to set the debug flag - if you don't directly use
-        # a plugin's properties (and for debugLog we don't) you'll want to translate it to
-        # the appropriate stuff here.
-
-        # if not userCancelled:
-        #     self.debug = valuesDict.get("showDebugInfo", False)
-        #     if self.debug:
-        #         indigo.server.log(u"Debug logging enabled")
-        #     else:
-        #         indigo.server.log(u"Debug logging disabled")
-        #     self.threadDebug = valuesDict.get("showThreadDebugInfo", False)
-        #     if self.threadDebug:
-        #         indigo.server.log(u"Thread debug logging enabled")
-        #     else:
-        #         indigo.server.log(u"Thread debug logging disabled")
 
         if userCancelled == True:
             return
@@ -336,7 +313,7 @@ class Plugin(indigo.PluginBase):
 
             self.refreshDeviceList(ahbDev.id)
         
-            indigo.server.log(u"Starting Hue Bridge '%s' web server thread" % self.globals['hueBridge'][ahbDev.id]['hubName'])
+            self.generalLogger.info(u"Starting Hue Bridge '%s' web server thread" % self.globals['hueBridge'][ahbDev.id]['hubName'])
 
             start_webserver_required = False
             if not 'webServer' in self.globals['hueBridge'][ahbDev.id]:
@@ -353,10 +330,10 @@ class Plugin(indigo.PluginBase):
 
             # Only start discovery if auto-start requested
             if not self.globals['hueBridge'][ahbDev.id]['autoStartDiscovery']:
-                indigo.server.log(u"Hue Bridge '%s' 'Auto Start Discovery' NOT requested" % self.globals['hueBridge'][ahbDev.id]['hubName'])
+                self.generalLogger.info(u"Hue Bridge '%s' 'Auto Start Discovery' NOT requested" % self.globals['hueBridge'][ahbDev.id]['hubName'])
                 self.setDeviceDiscoveryState(False, ahbDev.id)
             else:
-                indigo.server.log(u"Starting Hue Bridge '%s' discovery threads as 'Auto Start Discovery' requested" % self.globals['hueBridge'][ahbDev.id]['hubName'])
+                self.generalLogger.info(u"Starting Hue Bridge '%s' discovery threads as 'Auto Start Discovery' requested" % self.globals['hueBridge'][ahbDev.id]['hubName'])
 
                 start_broadcaster_required = False
                 if not 'broadcaster' in self.globals['hueBridge'][ahbDev.id]:
@@ -417,9 +394,16 @@ class Plugin(indigo.PluginBase):
 
     def didDeviceCommPropertyChange(self, origDev, newDev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
+        self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE: Old [%s] vs New [%s]' % (origDev.name, newDev.name))
         if newDev.deviceTypeId == EMULATED_HUE_BRIDGE_TYPEID:
-            self.generalLogger.debug(u'didDeviceCommPropertyChange: %s' % newDev)
+            pass
+            # self.generalLogger.debug(u'didDeviceCommPropertyChange: %s' % newDev)
         if newDev.pluginProps['port'] == "auto":
+            self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE: PORT AUTO')
+            return True
+        if origDev.pluginProps['expireMinutes'] != newDev.pluginProps['expireMinutes']:
+            self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE [EXPIRE MINUTES]: Old [%s] vs New [%s]' % (origDev.pluginProps['expireMinutes'], newDev.pluginProps['expireMinutes']))
+            self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE [AUTO START]: Old [%s] vs New [%s]' % (origDev.pluginProps['autoStartDiscovery'], newDev.pluginProps['autoStartDiscovery']))
             return True
         return False
 
@@ -492,8 +476,9 @@ class Plugin(indigo.PluginBase):
             if typeId != EMULATED_HUE_BRIDGE_TYPEID:
                 return
 
-            self.globals['hueBridge'][ahbDevId]['autoStartDiscovery'] = indigo.devices[ahbDevId].pluginProps.get("autoStartDiscovery", True)
-            self.globals['hueBridge'][ahbDevId]['expireMinutes'] = int(indigo.devices[ahbDevId].pluginProps.get("expireMinutes", "0"))
+            self.globals['hueBridge'][ahbDevId]['autoStartDiscovery'] = valuesDict.get("autoStartDiscovery", True)
+
+            self.globals['hueBridge'][ahbDevId]['expireMinutes'] = int(valuesDict.get("expireMinutes", "0"))
 
             if (len(self.globals['hueBridge'][ahbDevId]['devicesToAddToPublishedList']) == 0 and 
                 len(self.globals['hueBridge'][ahbDevId]['devicesToDeleteFromPublishedList']) == 0):
@@ -562,7 +547,6 @@ class Plugin(indigo.PluginBase):
 
             self.generalLogger.debug(u"'closePrefsConfigUi' completed for '%s'" % self.globals['hueBridge'][ahbDevId]['hubName'])
 
-
         except StandardError, e:
             self.generalLogger.error(u"StandardError detected in closedDeviceConfigUi for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
     
@@ -579,7 +563,7 @@ class Plugin(indigo.PluginBase):
             for ahbDevId in self.globals['hueBridge']:
                 if 'publishedDevices' in self.globals['hueBridge'][ahbDevId]:
                     if dev.id in self.globals['hueBridge'][ahbDevId]['publishedDevices']:
-                        indigo.server.log(u"A device (%s) that was published has been deleted - you'll probably want use the Alexa app to forget that device." % dev.name)
+                        self.generalLogger.info(u"A device (%s) that was published has been deleted - you'll probably want use the Alexa app to forget that device." % dev.name)
                         self.refreshDeviceList(ahbDevId)
 
         super(Plugin, self).deviceDeleted(dev)
@@ -609,13 +593,13 @@ class Plugin(indigo.PluginBase):
 
                     if origAltName != newAltName:
                         self.refreshDeviceLists()
-                        indigo.server.log(u"A device name changed - you'll most likely want to perform the 'Alexa, discover devices' command on all Alexa devices. #100")
+                        self.generalLogger.info(u"A device name changed - you'll most likely want to perform the 'Alexa, discover devices' command on all Alexa devices. #100")
                     elif origDev.name != newDev.name:
                         self.refreshDeviceLists()
-                        indigo.server.log(u"A device name changed - you'll most likely want to perform the 'Alexa, discover devices' command on all Alexa devices. #101")
+                        self.generalLogger.info(u"A device name changed - you'll most likely want to perform the 'Alexa, discover devices' command on all Alexa devices. #101")
                     elif origPubKey != newPubKey:
                         self.refreshDeviceLists()
-                        indigo.server.log(u"Your published device list changed - you'll most likely want to perform the 'Alexa, discover devices' command on all Alexa devices.")
+                        self.generalLogger.info(u"Your published device list changed - you'll most likely want to perform the 'Alexa, discover devices' command on all Alexa devices.")
 
         super(Plugin, self).deviceUpdated(origDev, newDev)
 
@@ -656,7 +640,7 @@ class Plugin(indigo.PluginBase):
             numberPublishedUI = 'one device'
         else:
             numberPublishedUI = str('%s devices' % numberPublished)
-        indigo.server.log(u"'%s' has %s published" % (self.globals['hueBridge'][ahbDevId]['hubName'], numberPublishedUI))
+        self.generalLogger.info(u"'%s' has %s published" % (self.globals['hueBridge'][ahbDevId]['hubName'], numberPublishedUI))
 
     ########################################
     # This method is called to generate a list of devices that support onState only.
@@ -762,17 +746,17 @@ class Plugin(indigo.PluginBase):
         return valuesDict
 
 
-    def identifyAssignedDeviceAndHubForAlexaName(self, valuesDict, typeId, ahbDevId):
+    def identifyAssignedDeviceAndHueBridgeForAlexaName(self, valuesDict, typeId, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         if "alexaNamesList" in valuesDict:
             hueHubId, devId = valuesDict["alexaNamesList"].split("-")
             if hueHubId == "0" and devId == "0":
                 valuesDict["alexaNameIndigoDevice"] = ''
-                valuesDict["alexaNameHub"] = ''
+                valuesDict["alexaNameHueBridge"] = ''
             else:
                 valuesDict["alexaNameIndigoDevice"] = indigo.devices[int(devId)].name
-                valuesDict["alexaNameHub"] = indigo.devices[int(hueHubId)].name
+                valuesDict["alexaNameHueBridge"] = indigo.devices[int(hueHubId)].name
 
         return valuesDict
 
@@ -1000,7 +984,7 @@ class Plugin(indigo.PluginBase):
     #   turnOn is a boolean to indicate on/off
     ########################################
     def turnOnOffDevice(self, ahbDevId, deviceId, turnOn):
-        indigo.server.log(u"Set on state of device %i to %s" % (deviceId, str(turnOn)))
+        self.generalLogger.info(u"Set on state of device %i to %s" % (deviceId, str(turnOn)))
         try:
             if turnOn:
                 indigo.device.turnOn(deviceId)
@@ -1024,7 +1008,7 @@ class Plugin(indigo.PluginBase):
             self.refreshDeviceList(ahbDevId)
             return
         if isinstance(dev, indigo.DimmerDevice):
-            indigo.server.log(u"Set brightness of device %i to %i" % (deviceId, brightness))
+            self.generalLogger.info(u"Set brightness of device %i to %i" % (deviceId, brightness))
             indigo.dimmer.setBrightness(dev, value=brightness)
         else:
             self.generalLogger.error(u"Device with id %i doesn't support dimming." % deviceId)
@@ -1086,9 +1070,10 @@ class Plugin(indigo.PluginBase):
         try:
             self.globals['hueBridge'][ahbDev.id]['responder'].start()
             self.setDeviceDiscoveryState(True, ahbDev.id)
-            indigo.server.log(u"Starting Hue Bridge '%s' discovery threads as 'Turn On Discovery' requested" % self.globals['hueBridge'][ahbDev.id]['hubName'])
+            self.generalLogger.info(u"Starting Hue Bridge '%s' discovery threads as 'Turn On Discovery' requested" % self.globals['hueBridge'][ahbDev.id]['hubName'])
 
         except:
+            self.generalLogger.info(u"Start Discovery action failed")
             self.setDeviceDiscoveryState(False, ahbDev.id)
 
             # the responder won't start for some reason, so just tell them to try restarting the plugin
@@ -1103,16 +1088,19 @@ class Plugin(indigo.PluginBase):
 
         # Stop the discovery threads
         self.setDeviceDiscoveryState(False, ahbDev.id)
+        self.generalLogger.info(u"Stop Discovery . . . . . . . . . . ")
+
         if 'broadcaster' in self.globals['hueBridge'][ahbDev.id]:
             if self.globals['hueBridge'][ahbDev.id]['broadcaster']:
                 self.globals['hueBridge'][ahbDev.id]['broadcaster'].stop()
         if 'responder' in self.globals['hueBridge'][ahbDev.id]:
             if self.globals['hueBridge'][ahbDev.id]['responder']:
                 self.globals['hueBridge'][ahbDev.id]['responder'].stop()
-        indigo.server.log(u"Stopping Hue Bridge '%s' discovery threads as 'Turn Off Discovery' requested" % self.globals['hueBridge'][ahbDev.id]['hubName'])
+        self.generalLogger.info(u"Stopping Hue Bridge '%s' discovery threads as 'Turn Off Discovery' requested" % self.globals['hueBridge'][ahbDev.id]['hubName'])
 
     def setDeviceDiscoveryState(self, discoveryOn, ahbDevId):
         try:
+            self.generalLogger.debug(u'SET DEVICE DISCOVERY STATE = %s' % discoveryOn)
             if discoveryOn:
                 indigo.devices[ahbDevId].updateStateOnServer("onOffState", True, uiValue="Discovery: On")
                 if self.globals['hueBridge'][ahbDevId]['expireMinutes'] == 0:
@@ -1121,6 +1109,9 @@ class Plugin(indigo.PluginBase):
                     indigo.devices[ahbDevId].updateStateImageOnServer(indigo.kStateImageSel.TimerOn)
             else:
                 indigo.devices[ahbDevId].updateStateOnServer("onOffState", False, uiValue="Discovery: Off")
-                indigo.devices[ahbDevId].updateStateImageOnServer(indigo.kStateImageSel.TimerOff)
+                if self.globals['hueBridge'][ahbDevId]['expireMinutes'] == 0:
+                    indigo.devices[ahbDevId].updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+                else:
+                    indigo.devices[ahbDevId].updateStateImageOnServer(indigo.kStateImageSel.TimerOff)
         except:
             pass  # Handle deleted Alexa-Hue Bridge devices

@@ -20,18 +20,18 @@
             </Field>
             <Field id="separator-2" type="separator" alwaysUseInDialogHeightCalc="true"/>
             <Field id="help-01" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>You can use the Assigned Alexa names menu below to check if the name is already assigned as an Alexa device. Selecting a menu entry will identify the corresponding Indigo device and on which Hue Hub it resides.</Label>
+                <Label>You can use the Assigned Alexa names menu below to check if the name is already assigned as an Alexa device. Selecting a menu entry will identify the corresponding Indigo device and on which Hue Bridge it resides.</Label>
             </Field>
             <Field id="alexaNamesList" type="menu"  default="0" readonly="YES" rows="5">
                 <Label>Assigned Alexa names:</Label>
                 <List class="self" method="alexaNamesList" dynamicReload="true"/>
-                <CallbackMethod>identifyAssignedDeviceAndHubForAlexaName</CallbackMethod>
+                <CallbackMethod>identifyAssignedDeviceAndHueBridgeForAlexaName</CallbackMethod>
             </Field>
             <Field id="alexaNameIndigoDevice" type="textfield" readonly="YES" >
                 <Label>Indigo Device:</Label>
             </Field>
-            <Field id="alexaNameHub" type="textfield" readonly="YES" >
-                <Label>Hue Hub:</Label>
+            <Field id="alexaNameHueBridge" type="textfield" readonly="YES" >
+                <Label>Hue Bridge:</Label>
             </Field>
             <Field id="separator-2B" type="separator" alwaysUseInDialogHeightCalc="true"/>
 

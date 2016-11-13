@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../alexa-hue-bridge/.idea/alexa-hue-bridge.iml" filepath="$PROJECT_DIR$/../alexa-hue-bridge/.idea/alexa-hue-bridge.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/alexa-hue-bridge.iml" filepath="$PROJECT_DIR$/.idea/alexa-hue-bridge.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/alexa-hue-bridge.iml" filepath="$PROJECT_DIR$/.idea/alexa-hue-bridge.iml" />
     </modules>
   </component>
 </project>
