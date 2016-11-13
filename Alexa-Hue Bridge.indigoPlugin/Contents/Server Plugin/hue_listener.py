@@ -1,49 +1,51 @@
-import threading
-import SocketServer
+import json
 import mimetypes
 import re
-import json
+import SocketServer
+import sys
+import threading
 import time
+
 
 PLUGIN = None
 FILE_LIST = ["/description.xml", "/index.html", "/hue_logo_0.png", "/hue_logo_3.png"]
 
 DESCRIPTION_XML = """<?xml version="1.0"?>
 <root xmlns="urn:schemas-upnp-org:device-1-0">
-	<specVersion>
-		<major>1</major>
-		<minor>0</minor>
-	</specVersion>
-	<URLBase>http://%(host)s:%(port)i/</URLBase>
-	<device>
-		<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
-		<friendlyName>Alexa Hue Bridge</friendlyName>
-		<manufacturer>Royal Philips Electronics</manufacturer>
-		<manufacturerURL>http://www.philips.com</manufacturerURL>
-		<modelDescription>Philips hue Personal Wireless Lighting</modelDescription>
-		<modelName>Philips hue bridge 2012</modelName>
-		<modelNumber>929000226503</modelNumber>
-		<modelURL>http://www.meethue.com</modelURL>
-		<serialNumber>001788101fe2</serialNumber>
-		<UDN>uuid:%(uuid)s</UDN>
-		<presentationURL>index.html</presentationURL>
-		<iconList>
-			<icon>
-				<mimetype>image/png</mimetype>
-				<height>48</height>
-				<width>48</width>
-				<depth>24</depth>
-				<url>hue_logo_0.png</url>
-			</icon>
-			<icon>
-				<mimetype>image/png</mimetype>
-				<height>120</height>
-				<width>120</width>
-				<depth>24</depth>
-				<url>hue_logo_3.png</url>
-			</icon>
-		</iconList>
-	</device>
+    <specVersion>
+        <major>1</major>
+        <minor>0</minor>
+    </specVersion>
+    <URLBase>http://%(host)s:%(port)i/</URLBase>
+    <device>
+        <deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
+        <friendlyName>Alexa Hue Bridge</friendlyName>
+        <manufacturer>Royal Philips Electronics</manufacturer>
+        <manufacturerURL>http://www.philips.com</manufacturerURL>
+        <modelDescription>Philips hue Personal Wireless Lighting</modelDescription>
+        <modelName>Philips hue bridge 2012</modelName>
+        <modelNumber>929000226503</modelNumber>
+        <modelURL>http://www.meethue.com</modelURL>
+        <serialNumber>001788101fe2</serialNumber>
+        <UDN>uuid:%(uuid)s</UDN>
+        <presentationURL>index.html</presentationURL>
+        <iconList>
+            <icon>
+                <mimetype>image/png</mimetype>
+                <height>48</height>
+                <width>48</width>
+                <depth>24</depth>
+                <url>hue_logo_0.png</url>
+            </icon>
+            <icon>
+                <mimetype>image/png</mimetype>
+                <height>120</height>
+                <width>120</width>
+                <depth>24</depth>
+                <url>hue_logo_3.png</url>
+            </icon>
+        </iconList>
+    </device>
 </root>
 """
 
@@ -62,128 +64,151 @@ ICON_BIG = "iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAYAAAA5ZDbSAAAAB3RJTUUH3AgNBw4nVfRr
 ########################################
 # Utility methods
 ########################################
-def get_response(request_string):
-    PLUGIN.threadDebugLog("hue_listener.get_response request string: " + request_string)
-    # get device list
-    get_match = re.search(r'(\/[^\s^\/]+)$',request_string)
-    if get_match:
-        request_file=get_match.group(1)
-    else:
-        request_file=""
-    if request_file == "" or request_file == "/":
-        request_file = "/index.html"
-    PLUGIN.threadDebugLog("hue_listener.get_response request file: " + request_file)
-    if re.search(r'/lights$',request_string):
-        PLUGIN.threadDebugLog("hue_listener.get_response: discovery request, returning the full list of devices in Hue JSON format")
-        return PLUGIN.getHueDeviceJSON()
+def get_response(globals, ahbDevId, request_string):
+    try:
+        PLUGIN.serverLogger.debug("hue_listener.get_response for: %s, request string: %s" % (ahbDevId, request_string))
 
-    # Get individual device status - I'm actually not sure what the last two cases are for, but this is taken directly
-    # from the source script so I just left it in.
-    get_device_match = re.search(r'/lights/([0-9]+)$',request_string)
-    if get_device_match:
-        PLUGIN.threadDebugLog("hue_listener.get_response: found /lights/ in request string: %s" % request_string)
-        return PLUGIN.getHueDeviceJSON(int(get_device_match.group(1)))
-    elif request_file in FILE_LIST:
-        PLUGIN.threadDebugLog("hue_listener.get_response: serving from a local file: %s" % request_file)
-        if request_file == "/description.xml":
-            desc_xml = DESCRIPTION_XML % {'host': PLUGIN.host, 'port': PLUGIN.port, 'uuid': PLUGIN.uuid}
-            PLUGIN.threadDebugLog("get_response: returning file description.xml with data:\n%s" % desc_xml)
-            return desc_xml
-        elif request_file == "/hue_logo_0.png":
-            return ICON_SMALL.decode('base64')
-        elif request_file == "/hue_logo_3.png":
-            return ICON_BIG.decode('base64')
-        elif request_file == "/index.html":
-            return INDEX_HTML
+        # get device list
+        get_match = re.search(r'(\/[^\s^\/]+)$',request_string)
+        if get_match:
+            request_file=get_match.group(1)
         else:
-            return "HTTP/1.1 404 Not Found"
-    elif re.search(r'/api/[^\/]+$',request_string):
-        PLUGIN.threadDebugLog("hue_listener.get_response: found /api/ in request string: %s" % request_string)
-        return "{}"
-    else:
-        return "{}"
+            request_file=""
+        if request_file == "" or request_file == "/":
+            request_file = "/index.html"
+        PLUGIN.serverLogger.debug("hue_listener.get_response request file: " + request_file)
+        if re.search(r'/lights$',request_string):
+            PLUGIN.serverLogger.debug("hue_listener.get_response for '%s', discovery request, returning the full list of devices in Hue JSON format" % ahbDevId)
+            return PLUGIN.getHueDeviceJSON(ahbDevId)
+
+        # Get individual device status - I'm actually not sure what the last two cases are for, but this is taken directly
+        # from the source script so I just left it in.
+        get_device_match = re.search(r'/lights/([0-9]+)$',request_string)
+        if get_device_match:
+            PLUGIN.serverLogger.debug("hue_listener.get_response for '%s', found /lights/ in request string: %s" % (ahbDevId, request_string))
+            return PLUGIN.getHueDeviceJSON(ahbDevId, int(get_device_match.group(1)))
+        elif request_file in FILE_LIST:
+            PLUGIN.serverLogger.debug("hue_listener.get_response for '%s', serving from a local file: %s" % (ahbDevId, request_file))
+            if request_file == "/description.xml":
+                hostXml = globals['hueBridge'][ahbDevId]['host']
+                portXml = globals['hueBridge'][ahbDevId]['port']
+                uuidXml = globals['hueBridge'][ahbDevId]['uuid']
+                desc_xml = DESCRIPTION_XML % {'host': hostXml, 'port': portXml, 'uuid': uuidXml}
+                PLUGIN.serverLogger.debug("hue_listener.get_response for '%s', returning file description.xml with data:\n%s" % (ahbDevId, desc_xml))
+                return desc_xml
+            elif request_file == "/hue_logo_0.png":
+                return ICON_SMALL.decode('base64')
+            elif request_file == "/hue_logo_3.png":
+                return ICON_BIG.decode('base64')
+            elif request_file == "/index.html":
+                return INDEX_HTML
+            else:
+                return "HTTP/1.1 404 Not Found"
+        elif re.search(r'/api/[^\/]+$',request_string):
+            PLUGIN.serverLogger.debug("hue_listener.get_response for '%s',  found /api/ in request string: %s" % (ahbDevId, request_string))
+            return "{}"
+        else:
+            return "{}"
+    except StandardError, e:
+        PLUGIN.generalLogger.error(u"StandardError detected in get_response for '%s'. Line '%s' has error='%s'" % (ahbDevId, sys.exc_traceback.tb_lineno, e))
+
 
 ########################################
-def put_response(request_string,request_data):
-    PLUGIN.threadDebugLog("put_response request_string: %s" % request_string)
-    put_device_match = re.search(r'/lights/([0-9]+)/state$',request_string)
-    if put_device_match:
-        device_id = int(put_device_match.group(1))
-        request = json.loads(request_data)
-        #print request
-        list = []
-        for key in request:
-            # Do something for each key here, then return success
-            list.append({"success":{key:request[key]}})
-            if key.lower() == "on":
-                # ON == TRUE, OFF == FALSE
-                PLUGIN.turnOnOffDevice(device_id, request[key])
-            if key.lower() == "bri":
-                PLUGIN.setDeviceBrightness(device_id, int(float(request[key])/254.0*100.0))
-        return json.dumps(list)
+def put_response(globals, ahbDevId, request_string,request_data):
+    try:
+        PLUGIN.serverLogger.debug("put_response request_string: %s" % request_string)
+
+        put_device_match = re.search(r'/lights/([0-9]+)/state$',request_string)
+        if put_device_match:
+            device_id = int(put_device_match.group(1))
+            request = json.loads(request_data)
+            #print request
+            list = []
+            for key in request:
+                # Do something for each key here, then return success
+                list.append({"success":{key:request[key]}})
+                if key.lower() == "on":
+                    # ON == TRUE, OFF == FALSE
+                    PLUGIN.turnOnOffDevice(ahbDevId, device_id, request[key])
+                if key.lower() == "bri":
+                    PLUGIN.setDeviceBrightness(ahbDevId, device_id, int(float(request[key])/254.0*100.0))
+            return json.dumps(list)
+    except StandardError, e:
+        PLUGIN.generalLogger.error(u"StandardError detected in put_response for device %s. Line '%s' has error='%s'" % (ahbDevId, sys.exc_traceback.tb_lineno, e))
 
 
 class Httpd(threading.Thread):
-    def __init__(self, host, port, plugin):
+    def __init__(self, plugin, globals, ahbDevId):
         threading.Thread.__init__(self)
         global PLUGIN
         PLUGIN = plugin
-        self.host = host
-        self.port = port
+
+        self.globals = globals
+        self.ahbDevId = ahbDevId
+        self.host = self.globals['hueBridge'][ahbDevId]['host']
+        self.port = self.globals['hueBridge'][ahbDevId]['port']
         self.server = None
 
     def run(self):
-        PLUGIN.threadDebugLog("Httpd.run called")
+        PLUGIN.serverLogger.debug("Httpd.run called")
         retryCount = 3
         while retryCount:
             try:
-                PLUGIN.threadDebugLog("Httpd.run SocketServer.ThreadingTCPServer")
+                PLUGIN.serverLogger.debug("Httpd.run SocketServer.ThreadingTCPServer")
                 self.server = SocketServer.ThreadingTCPServer((self.host, self.port), HttpdRequestHandler)
                 self.server.allow_reuse_address = True
-                PLUGIN.threadDebugLog("Httpd.run calling server.serve_forever()")
+                self.server.globals = self.globals
+                self.server.alexaHueBridgeId = self.ahbDevId
+                PLUGIN.serverLogger.debug("Httpd.run calling server.serve_forever()")
                 self.server.serve_forever()
                 retryCount = 0
             except SocketServer.socket.error as exc:
                 if exc.args[0] != 48:
                     raise
-                PLUGIN.errorLog("HTTP port %i already in use - waiting 15 seconds to try again (will retry %i more times)" % (self.port, retryCount))
+                PLUGIN.generalLogger.error("HTTP port %i already in use - waiting 15 seconds to try again (will retry %i more times)" % (self.port, retryCount))
                 time.sleep(15)
                 retryCount -= 1
             except Exception, e:
-                PLUGIN.threadDebugLog("Exception in HTTPD run method:\n%s" % str(e))
+                PLUGIN.serverLogger.debug("Exception in HTTPD run method:\n%s" % str(e))
                 raise
 
     def stop(self):
-        PLUGIN.threadDebugLog("Httpd.stop called")
+        PLUGIN.serverLogger.debug("Httpd.stop called")
         if self.server:
             self.server.shutdown()
-            PLUGIN.infoLog("HTTP server stopped...")
+            PLUGIN.serverLogger.info("HTTP server stopped...")
         else:
-            PLUGIN.threadDebugLog("Httpd socket was not running...")
+            PLUGIN.serverLogger.debug("Httpd socket was not running...")
+
 
 class HttpdRequestHandler(SocketServer.BaseRequestHandler):
-    def handle(self):
-        PLUGIN.threadDebugLog("HttpdRequestHandler.handle called")
-        data = self.request.recv(1024)
-        get_match = re.search(r'GET (.*?(\/[^\s^\/]*?))\s', data)
-        if get_match:
-            get_request_full=get_match.group(1).replace("..","")
-            self.send_headers(get_request_full)
-            self.request.sendall(get_response(get_request_full))
-        put_match = re.search(r'PUT (.*?(\/[^\s^\/]*?))\s', data)
-        put_data_match = re.search(r'(\{.*\})', data)
-        if put_match and put_data_match:
-            put_request_full = put_match.group(1).replace("..","")
-            put_data = put_data_match.group(1)
-            self.send_headers("file.json")
-            self.request.sendall(put_response(put_request_full,put_data))
 
-    def send_headers(self,file):
+    def handle(self):
+        try:
+            PLUGIN.serverLogger.debug(str("HttpdRequestHandler.handle called for: %s" % self.server.alexaHueBridgeId))
+            data = self.request.recv(1024)
+            PLUGIN.serverLogger.debug(str("HttpdRequestHandler.handle data for: %s = %s" % (self.server.alexaHueBridgeId, data)))
+            get_match = re.search(r'GET (.*?(\/[^\s^\/]*?))\s', data)
+            if get_match:
+                get_request_full=get_match.group(1).replace("..","")
+                self.send_headers(get_request_full)
+                self.request.sendall(get_response(self.server.globals, self.server.alexaHueBridgeId, get_request_full))
+            put_match = re.search(r'PUT (.*?(\/[^\s^\/]*?))\s', data)
+            put_data_match = re.search(r'(\{.*\})', data)
+            if put_match and put_data_match:
+                put_request_full = put_match.group(1).replace("..","")
+                put_data = put_data_match.group(1)
+                self.send_headers("file.json")
+                self.request.sendall(put_response(self.server.globals, self.server.alexaHueBridgeId, put_request_full, put_data))
+        except StandardError, e:
+            PLUGIN.generalLogger.error(u"StandardError detected in HttpdRequestHandler for device %s. Line '%s' has error='%s'" % (self.server.alexaHueBridgeId, sys.exc_traceback.tb_lineno, e))
+
+    def send_headers(self, file):
         self.request.sendall("HTTP/1.1 200 OK\r\n")
         self.request.sendall("Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n")
         (type,encoding) = mimetypes.guess_type(file)
         if type is None:
             type = "application/json"
         self.request.sendall("Content-type: "+type+"\r\n\r\n")
-        PLUGIN.threadDebugLog("HttpdRequestHandler.send_headers: Sent content type: "+type)
+        PLUGIN.serverLogger.debug("HttpdRequestHandler.send_headers: Sent content type: "+type)
 
