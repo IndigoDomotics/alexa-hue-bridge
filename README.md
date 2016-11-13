@@ -1,28 +1,29 @@
-Alexa-Hue Bridge
-================
+# Alexa-Hue Bridge
 
-This plugin emulates multiple Philips Hue bridges to publish Indigo devices to any Amazon Alexa device (Echo, FireTV, etc.). 
+V2.x of this plugin emulates multiple Philips Hue bridges to publish Indigo devices to any Amazon Alexa device (Echo, FireTV, etc.).
 
-There is a 27 device limitfor each emulated Hue Bridge which is a limitation in Amazon's Alexa implementation.
+It requires Indigo V7.0+. 
+
+There is a 27 device limit for each emulated Hue Bridge which is a limitation in Amazon's Alexa implementation.
 By supporting more than one emulated Hue Bridge this limit is now effectively bypassed.
 
 Consider using a 
-[Device Group](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface#device_groups>)
-in the [Virtual Devices interface](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface>)
+[Device Group](<http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface#device_groups>)
+in the [Virtual Devices interface](<http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface>)
 to group devices that you generally control together into a single device and
 publish that. This is a good way to create “scenes” that you can turn on/off
 rather than control each device individually.
 
 A useful new feature is that you can specify different Alexa names for the same Indigo device by setting up the same Indigo device
-on diferent emulated Hue Bridges and each bridge having a diferent Alexa name.
+on different emulated Hue Bridges, with each bridge having a diferent Alexa name for the Indigo device.
 
 This plugin is **not intended to be an officially supported** Alexa integration,
 but rather as a stop-gap until Indigo Domotics can evaluate how best to
 officially support Alexa devices. See our [blog post on the subject](<http://www.indigodomo.com/blog/2015/10/28/amazon-echo-and-indigo/>)
 and the Terms section below for more information.
 
-Usage
------
+## Install
+
 
 The plugin is quite straight-forward: the first thing you’ll want to do is
 install it. Download the version you want from the releases section above (we
@@ -30,7 +31,7 @@ always recommend the most recent release but you can go back to previous
 releases if you want to). Once downloaded, double-click the plugin file in the
 Finder on your Indigo Server Mac. This will install and enable the plugin. 
 
-### Plugin Config
+## Plugin Config
 
 The only configuration options for the plugin are to set monitoring and debugging options - not normally required.
 
@@ -43,21 +44,21 @@ particularly chatty and will spew a lot of information so that one should really
 only be enabled when specifically asked.
 
 
-### Managing Devices
+## Managing Devices
 
 Create an emulated Hue Bridge by creating a new Indigo device:
 
 New... > Type: Alexa-Hue Bridge, Model: Emulated Hue Bridge
 
-Configuring Emulated Hue Bridge
+### Configuring the Emulated Hue Bridge
 
-Port
+* Port
 Default is Auto or specify a port
 
 Expiration in minutes
 This is the number of minutes the discovery process will broadcast and Alexa devices will find Indigo devices when you say "Alexa, discover devices". It must be a whole number from 0 to 10 minutes. During this time, other apps on your Mac may not be able to use UPNP. If you specify 0, once started, discovery will run until you explicitly stop it. You can start and stop discovery broadcasting by turning the Alexa-Hue Bridge device 'on' and 'off'.
 
-Assigned Alexa Names
+* Assigned Alexa Names
 
 The Assigned Alexa names menu can be used to check if the name is already assigned as an Alexa device. 
 
@@ -65,11 +66,11 @@ This is a list of all the Alexa names defined across all the Emulated Hue Bridge
 
 Selecting a menu entry will identify the corresponding *Indigo Device* and on which *Hue Bridge* it resides, shown in the fields below.
 
-Device to publish
+* Device to publish
 
 Select an Indigo device to publish. If the Indigo device has already been published then it will be shown
 
-Alternate name
+* Alternate name
 
 If you want Alexa to recognize a different name for this device, enter it above. Otherwise, leave it blank to use the default Indigo device name. For instance, if the name is "034 - HA-02 Appliance Module”, it’s not going to be easy to say that to
 Alexa or for Alexa to interpret. You can use an alternate name that’s more
@@ -77,7 +78,7 @@ easily said and recognized by Alexa in the *Alternate name* field. If you’ve
 already published a device, you can still select it from the top menu and change
 the alternate name.
 
-Add/Update
+* Add/Update
 
 When you’re ready to add or update the device name, click
 the *Add/Update Device* button. The device will be added into the Published devices list. If you try and add more than 27 devices you will get an error message: "You have reached 27 device limit imposed by Amazon Alexa for this Bridge. Create a new Bridge Device or consider Device Groups to group similar devices into a single device."
@@ -87,13 +88,13 @@ Note: You must click the *Save* button to make the changes permanent; see below.
 Published devices
 This is the list of devices currently published to this bridge (including any just added or updated. There is a limit of 27 devices currently imposed by the Amazon implementation for each bridge. If you specified an alternate name, it will show in parenthesis after the Indigo name. If the name is too long to show all the detail, hovering the mouse over the name will show the full anme and alternate name (if specified) after a few seconds.
 
-Delete Devices
+* Delete Devices
 Select one or more devices from the Published devices list and click the *Delete Devices* button. Note: You must click the *Save* button to make the changes permanent; see below. 
 
-Save
+* Save
 Once you’re finished adding/editing/deleting published devices, click the *Save* button to make the changes permanent. Click the *Cancel* button to discard all changes.  
 
-### Discovery
+## Discovery
 
 At this point, the plugin knows about the devices, but Alexa
 doesn’t. You need to tell Alexa to discover devices. By default, you can 
@@ -148,7 +149,7 @@ when you tell Alexa to discover devices, it will only announce the total count
 of devices that are enabled, but if you look in the app at the list above it
 will actually have all the devices you published.
 
-### Controlling Devices
+## Controlling Devices
 
 That’s basically it. Once Alexa discovers your devices, you can control them
 with the standard Alexa commands for home automation:
@@ -237,6 +238,7 @@ time other apps may have a problem. This is a list of things users have found on
 is by no means an exhaustive list.
 
 - The Sonos Indigo Plugin
+- The Squeezebox Indigo Plugin
 - MythTV
 - Sighthound Video
 
