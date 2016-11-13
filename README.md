@@ -52,29 +52,29 @@ New... > Type: Alexa-Hue Bridge, Model: Emulated Hue Bridge
 
 ### Configuring the Emulated Hue Bridge
 
-* Port
+* *Port*
 
     Default is Auto or specify a port
 
-#Expiration in minutes
+* *Expiration in minutes*
 
     This is the number of minutes the discovery process will broadcast and Alexa devices will find Indigo devices when you say "Alexa, iscover devices". 
 It must be a whole number from 0 to 10 minutes. During this time, other apps on your Mac may not be able to use UPNP.
 If you specify 0, once started, discovery will run until you explicitly stop it. You can start and stop discovery broadcasting by turning the Alexa-Hue Bridge device 'on' and 'off'.
 
-* Assigned Alexa Names
+* *Assigned Alexa Names*
 
     The Assigned Alexa names menu can be used to check if the name is already assigned as an Alexa device. 
 
     This is a list of all the Alexa names defined across all the Emulated Hue Bridges. These are shown in alphabetical order and are used to check for duplicate names which will be rejected if spotted (as Alexa doesn't like duplicate names!). If an alternate name has been defined for a device, then that will be shown in the list instaed of the Indigo Device name as that is the name that Alexa knows the device by. 
 
-Selecting a menu entry will identify the corresponding *Indigo Device* and on which *Hue Bridge* it resides, shown in the fields below.
+    Selecting a menu entry will identify the corresponding *Indigo Device* and on which *Hue Bridge* it resides, shown in the fields below.
 
-* Device to publish
+* *Device to publish*
 
     Select an Indigo device to publish. If the Indigo device has already been published then it will be shown
 
-* Alternate name
+* *Alternate name*
 
     If you want Alexa to recognize a different name for this device, enter it above. Otherwise, leave it blank to use the default Indigo device name. For instance, if the name is "034 - HA-02 Appliance Module”,
 it’s not going to be easy to say that to
@@ -83,20 +83,23 @@ easily said and recognized by Alexa in the *Alternate name* field. If you’ve
 already published a device, you can still select it from the top menu and change
 the alternate name.
 
-* Add/Update
+* *Add/Update*
 
     When you’re ready to add or update the device name, click
 the *Add/Update Device* button. The device will be added into the Published devices list. If you try and add more than 27 devices you will get an error message: "You have reached 27 device limit imposed by Amazon Alexa for this Bridge. Create a new Bridge Device or consider Device Groups to group similar devices into a single device."
 
     Note: You must click the *Save* button to make the changes permanent; see below.
 
-* Published devices
+* *Published devices*
+
     This is the list of devices currently published to this bridge (including any just added or updated. There is a limit of 27 devices currently imposed by the Amazon implementation for each bridge. If you specified an alternate name, it will show in parenthesis after the Indigo name. If the name is too long to show all the detail, hovering the mouse over the name will show the full anme and alternate name (if specified) after a few seconds.
 
-* Delete Devices
+* *Delete Devices*
+
     Select one or more devices from the Published devices list and click the *Delete Devices* button. Note: You must click the *Save* button to make the changes permanent; see below. 
 
-* Save
+* *Save*
+
     Once you’re finished adding/editing/deleting published devices, click the *Save* button to make the changes permanent. Click the *Cancel* button to discard all changes.  
 
 ## Discovery
