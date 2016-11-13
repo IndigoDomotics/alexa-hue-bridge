@@ -1,15 +1,20 @@
 Alexa-Hue Bridge
 ================
 
-This plugin will emulate a Philips Hue bridge for the purpose of publishing up
-to 27 devices to any Amazon Alexa device (Echo, FireTV, etc.). The 27 device
-limit appears to be a limitation in Amazon's Alexa implementation so there's
-nothing that we can do about it. If you reach that limit, consider using a
+This plugin emulates multiple Philips Hue bridges to publish Indigo devices to any Amazon Alexa device (Echo, FireTV, etc.). 
+
+There is a 27 device limitfor each emulated Hue Bridge which is a limitation in Amazon's Alexa implementation.
+By supporting more than one emulated Hue Bridge this limit is now effectively bypassed.
+
+Consider using a 
 [Device Group](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface#device_groups>)
 in the [Virtual Devices interface](<http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:virtual_devices_interface>)
 to group devices that you generally control together into a single device and
 publish that. This is a good way to create “scenes” that you can turn on/off
 rather than control each device individually.
+
+A useful new feature is that you can specify different Alexa names for the same Indigo device by setting up the same Indigo device
+on diferent emulated Hue Bridges and each bridge having a diferent Alexa name.
 
 This plugin is **not intended to be an officially supported** Alexa integration,
 but rather as a stop-gap until Indigo Domotics can evaluate how best to
@@ -23,55 +28,94 @@ The plugin is quite straight-forward: the first thing you’ll want to do is
 install it. Download the version you want from the releases section above (we
 always recommend the most recent release but you can go back to previous
 releases if you want to). Once downloaded, double-click the plugin file in the
-Finder on your Indigo Server Mac. This will install and enable the plugin. The
-next sections go into more detail about configuring and using the plugin.
+Finder on your Indigo Server Mac. This will install and enable the plugin. 
+
+### Plugin Config
+
+The only configuration options for the plugin are to set monitoring and debugging options - not normally required.
+
+These options in the Plugins’ config menu will help control the
+amount of debugging information that’s shown in the Event Log window. This
+information will help track down any issues that you may experience using the
+plugin. We recommend only turning on debugging if you’re asked to by someone
+trying to help with a specific issue. Some of the debugging options are
+particularly chatty and will spew a lot of information so that one should really
+only be enabled when specifically asked.
+
 
 ### Managing Devices
 
-Because Amazon's implementation will only support 27 devices, you need to
-specify the devices you want published to the bridge (and therefore to any Alexa
-devices). To do this, select the *Plugins-\>Alexa-Hue Bridge-\>Manage
-Devices...* menu item. This will open the Manage Devices dialog:
+Create an emulated Hue Bridge by creating a new Indigo device:
 
-![](<doc-images/manage-devices.png>)
+New... > Type: Alexa-Hue Bridge, Model: Emulated Hue Bridge
 
-To publish a device, select it from the *Device to publish* popup at the top.
-You can specify an alternate name to publish for a device. For instance, if the
-name is "034 - HA-02 Appliance Module”, it’s not going to be easy to say that to
+Configuring Emulated Hue Bridge
+
+Port
+Default is Auto or specify a port
+
+Expiration in minutes
+This is the number of minutes the discovery process will broadcast and Alexa devices will find Indigo devices when you say "Alexa, discover devices". It must be a whole number from 0 to 10 minutes. During this time, other apps on your Mac may not be able to use UPNP. If you specify 0, once started, discovery will run until you explicitly stop it. You can start and stop discovery broadcasting by turning the Alexa-Hue Bridge device 'on' and 'off'.
+
+Assigned Alexa Names
+
+The Assigned Alexa names menu can be used to check if the name is already assigned as an Alexa device. 
+
+This is a list of all the Alexa names defined across all the Emulated Hue Bridges. These are shown in alphabetical order and are used to check for duplicate names which will be rejected if spotted (as Alexa doesn't like duplicate names!). If an alternate name has been defined for a device, then that will be shown in the list instaed of the Indigo Device name as that is the name that Alexa knows the device by. 
+
+Selecting a menu entry will identify the corresponding *Indigo Device* and on which *Hue Bridge* it resides, shown in the fields below.
+
+Device to publish
+
+Select an Indigo device to publish. If the Indigo device has already been published then it will be shown
+
+Alternate name
+
+If you want Alexa to recognize a different name for this device, enter it above. Otherwise, leave it blank to use the default Indigo device name. For instance, if the name is "034 - HA-02 Appliance Module”, it’s not going to be easy to say that to
 Alexa or for Alexa to interpret. You can use an alternate name that’s more
 easily said and recognized by Alexa in the *Alternate name* field. If you’ve
 already published a device, you can still select it from the top menu and change
-the alternate name. When you’re ready to add or update the device name, click
-the *Add/Update Device* button.
+the alternate name.
 
-To unpublish a device, just select the device(s) in the *Published devices* list
-and click the *Delete Devices* button.
+Add/Update
 
-**Note**: changes made in this dialog take effect immediately - there’s no undo
-or save confirmations.
+When you’re ready to add or update the device name, click
+the *Add/Update Device* button. The device will be added into the Published devices list. If you try and add more than 27 devices you will get an error message: "You have reached 27 device limit imposed by Amazon Alexa for this Bridge. Create a new Bridge Device or consider Device Groups to group similar devices into a single device."
+
+Note: You must click the *Save* button to make the changes permanent; see below.
+
+Published devices
+This is the list of devices currently published to this bridge (including any just added or updated. There is a limit of 27 devices currently imposed by the Amazon implementation for each bridge. If you specified an alternate name, it will show in parenthesis after the Indigo name. If the name is too long to show all the detail, hovering the mouse over the name will show the full anme and alternate name (if specified) after a few seconds.
+
+Delete Devices
+Select one or more devices from the Published devices list and click the *Delete Devices* button. Note: You must click the *Save* button to make the changes permanent; see below. 
+
+Save
+Once you’re finished adding/editing/deleting published devices, click the *Save* button to make the changes permanent. Click the *Cancel* button to discard all changes.  
 
 ### Discovery
 
-Once you’re finished adding/editing/deleting published devices, click the
-*Close* button. At this point, the plugin knows about the devices, but Alexa
+At this point, the plugin knows about the devices, but Alexa
 doesn’t. You need to tell Alexa to discover devices. By default, you can 
 just tell Alexa to discover your devices either by saying that or by 
 using the Alexa app.
 
-In prior releases of the 
-plugin, you needed to specifically start the discovery process. This is now 
-done automatically and it runs forever. Thanks to a comment from another 
+In prior releases of the plugin, you needed to specifically start the discovery process.
+This is now done automatically and it can run forever. Thanks to a comment from another 
 Indigo user, we've added a switch which allows us to open the UPNP response 
 port in a shared mode - so any other app that opens the same port in the 
 same way will also work concurrently.
 
 However, there may be other apps/plugins that don't open the port shared, 
-and those may still require this plugin to not be in discover mode. You 
-can stop discovery and then start it back up using menu items on the 
-plugin's menu. You can also stop the 
-discovery process by selecting the *Plugins-\>Alexa-Hue Bridge-\>Stop Discovery* 
-menu item (or associated Action) and start it by selecting the 
-*Plugins-\>Alexa-Hue Bridge-\>Start Discovery*
+and those may still require this plugin to not be in discover mode.
+
+The discovery minutes is defaulted to zero which means discovery is always on. The status of discovery is shown in the state column of the Indigo device UI. A solid green dot means discovery is always on, a green timer means that it is on for a limited time (1 to 10 minutes), a grey timer (or gray for the USA  :wink: ) means discovery is off.
+
+Discovery can be turned on and off by using the Turn On and Turn Off controls in the UI.
+
+Starting discovery (and stopping it) are also available as actions: The emulated Hue Bridges, so if you
+can start (and stop if necessary) discovery from Triggers, Schedules, etc.
+
 
 A quick description of how discovery works: the Hue Bridge uses a technology 
 called UPNP to broadcast its presence and information about its devices on 
@@ -126,15 +170,6 @@ group that sets a thermostat in one way, and the OFF action group would set it
 another. You could then “turn on” and “turn off” the group to set the
 thermostat.
 
-### Plugin Config
-
-There are a few options in the Plugins’ config menu that will help control the
-amount of debugging information that’s shown in the Event Log window. This
-information will help track down any issues that you may experience using the
-plugin. We recommend only turning on debugging if you’re asked to by someone
-trying to help with a specific issue. The Show thread debugging option is
-particularly chatty and will spew a lot of information so that one should really
-only be enabled when specifically asked.
 
 Troubleshooting
 ------------
