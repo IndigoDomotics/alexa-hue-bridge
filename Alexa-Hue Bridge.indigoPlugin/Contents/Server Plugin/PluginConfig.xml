@@ -1,16 +1,40 @@
+<?xml version="1.0"?>
 <PluginConfig>
+    <SupportURL>https://github.com/IndigoDomotics/alexa-hue-bridge</SupportURL>
+    <Field id="description" type="label">
+        <Label>This plugin emulates multiple Philips Hue Hubs for the purpose of publishing up to 27 devices per hub to any Amazon Alexa device (Echo, FireTV, etc.). It provides a bridge between Indigo and Amazon Alexa. 😄</Label>
+    </Field>
+    <Field id="separator-1" type="separator" visibleBindingValue="true"/> 
+
 	<Field id="topLabel" type="label" fontSize="small" fontColor="darkgray">
-		<Label>If you are having problems with the plugin, you can enable extra logging in the Event Log window by checking this button. Use with caution.</Label>
+		<Label>If you are having problems with the plugin, you can enable extra logging by checking this button to display debugging options. Use with caution!</Label>
 	</Field>
-	<Field type="checkbox" id="showDebugInfo">
-		<Label>Enable debuging:</Label>
-		<Description>(not recommended)</Description>
-	</Field>
-	<Field type="checkbox" id="showThreadDebugInfo" enabledBindingId="showDebugInfo">
-		<Label>Enable thread debugging:</Label>
-		<Description>(really not recommended)</Description>
-	</Field>
-	<Field id="bottomLabel" type="label" fontSize="small" fontColor="darkgray" alignWithControl="true">
-		<Label>This is for advanced problems only - it will fill up your log with a lot of information. You should only do this if asked by someone trying to help with a specific issue.</Label>
-	</Field>
+    <Field type="checkbox" id="debugEnabled" default="false">
+        <Label>Debugging:</Label>
+        <Description>Enable debugging options.</Description>
+    </Field>
+    <Field id="separator-2" type="separator" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"/> 
+    <Field id="help-4" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+        <Label>Select monitoring / debugging to be performed by ticking required option(s) below and then clicking Save.</Label>
+    </Field>
+    <Field type="checkbox" id="debugGeneral" default="false" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+        <Label>General:</Label>
+        <Description>Debug 'general' processing.</Description>
+    </Field>
+     <Field type="checkbox" id="debugServer" default="false" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+        <Label>Debug Server:</Label>
+        <Description>Debug server communication processing.</Description>
+    </Field>
+    <Field type="checkbox" id="debugBroadcaster" default="false" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+        <Label>Debug Broadcaster:</Label>
+        <Description>Debug 'Broadcast' processing.</Description>
+    </Field>
+    <Field type="checkbox" id="debugResponder" default="false" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+        <Label>Debug Responder:</Label>
+        <Description>Debug 'Responder' processing.</Description>
+    </Field>
+     <Field type="checkbox" id="debugMethodTrace" default="false" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+        <Label>Method Trace:</Label>
+        <Description>Trace Method calls.</Description>
+    </Field>
 </PluginConfig>
