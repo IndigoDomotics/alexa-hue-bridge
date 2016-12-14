@@ -2,7 +2,7 @@ Alexa-Hue Bridge
 ================
 
 V2.x of this plugin emulates multiple Philips Hue bridges to publish Indigo
-devices to any Amazon Alexa device (Echo, Dot, FireTV, etc.).
+devices (on/off and dimmer types only) to any Amazon Alexa device (Echo, Dot, FireTV, etc.).
 
 The 2.x and higher versions of this plugin require Indigo V7.0+. Use the latest
 1.x release for Indigo 6.
