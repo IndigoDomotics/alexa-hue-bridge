@@ -17,7 +17,8 @@ in the [Virtual Devices
 interface](http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface)
 to group devices that you generally control together into a single device and
 publish that. This is a good way to create “scenes” that you can turn on/off
-rather than control each device individually.
+rather than control each device individually. You can also use [Virtual On/Off devices](http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface#virtual_on_off_devices)
+to control devices that aren't relay (on/off) or dimmer devices natively.
 
 A useful new feature is that you can specify different Alexa names for the same
 Indigo device by setting up the same Indigo device on different emulated Hue
