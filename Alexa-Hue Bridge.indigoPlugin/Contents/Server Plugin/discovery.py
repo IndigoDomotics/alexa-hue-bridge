@@ -1,6 +1,15 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+#######################
+#
+# Alexa-Hue Bridge 
+
+# Note the "indigo" module is automatically imported and made available inside
+# our global name space by the host process. We add it here so that the various
+# Python IDEs will not show errors on each usage of the indigo module.
 try:
     import indigo
-except:
+except ImportError, e:
     pass
 import socket
 import sys
@@ -50,23 +59,21 @@ USN: uuid:%(uuid)s
 
 
 class Broadcaster(threading.Thread):
-    def __init__(self, plugin,  globals, ahbDevId):
+    def __init__(self, plugin, ahbDevId):
         threading.Thread.__init__(self)
         global PLUGIN
         PLUGIN = plugin
 
         try:
-            self.globals = globals
             self.ahbDevId = ahbDevId
-            self._host = self.globals['hueBridge'][self.ahbDevId]['host']
-            self._port = self.globals['hueBridge'][self.ahbDevId]['port']
-            self.uuid = self.globals['hueBridge'][self.ahbDevId]['uuid']
-            self._timeout = self.globals['hueBridge'][self.ahbDevId]['expireMinutes']
+            self._host = PLUGIN.globals['hueBridge'][self.ahbDevId]['host']
+            self._port = PLUGIN.globals['hueBridge'][self.ahbDevId]['port']
+            self.uuid = PLUGIN.globals['hueBridge'][self.ahbDevId]['uuid']
+            self._timeout = PLUGIN.globals['hueBridge'][self.ahbDevId]['expireMinutes']
 
-            PLUGIN.broadcasterLogger.debug("Broadcaster.__init__ for '%s' is running" % self.globals['hueBridge'][self.ahbDevId]['hubName'])
+            PLUGIN.broadcasterLogger.debug("Broadcaster.__init__ for '%s' is running" % PLUGIN.globals['hueBridge'][self.ahbDevId]['hubName'])
 
             self.interrupted = False
-
 
             broadcast_data = {"broadcast_ip": BCAST_IP, 
                               "upnp_port": UPNP_PORT, 
@@ -75,7 +82,7 @@ class Broadcaster(threading.Thread):
                               "uuid": self.uuid}
             self.broadcast_packet = broadcast_packet % broadcast_data
         except StandardError, e:
-            PLUGIN.generalLogger.error(u"StandardError detected in Broadcaster.Init for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.broadcasterLogger.error(u"StandardError detected in Broadcaster.Init for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def run(self):
         try:
@@ -97,8 +104,10 @@ class Broadcaster(threading.Thread):
                         sock.close()
                         return
             PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
+            PLUGIN.broadcasterLogger.debug("Broadcaster.run for '%s' is ending" % PLUGIN.globals['hueBridge'][self.ahbDevId]['hubName'])
+
         except StandardError, e:
-            PLUGIN.generalLogger.error(u"StandardError detected in Broadcaster.Run for '%s'. Line '%s' has error='%s'" % (indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.broadcasterLogger.error(u"StandardError detected in Broadcaster.Run for '%s'. Line '%s' has error='%s'" % (indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def stop(self):
         PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
@@ -130,20 +139,20 @@ class Broadcaster(threading.Thread):
         self._timeout = timeout
 
 class Responder(threading.Thread):
-    def __init__(self, plugin,  globals, ahbDevId):
+    def __init__(self, plugin,  ahbDevId):
         threading.Thread.__init__(self)
+
         global PLUGIN
         PLUGIN = plugin
 
         try:
-            self.globals = globals
             self.ahbDevId = ahbDevId
-            self._host = self.globals['hueBridge'][self.ahbDevId]['host']
-            self._port = self.globals['hueBridge'][self.ahbDevId]['port']
-            self.uuid = self.globals['hueBridge'][self.ahbDevId]['uuid']
-            self._timeout = self.globals['hueBridge'][self.ahbDevId]['expireMinutes']
+            self._host = PLUGIN.globals['hueBridge'][self.ahbDevId]['host']
+            self._port = PLUGIN.globals['hueBridge'][self.ahbDevId]['port']
+            self.uuid = PLUGIN.globals['hueBridge'][self.ahbDevId]['uuid']
+            self._timeout = PLUGIN.globals['hueBridge'][self.ahbDevId]['expireMinutes']
 
-            PLUGIN.broadcasterLogger.debug("Broadcaster.__init__ for '%s' is running" % self.globals['hueBridge'][self.ahbDevId]['hubName'])
+            PLUGIN.responderLogger.debug("Responder.__init__ for '%s' is running" % PLUGIN.globals['hueBridge'][self.ahbDevId]['hubName'])
 
             self.interrupted = False
 
@@ -152,7 +161,7 @@ class Responder(threading.Thread):
                              "uuid": self.uuid}
             self.response_packet = response_packet % response_data
         except StandardError, e:
-            PLUGIN.generalLogger.error(u"StandardError detected in Responder.Init for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.responderLogger.error(u"StandardError detected in Responder.Init for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def run(self):
         try:
@@ -192,7 +201,7 @@ class Responder(threading.Thread):
                     self.stop()
             PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
         except StandardError, e:
-            PLUGIN.generalLogger.error(u"StandardError detected in Responder.Run for '%s'. Line '%s' has error='%s'" % (indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.responderLogger.error(u"StandardError detected in Responder.Run for '%s'. Line '%s' has error='%s'" % (indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def stop(self):
         PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)

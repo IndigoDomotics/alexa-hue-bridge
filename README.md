@@ -4,17 +4,15 @@ Alexa-Hue Bridge
 V2.x of this plugin emulates multiple Philips Hue bridges to publish Indigo
 devices (on/off and dimmer types only) to any Amazon Alexa device (Echo, Dot, FireTV, etc.).
 
-The 2.x and higher versions of this plugin require Indigo V7.0+. Use the latest
-1.x release for Indigo 6.
+The 2.x and higher versions of this plugin require Indigo V7.0+.
+Use the latest 1.x release for Indigo 6.
 
 There is a 27 device limit for each emulated Hue Bridge which is a limitation in
 Amazon's Alexa implementation. By supporting more than one emulated Hue Bridge
 this limit is now effectively bypassed.
 
-Consider using a [Device
-Group](http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface#device_groups)
-in the [Virtual Devices
-interface](http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface)
+Consider using a [Device Group](http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface#device_groups)
+in the [Virtual Devices interface](http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface)
 to group devices that you generally control together into a single device and
 publish that. This is a good way to create “scenes” that you can turn on/off
 rather than control each device individually. You can also use [Virtual On/Off devices](http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface#virtual_on_off_devices)
@@ -22,7 +20,7 @@ to control devices that aren't relay (on/off) or dimmer devices natively.
 
 A useful new feature is that you can specify different Alexa names for the same
 Indigo device by setting up the same Indigo device on different emulated Hue
-Bridges, with each bridge having a diferent Alexa name for the Indigo device.
+Bridges, with each bridge having a different Alexa name for the Indigo device.
 
 This plugin is **not intended to be an officially supported** Alexa integration,
 but rather as a stop-gap until Indigo Domotics can evaluate how best to
@@ -44,16 +42,22 @@ Plugin Configuration
 
 ![Plugin Configuration](doc-images/config_plugin.png)
 
-The only configuration options for the plugin are to set monitoring and
-debugging options - not normally required.
+There are two configuration options for the plugin:
 
-These options in the Plugins’ config menu will help control the amount of
-debugging information that’s shown in the Event Log window. This information
-will help track down any issues that you may experience using the plugin. We
-recommend only turning on debugging if you’re asked to by someone trying to help
-with a specific issue. Some of the debugging options are particularly chatty and
-will spew a lot of information so that one should really only be enabled when
-specifically asked.
+* ** Log Discovery **
+
+    If you tick this box, then the Alexa-Hue Bridge will log discovery requests from Alexa to the Event Log, showing all devices published. This can result in a lot of log entries! So now you can see what discovered devices are being sent to Alexa
+
+    Note: see the Discovery section later for a description of how this works.
+
+* ** Debugging  **
+
+    This is not normally required but may be helpful to resolve any error situations.
+
+    When this is ticked, it reveals further debugging options.
+
+    These further options help control the amount of debugging information that’s shown in the Event Log window. This information
+will help track down any issues that you may experience using the plugin. We recommend only turning on debugging if you’re asked to by someone trying to help with a specific issue. Some of the debugging options are particularly chatty and will spew a lot of information so that one should really only be enabled when specifically asked.
 
 Managing Devices
 ----------------
@@ -76,12 +80,12 @@ device.
 
 ![Configure Device](doc-images/config_device.png)
 
--   **Port** Default is Auto or specify a port. Normally leave as *Auto* and the
-    plugin will select a port starting from *8178*. Onc a port had been
+* **Port** Default is Auto or specify a port. Normally leave as *Auto* and the
+    plugin will select a port starting from *8178*. Once a port had been
     allocated the device properties will be updated with the allocated value and
     the port will assigned as the device's address.
 
--   **Expiration in minutes** This is the number of minutes the discovery
+* **Expiration in minutes** This is the number of minutes the discovery
     process will broadcast and Alexa devices will find Indigo devices when you
     say "Alexa, discover devices". It must be a whole number from 0 to 10
     minutes. During this time, other apps on your Mac may not be able to use
@@ -89,31 +93,31 @@ device.
     explicitly stop it. You can start and stop discovery broadcasting by turning
     the Alexa-Hue Bridge device 'on' and 'off'.
 
--   **Assigned Alexa Names** The Assigned Alexa names menu can be used to check
+* **Assigned Alexa Names** The Assigned Alexa names menu can be used to check
     if the name is already assigned as an Alexa device.
 
     This is a list of all the Alexa names defined across all the Emulated Hue
     Bridges. These are shown in alphabetical order and are used to check for
     duplicate names which will be rejected if spotted (as Alexa doesn't like
     duplicate names!). If an alternate name has been defined for a device, then
-    that will be shown in the list instaed of the Indigo Device name as that is
+    that will be shown in the list instead of the Indigo Device name as that is
     the name that Alexa knows the device by.
 
     Selecting a menu entry will identify the corresponding *Indigo Device* and
     on which *Hue Bridge* it resides, shown in the fields below.
 
--   **Device to publish** Select an Indigo device to publish. If the Indigo
+* **Device to publish** Select an Indigo device to publish. If the Indigo
     device has already been published then it will be shown
 
--   **Alternate name** If you want Alexa to recognize a different name for this
+* **Alternate name** If you want Alexa to recognise a different name for this
     device, enter it above. Otherwise, leave it blank to use the default Indigo
     device name. For instance, if the name is "034 - HA-02 Appliance Module”,
     it’s not going to be easy to say that to Alexa or for Alexa to interpret.
-    You can use an alternate name that’s more easily said and recognized by
+    You can use an alternate name that’s more easily said and recognised by
     Alexa in the *Alternate name* field. If you’ve already published a device,
     you can still select it from the top menu and change the alternate name.
 
--   **Add/Update** When you’re ready to add or update the device name, click the
+* **Add/Update** When you’re ready to add or update the device name, click the
     *Add/Update Device* button. The device will be added into the Published
     devices list. If you try and add more than 27 devices you will get an error
     message: "You have reached 27 device limit imposed by Amazon Alexa for this
@@ -123,19 +127,19 @@ device.
     Note: You must click the *Save* button to make the changes permanent; see
     below.
 
--   **Published devices** This is the list of devices currently published to
+* **Published devices** This is the list of devices currently published to
     this bridge (including any just added or updated. There is a limit of 27
     devices currently imposed by the Amazon implementation for each bridge. If
     you specified an alternate name, it will show in parenthesis after the
     Indigo name. If the name is too long to show all the detail, hovering the
-    mouse over the name will show the full anme and alternate name (if
+    mouse over the name will show the full name and alternate name (if
     specified) after a few seconds.
 
--   **Delete Devices** Select one or more devices from the Published devices
+* **Delete Devices** Select one or more devices from the Published devices
     list and click the *Delete Devices* button. Note: You must click the *Save*
     button to make the changes permanent; see below.
 
--   **Save** Once you’re finished adding/editing/deleting published devices,
+* **Save** Once you’re finished adding/editing/deleting published devices,
     click the *Save* button to make the changes permanent. Click the *Cancel*
     button to discard all changes.
 
@@ -146,8 +150,35 @@ At this point, the plugin knows about the devices, but Alexa doesn’t. You need
 to tell Alexa to discover devices. By default, you can just tell Alexa to
 discover your devices either by saying that or by using the Alexa app.
 
+Saying to Alexa "Alexa discover devices" appears to be more reliable than using the Alexa App to discover devices - Your mileage may vary. :)
+
+If you enabled *Log Discovery* in the plugin configuration, you will now see a series of messages in the Event Log. Alexa will make multiple attempts to discover devices, so you may well see the discovery for each defined Emulated Hue Hub appearing to be repeated.
+
+An example output is like this:
+
+<pre><code>
+   Alexa-Hue Bridge                Alexa-Hue Bridge 'Test Hue Bridge Two' responding to Alexa discovery [request id: 1] ...
+   Alexa-Hue Bridge                + Publishing device 'Landing Lights' to Alexa
+   Alexa-Hue Bridge                ... One device discovered by Alexa on Alexa-Hue Bridge 'Test Hue Bridge Two'.
+   Alexa-Hue Bridge                Alexa-Hue Bridge 'Test Hue Bridge Two' responding to Alexa discovery [request id: 2] ...
+   Alexa-Hue Bridge                + Publishing device 'Landing Lights' to Alexa
+   Alexa-Hue Bridge                ... One device discovered by Alexa on Alexa-Hue Bridge 'Test Hue Bridge Two'.
+   Alexa-Hue Bridge                Alexa-Hue Bridge 'Test Hue Bridge One' responding to Alexa discovery [request id: 3] ...
+   Alexa-Hue Bridge                + Publishing device 'Testing lamp' to Alexa
+   Alexa-Hue Bridge                + Publishing device 'Virtual Camera ' to Alexa
+   Alexa-Hue Bridge                + Publishing device 'boiler switch' to Alexa
+   Alexa-Hue Bridge                + Publishing device 'macbook lamp' to Alexa
+   Alexa-Hue Bridge                ... 4 devices discovered by Alexa on Alexa-Hue Bridge 'Test Hue Bridge One'.
+   Alexa-Hue Bridge                Alexa-Hue Bridge 'Test Hue Bridge One' responding to Alexa discovery [request id: 5] ...
+   Alexa-Hue Bridge                + Publishing device 'Testing lamp' to Alexa
+   Alexa-Hue Bridge                + Publishing device 'Virtual Camera ' to Alexa
+   Alexa-Hue Bridge                + Publishing device 'boiler switch' to Alexa
+   Alexa-Hue Bridge                + Publishing device 'macbook lamp' to Alexa
+   Alexa-Hue Bridge                ... 4 devices discovered by Alexa on Alexa-Hue Bridge 'Test Hue Bridge One'.
+</code></pre>
+
 In prior releases of the plugin, you needed to specifically start the discovery
-process.
+process i.e. the process in the plugin that will allow Alexa to discover devices when you tell "her" to.
 
 This is now done automatically and it can run forever. Thanks to a comment from
 another Indigo user, we've added a switch which allows us to open the UPNP
@@ -267,7 +298,7 @@ Terms
 Perceptive Automation (aka Indigo Domotics) is hosting this repository and will
 do minimal management. Unless a pull request has no description or upon cursory
 observation has some obvious issue, pull requests will be accepted without any
-testing by us. We may choose to delegate commit privledges to other users at
+testing by us. We may choose to delegate commit privileges to other users at
 some point in the future.
 
 We (Perceptive Automation) don't guarantee anything about this plugin - that
@@ -278,7 +309,7 @@ users out on the net, we can’t guarantee that it will always work since either
 Amazon or Philips can change the protocol at any time.
 
 This plugin is a derivative work from a couple of different sources: the
-[hueAndMe project](https://github.com/johnray/hueAndM), which is itself based
+[hueAndMe project](https://github.com/johnray/hueAndMe), which is itself based
 loosely on work from the [hue-upnp project](https://github.com/sagen/hue-upnp).
 We’re grateful that these developers published these projects so that we could
 build upon them.
