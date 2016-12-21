@@ -185,6 +185,7 @@ class Responder(threading.Thread):
                             raise socket.error
                     except socket.error:
                         if self.interrupted:
+                            PLUGIN.responderLogger.debug("Responder.run: self.interrupted: True")
                             PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
                             sock.close()
                             return
@@ -199,6 +200,9 @@ class Responder(threading.Thread):
                     PLUGIN.responderLogger.error(u"Responder startup failed because another app or plugin is using the UPNP port.")
                     PLUGIN.responderLogger.error(u"Open a terminal window and type 'sudo lsof -i :%i' to see a list of processes that have bound to that port and quit those applications." % UPNP_PORT)
                     self.stop()
+                else:
+                    PLUGIN.responderLogger.debug("Responder.run: socket error: %s - %s" % (str(value), message))
+
             PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
         except StandardError, e:
             PLUGIN.responderLogger.error(u"StandardError detected in Responder.Run for '%s'. Line '%s' has error='%s'" % (indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
