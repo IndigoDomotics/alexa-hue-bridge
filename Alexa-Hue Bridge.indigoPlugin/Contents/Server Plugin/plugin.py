@@ -35,6 +35,8 @@ class Plugin(indigo.PluginBase):
         # Initialise dictionary to store plugin Globals
         self.globals = {}
 
+        self.globals['overriddenHostIpAddress'] = ''  # If needed, set in Plugin config
+
         self.globals['discoveryId'] = 0  # An id (count) of discoveries to be used by discovery logging (if enabled)
         self.globals['discoveryLists'] = {}  # Dictionary of discovery lists (entries will be keyed by 'discoveryId')
 
@@ -103,18 +105,22 @@ class Plugin(indigo.PluginBase):
                     else:
                         self.globals['ahbConversion'][dev.id] = ''
 
-        # Validate the Plugin Config
-        self.validatePrefsConfigUi(pluginPrefs)
 
-        # Check debug options  
-        self.setDebuggingLevels(pluginPrefs)
+        # Set Plugin Config Values
+        self.closedPrefsConfigUi(pluginPrefs, False)
 
-        # set possibly updated logging levels
-        self.generalLogger.setLevel(self.globals['debug']['debugGeneral'])
-        self.serverLogger.setLevel(self.globals['debug']['debugServer'])
-        self.broadcasterLogger.setLevel(self.globals['debug']['debugBroadcaster'])
-        self.responderLogger.setLevel(self.globals['debug']['debugResponder'])
-        self.methodTracer.setLevel(self.globals['debug']['debugMethodTrace'])
+        # # Validate the Plugin Config
+        # self.validatePrefsConfigUi(pluginPrefs)
+
+        # # Check debug options  
+        # self.setDebuggingLevels(pluginPrefs)
+
+        # # set possibly updated logging levels
+        # self.generalLogger.setLevel(self.globals['debug']['debugGeneral'])
+        # self.serverLogger.setLevel(self.globals['debug']['debugServer'])
+        # self.broadcasterLogger.setLevel(self.globals['debug']['debugBroadcaster'])
+        # self.responderLogger.setLevel(self.globals['debug']['debugResponder'])
+        # self.methodTracer.setLevel(self.globals['debug']['debugMethodTrace'])
 
         # Need to subscribe to device changes here so we can call the refreshDeviceList method
         # in case there was a change or deletion of a device that's published
@@ -149,11 +155,13 @@ class Plugin(indigo.PluginBase):
     def validatePrefsConfigUi(self, valuesDict):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-        self.globals['showDiscoveryInEventLog'] = bool(valuesDict.get("showDiscoveryInEventLog", True))
-        if self.globals['showDiscoveryInEventLog']:
-            self.generalLogger.info(u"Alexa discovery request logging enabled")
-        else:
-            self.generalLogger.info(u"Alexa discovery request logging disabled")
+        if 'overrideHostIpAddress' in valuesDict:
+            if bool(valuesDict.get('overrideHostIpAddress', False)):
+                if valuesDict.get('overriddenHostIpAddress', '') == '':
+                    errorDict = indigo.Dict()
+                    errorDict["overriddenHostIpAddress"] = "Host IP Address missing"
+                    errorDict["showAlertText"] = "You have elected to override the Host Ip Address but haven't specified it!"
+                    return (False, valuesDict, errorDict)
 
         return True
 
@@ -162,6 +170,20 @@ class Plugin(indigo.PluginBase):
 
         if userCancelled == True:
             return
+
+        # Set Host IP Address override
+        if bool(valuesDict.get('overrideHostIpAddress', False)): 
+            self.globals['overriddenHostIpAddress'] = valuesDict.get('overriddenHostIpAddress', '')
+            if self.globals['overriddenHostIpAddress'] != '':
+                self.generalLogger.info(u"Host IP Address overridden and specified as: '%s'" % (valuesDict.get('overriddenHostIpAddress', 'INVALID ADDRESS')))
+
+
+        # Set Discovery Logging
+        self.globals['showDiscoveryInEventLog'] = bool(valuesDict.get("showDiscoveryInEventLog", True))
+        if self.globals['showDiscoveryInEventLog']:
+            self.generalLogger.info(u"Alexa discovery request logging enabled")
+        else:
+            self.generalLogger.info(u"Alexa discovery request logging disabled")
 
         # Check debug options  
         self.setDebuggingLevels(valuesDict)
@@ -265,13 +287,16 @@ class Plugin(indigo.PluginBase):
                     uuid_changed = True
 
             host_changed = False
-            host = ahbDev.pluginProps.get("host", "auto")
-            if host == "auto":
-                try:
-                    host = socket.gethostbyname(socket.gethostname())
-                except socket.gaierror:
-                    self.generalLogger.error("Computer has no host name specified. Check the Sharing system preference and restart the plugin once the name is resolved.")
-                    host = None
+            if self.globals['overriddenHostIpAddress'] != '':
+                host = self.globals['overriddenHostIpAddress']
+            else:
+                host = ahbDev.pluginProps.get("host", "auto")
+                if host == "auto":
+                    try:
+                        host = socket.gethostbyname(socket.gethostname())
+                    except socket.gaierror:
+                        self.generalLogger.error("Computer has no host name specified. Check the Sharing system preference and restart the plugin once the name is resolved.")
+                        host = None
 
                     # CAN'T START HUB ?
 
@@ -282,6 +307,8 @@ class Plugin(indigo.PluginBase):
                 if self.globals['hueBridge'][ahbDev.id]['host'] != host:
                     self.globals['hueBridge'][ahbDev.id]['host'] = host
                     host_changed = True
+
+            self.generalLogger.info(u"Hue Bridge '%s' Host: %s" % (self.globals['hueBridge'][ahbDev.id]['hubName'], self.globals['hueBridge'][ahbDev.id]['host']))
 
             port_changed = False
             port = ahbDev.pluginProps.get("port", "auto")
@@ -339,7 +366,7 @@ class Plugin(indigo.PluginBase):
             else:
                 if host_changed or port_changed:
                     self.globals['hueBridge'][ahbDev.id]['webServer'].stop()
-                    self.sleep(2)  # wait 2 seconds (temporary fix)
+                    self.sleep(2)  # wait 2 seconds (temporary fix?)
                     del self.globals['hueBridge'][ahbDev.id]['webServer']
                     start_webserver_required = True
             if start_webserver_required == True:

@@ -4,17 +4,32 @@
     <Field id="description" type="label">
         <Label>This plugin emulates multiple Philips Hue Hubs for the purpose of publishing up to 27 devices per hub to any Amazon Alexa device (Echo, FireTV, etc.). It provides a bridge between Indigo and Amazon Alexa. 😄</Label>
     </Field>
-    <Field id="separator-1" type="separator" visibleBindingValue="true"/> 
+    
+    <Field id="separator-1" type="separator" visibleBindingValue="true"/>
+
+     <Field type="checkbox" id="overrideHostIpAddress" default="false" alwaysUseInDialogHeightCalc="true">
+        <Label>Override Host IP Address:</Label>
+        <Description>Check to enable Host IP Address input.</Description>
+    </Field>
+    <Field id="help-1" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
+        <Label>^ If you tick this box, then you can specify the host address that Alexa-Hue Bridge will use rather than discovering it automatically. Not normally needed but can help in problem situations. It is your responsibility to specify it correctly e.g. '192.168.1.100' (no quotes). Reload the Plugin after saving this change.</Label>
+    </Field>
+    
+     <Field type="textfield" id="overriddenHostIpAddress" default="" visibleBindingId="overrideHostIpAddress" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+        <Label>Host IP Address:</Label>
+    </Field>
+
+    <Field id="separator-2" type="separator" visibleBindingValue="true"/> 
 
      <Field type="checkbox" id="showDiscoveryInEventLog" default="true" alwaysUseInDialogHeightCalc="true">
         <Label>Log Discovery:</Label>
         <Description>Log Alexa discovery requests in Event Log.</Description>
     </Field>
-    <Field id="help-1" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+    <Field id="help-2" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
         <Label>^ If you tick this box, then the Alexa-Hue Bridge will log discovery requests from Alexa to the Event Log, showing all devices published. This can result in a lot of log entries!</Label>
     </Field>
 
-    <Field id="separator-2" type="separator" visibleBindingValue="true"/> 
+    <Field id="separator-3" type="separator" visibleBindingValue="true"/> 
 
 	<Field id="topLabel" type="label" fontSize="small" fontColor="darkgray">
 		<Label>If you are having problems with the plugin, you can enable extra logging by checking this button to display debugging options. Use with caution!</Label>
@@ -23,8 +38,8 @@
         <Label>Debugging:</Label>
         <Description>Enable debugging options.</Description>
     </Field>
-    <Field id="separator-3" type="separator" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"/> 
-    <Field id="help-2" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+    <Field id="separator-4" type="separator" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"/> 
+    <Field id="help-3" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
         <Label>Select monitoring / debugging to be performed by ticking required option(s) below and then clicking Save.</Label>
     </Field>
     <Field type="checkbox" id="debugGeneral" default="false" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">

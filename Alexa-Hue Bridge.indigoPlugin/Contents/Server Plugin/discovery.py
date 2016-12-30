@@ -201,7 +201,7 @@ class Responder(threading.Thread):
                     PLUGIN.responderLogger.error(u"Open a terminal window and type 'sudo lsof -i :%i' to see a list of processes that have bound to that port and quit those applications." % UPNP_PORT)
                     self.stop()
                 else:
-                    PLUGIN.responderLogger.debug("Responder.run: socket error: %s - %s" % (str(value), message))
+                    PLUGIN.responderLogger.error("Responder.run: socket error: %s - %s" % (str(value), message))
 
             PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
         except StandardError, e:

@@ -42,7 +42,13 @@ Plugin Configuration
 
 ![Plugin Configuration](doc-images/config_plugin.png)
 
-There are two configuration options for the plugin:
+There are three configuration options for the plugin:
+
+* ** Override Host IP Address **
+
+    If you tick this box, then you can specify the host address of the Apple Mac that the Alexa-Hue Bridge plugin is running on (rather than the plugin discovering it automatically). This is not normally needed but can help in problem situations.
+    When this is ticked, it reveals the field to enter the Host IP Address into. It is your responsibility to specify it correctly e.g. '192.168.1.100' (no quotes).
+    Reload the Plugin after saving this change.
 
 * ** Log Discovery **
 
