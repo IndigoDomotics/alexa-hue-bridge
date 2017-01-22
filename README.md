@@ -70,7 +70,7 @@ Managing Devices
 
 Create an emulated Hue Bridge by creating a new Indigo device:
 
-![Create New Device](doc-images/config_plugin.png)
+![Create New Device](doc-images/devices.png)
 
 New... \> Type: Alexa-Hue Bridge, Model: Emulated Hue Bridge
 

@@ -308,12 +308,13 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                 "sat": 143
             },
             "swversion": "6601820",
-            "name": self.name.encode('ascii', 'ignore'),
+            "name": self.name, 
             "manufacturername": "Philips",
             "uniqueid": str(self.dev.id),
             "type": "Extended color light",
             "modelid": "LCT001"
         }
+            # above return had line: "name": self.name.encode('ascii', 'ignore'), # Removed ascii encoding
 
     def _createFullDeviceDict(self, ahbDevId):
         PLUGIN.serverLogger.debug(u"_createFullDeviceDict called")
