@@ -556,7 +556,7 @@ class Plugin(indigo.PluginBase):
 
                 # Add/update/delete the name to the props as appropriate.
                 altName = self.globals['hueBridge'][ahbDevId]['devicesToAddToPublishedList'][devId]
-                self.generalLogger.debug(u"addDevice: valuesDict['altName']: |%s|" % str(altName))
+                self.generalLogger.debug(u"addDevice: valuesDict['altName']: |%s|" % altName)
                 if len(altName):
                     ahbProps[ALT_NAME_KEY] = altName
                 elif ALT_NAME_KEY in ahbProps:
@@ -868,7 +868,7 @@ class Plugin(indigo.PluginBase):
         # Add or update the name to the plugin's cached list
         self.globals['hueBridge'][ahbDevId]['devicesToAddToPublishedList'][deviceId] = valuesDict["altName"]
 
-        self.generalLogger.debug(u"valuesDict = " + str(valuesDict))
+        # self.generalLogger.debug(u"valuesDict = " + str(valuesDict))  # Commented out due to umlaut error on 31-Jan-2017
         # Clear out the name field and the source device field
         valuesDict["sourceDeviceMenu"] = ""
         valuesDict["enableAltNameField"] = "False"
