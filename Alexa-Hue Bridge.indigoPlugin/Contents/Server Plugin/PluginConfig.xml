@@ -29,17 +29,45 @@
         <Label>^ If you tick this box, then the Alexa-Hue Bridge will log discovery requests from Alexa to the Event Log, showing all devices published. This can result in a lot of log entries!</Label>
     </Field>
 
-    <Field id="separator-3" type="separator" visibleBindingValue="true"/> 
+    <Field id="separator-3" type="separator"/>
 
-	<Field id="topLabel" type="label" fontSize="small" fontColor="darkgray">
-		<Label>If you are having problems with the plugin, you can enable extra logging by checking this button to display debugging options. Use with caution!</Label>
-	</Field>
+     <Field type="textfield" id="networkCheckURL" default="www.google.com" alwaysUseInDialogHeightCalc="true">
+        <Label>Network Check URL:</Label>
+    </Field>
+    <Field id="help-3" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
+        <Label>^ The plugin will try and access this URL to determine whether there is a network available with Internet access. If there isn't, It will repeatedly retry until there is and after a short period of there being no network available with Internet access, it will retry silently in the background.</Label>
+    </Field>
+
+    <Field id="separator-4" type="separator"/>  
+
+    <Field type="checkbox" id="updateCheck" defaultValue="true" tooltip="Tick to turn on checking for new Alexa-Hue Bridge plugin version">
+        <Label>Check for updates:</Label>
+        <Description>Enable to check for new version of Alexa-Hue Bridge plugin.</Description>
+    </Field>
+    <Field id="help-4" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
+        <Label>^ Use Update Check to check for a new release of the Alexa-Hue Bridge plugin on Github. Use plugin menu to update plugin. Set check frequency in field below.</Label>
+    </Field>
+    <Field id="checkFrequency" type="menu" defaultValue="DAILY" enabledBindingId="updateCheck" tooltip="Select update check frequency">
+        <Label>Check Frequency:</Label>
+        <List>
+            <Option value="DAILY">Check every day</Option>
+            <Option value="WEEKLY">Check every week</Option>
+        </List>
+    </Field>
+
+    <Field id="separator-5" type="separator"/>  
+
     <Field type="checkbox" id="debugEnabled" default="false">
         <Label>Debugging:</Label>
         <Description>Enable debugging options.</Description>
     </Field>
-    <Field id="separator-4" type="separator" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"/> 
-    <Field id="help-3" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+    <Field id="help-5" type="label" fontSize="small" fontColor="darkgray" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
+        <Label>^ If you are having problems with the plugin, you can enable extra logging by checking this button to display debugging options. Use with caution!</Label>
+    </Field>
+
+    <Field id="separator-6" type="separator" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"/> 
+
+    <Field id="help-6" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
         <Label>Select monitoring / debugging to be performed by ticking required option(s) below and then clicking Save.</Label>
     </Field>
     <Field type="checkbox" id="debugGeneral" default="false" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">

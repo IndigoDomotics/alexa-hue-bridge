@@ -85,8 +85,8 @@ class Httpd(threading.Thread):
         PLUGIN = plugin
 
         self.ahbDevId = ahbDevId  # Alexa-Hue Bridge device Id
-        self.host = PLUGIN.globals['hueBridge'][ahbDevId]['host']
-        self.port = PLUGIN.globals['hueBridge'][ahbDevId]['port']
+        self.host = PLUGIN.globals['alexaHueBridge'][ahbDevId]['host']
+        self.port = PLUGIN.globals['alexaHueBridge'][ahbDevId]['port']
         self.server = None
 
     def run(self):
@@ -107,6 +107,7 @@ class Httpd(threading.Thread):
                     raise
                 PLUGIN.serverLogger.error("HTTP port %i already in use - waiting 15 seconds to try again (will retry %i more times)" % (self.port, retryCount))
                 time.sleep(15)
+                PLUGIN.serverLogger.error("HTTP port %i already in use - now retrying" % (self.port, retryCount))
                 retryCount -= 1
             except Exception, e:
                 PLUGIN.serverLogger.debug("Exception in HTTPD run method:\n%s" % str(e))
@@ -179,16 +180,16 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
 
             # Get individual device status - I'm actually not sure what the last two cases are for, but this is taken directly
             # from the source script so I just left it in.
-            get_device_match = re.search(r'/lights/([0-9]+)$',request_string)
+            get_device_match = re.search(r'/lights/([a-fA-F0-9]+)$',request_string)
             if get_device_match:
                 PLUGIN.serverLogger.debug("hue_listener.get_response for '%s', found /lights/ in request string: %s" % (ahbDevId, request_string))
-                return self.getHueDeviceJSON(ahbDevId, int(get_device_match.group(1)))
+                return self.getHueDeviceJSON(ahbDevId, get_device_match.group(1))  # Hash key
             elif request_file in FILE_LIST:
                 PLUGIN.serverLogger.debug("hue_listener.get_response for '%s', serving from a local file: %s" % (ahbDevId, request_file))
                 if request_file == "/description.xml":
-                    hostXml = PLUGIN.globals['hueBridge'][ahbDevId]['host']
-                    portXml = PLUGIN.globals['hueBridge'][ahbDevId]['port']
-                    uuidXml = PLUGIN.globals['hueBridge'][ahbDevId]['uuid']
+                    hostXml = PLUGIN.globals['alexaHueBridge'][ahbDevId]['host']
+                    portXml = PLUGIN.globals['alexaHueBridge'][ahbDevId]['port']
+                    uuidXml = PLUGIN.globals['alexaHueBridge'][ahbDevId]['uuid']
                     desc_xml = DESCRIPTION_XML % {'host': hostXml, 'port': portXml, 'uuid': uuidXml}
                     PLUGIN.serverLogger.debug("hue_listener.get_response for '%s', returning file description.xml with data:\n%s" % (ahbDevId, desc_xml))
                     return desc_xml
@@ -214,9 +215,10 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
         try:
             PLUGIN.serverLogger.debug("put_response request_string: %s" % request_string)
 
-            put_device_match = re.search(r'/lights/([0-9]+)/state$',request_string)
+            put_device_match = re.search(r'/lights/([a-fA-F0-9]+)/state$',request_string)
             if put_device_match:
-                device_id = int(put_device_match.group(1))
+                alexaDeviceHashedKey = str(put_device_match.group(1))
+                alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
                 request = json.loads(request_data)
                 list = []
                 for key in request:
@@ -224,9 +226,9 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                     list.append({"success":{key:request[key]}})
                     if key.lower() == "on":
                         # ON == TRUE, OFF == FALSE
-                        PLUGIN.turnOnOffDevice(ahbDevId, device_id, request[key])
+                        PLUGIN.turnOnOffDevice(ahbDevId, alexaDeviceNameKey, request[key])
                     if key.lower() == "bri":
-                        PLUGIN.setDeviceBrightness(ahbDevId, device_id, int(float(request[key])/254.0*100.0))
+                        PLUGIN.setDeviceBrightness(ahbDevId, alexaDeviceNameKey, int(float(request[key])/254.0*100.0))
                 return json.dumps(list)
         except StandardError, e:
             PLUGIN.serverLogger.error(u"StandardError detected in put_response for device %s. Line '%s' has error='%s'" % (ahbDevId, sys.exc_traceback.tb_lineno, e))
@@ -236,14 +238,15 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
     # This is the method that's called to build the member device list. Note
     # that valuesDict is read-only so any changes you make to it will be discarded.
     ########################################
-    def getHueDeviceJSON(self, ahbDevId, deviceId=None):
+    def getHueDeviceJSON(self, ahbDevId, alexaDeviceHashedKey=None):
         try:
             self.ahbDevName = indigo.devices[ahbDevId].name
             PLUGIN.serverLogger.debug(u"CALLER - GET_HUE_DEVICE_JSON [START]: '%s', SELF=%s" % (self.ahbDevName, self.selfId))
-            if deviceId:
+            if alexaDeviceHashedKey:
                 # Return the JSON for a single device
-                PLUGIN.serverLogger.debug(u"getHueDeviceJSON called with device ID: %i" % deviceId)
-                deviceDict = self._createDeviceDict(ahbDevId, indigo.devices[deviceId], False)
+                alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
+                PLUGIN.serverLogger.debug(u"getHueDeviceJSON called with Alexa Device Hash Key [Name]: %s [%s]" % (alexaDeviceHashedKey, alexaDeviceNameKey))
+                deviceDict = self._createDeviceDict(ahbDevId, alexaDeviceHashedKey, False)
                 PLUGIN.serverLogger.debug(u"json: \n%s" % json.dumps(deviceDict, indent=4))
                 PLUGIN.serverLogger.debug(u"CALLER - GET_HUE_DEVICE_JSON [END-DEVICE]: '%s', SELF=%s" % (self.ahbDevName, self.selfId))
                 return json.dumps(deviceDict)
@@ -270,60 +273,113 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
     ################################################################################
     # Utility methods to create the Hue dicts that will be converted to JSON
     ################################################################################
-    def _createDeviceDict(self, ahbDevId, devId, isDiscovery):
+    def _createDeviceDict(self, ahbDevId, alexaDeviceHashedKey, isShowDiscoveryInEventLog):
         PLUGIN.serverLogger.debug(u"_createDeviceDict called")
-        self.ahbDevName = indigo.devices[ahbDevId].name
-        self.dev = indigo.devices[devId]
-        self.brightness = self.dev.states.get("brightness", 255)
-        self.name = self.dev.name
-        self.ahbKey = KEY_PREFIX + str(ahbDevId)  # Set key for this Alexa-Hue Bridge
-        if self.ahbKey in self.dev.pluginProps:
-            if ALT_NAME_KEY in self.dev.pluginProps[self.ahbKey]:
-                self.name = self.dev.pluginProps[self.ahbKey][ALT_NAME_KEY]
 
-        if isDiscovery:
-            PLUGIN.globals['discoveryLists'][self.discoveryId].append(self.name)
+        try:
 
-        return {
-            "pointsymbol": {
-                "1": "none",
-                "3": "none",
-                "2": "none",
-                "5": "none",
-                "4": "none",
-                "7": "none",
-                "6": "none",
-                "8": "none",
-            },
-            "state": {
-                "on": self.dev.onState,
-                "xy": [0.4589, 0.4103],
-                "alert": "none",
-                "reachable": self.dev.enabled,
-                "bri": self.brightness,
-                "hue": 14924,
-                "colormode": "hs",
-                "ct": 365,
-                "effect": "none",
-                "sat": 143
-            },
-            "swversion": "6601820",
-            "name": self.name, 
-            "manufacturername": "Philips",
-            "uniqueid": str(self.dev.id),
-            "type": "Extended color light",
-            "modelid": "LCT001"
-        }
-            # above return had line: "name": self.name.encode('ascii', 'ignore'), # Removed ascii encoding
+            ahbDev = indigo.devices[ahbDevId]
+            publishedAlexaDevices =  json.loads(ahbDev.pluginProps['alexaDevices'])
+
+            alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
+            if alexaDeviceNameKey in publishedAlexaDevices:
+                alexaDeviceData = publishedAlexaDevices[alexaDeviceNameKey]
+                alexaDeviceName = alexaDeviceData['name']
+                if alexaDeviceData['mode'] == 'D':  # Device
+                    devId = int(alexaDeviceData['devId'])
+                    dev = indigo.devices[devId]
+                    onState = dev.onState
+                    reachable = dev.enabled
+                    brightness = dev.states.get("brightness", 255)
+                    uniqueId = alexaDeviceHashedKey
+                elif alexaDeviceData['mode'] == 'A':  # Action
+                    onOffVariableId = int(alexaDeviceData["variableOnOffId"])
+                    if onOffVariableId != 0:
+                        onState = bool(indigo.variables[onOffVariableId].value)
+                    else:
+                        onState = True  # Default to On ???
+                    reachable = True
+                    dimVariableId = int(alexaDeviceData["variableDimId"])
+                    if dimVariableId != 0:
+                        brightness = int(indigo.variables[dimVariableId].value)
+                    else:
+                        brightness = 255  # Default to 255 (max brightness)
+                    uniqueId = alexaDeviceHashedKey
+                else:
+                    return {}
+            else:
+                PLUGIN.serverLogger.error(u"_createDeviceDict: alexaDeviceNameKey '%s' not in published devices; HashKey='%s'" % (alexaDeviceNameKey, alexaDeviceHashedKey))
+                return {}
+
+            if isShowDiscoveryInEventLog:
+                PLUGIN.globals['discoveryLists'][self.discoveryId].append(alexaDeviceName)
+
+            return {
+                "pointsymbol": {
+                    "1": "none",
+                    "3": "none",
+                    "2": "none",
+                    "5": "none",
+                    "4": "none",
+                    "7": "none",
+                    "6": "none",
+                    "8": "none",
+                },
+                "state": {
+                    "on": onState,
+                    "xy": [0.4589, 0.4103],
+                    "alert": "none",
+                    "reachable": reachable,
+                    "bri": brightness,
+                    "hue": 14924,
+                    "colormode": "hs",
+                    "ct": 365,
+                    "effect": "none",
+                    "sat": 143
+                },
+                "swversion": "6601820",
+                "name": alexaDeviceName, 
+                "manufacturername": "Philips",
+                "uniqueid": uniqueId,
+                "type": "Extended color light",
+                "modelid": "LCT001"
+            }
+                # above return had line: "name": self.name.encode('ascii', 'ignore'), # Removed ascii encoding
+
+        except Exception, e:
+            PLUGIN.serverLogger.error(u"_createDeviceDict exception: \n%s" % str(traceback.format_exc(10)))
+
 
     def _createFullDeviceDict(self, ahbDevId):
         PLUGIN.serverLogger.debug(u"_createFullDeviceDict called")
         returnDict = dict()
-        PLUGIN.serverLogger.debug(u"_createFullDeviceDict: publishedDevices: \n%s" % str(PLUGIN.globals['hueBridge'][ahbDevId]['publishedDevices']))
+        PLUGIN.serverLogger.debug(u"_createFullDeviceDict: publishedAlexaDevices: \n%s" % str(PLUGIN.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']))
 
-        for self.devId in PLUGIN.globals['hueBridge'][ahbDevId]['publishedDevices'].keys():
-            self.newDeviceDict = self._createDeviceDict(ahbDevId, self.devId, PLUGIN.globals['showDiscoveryInEventLog'])
-            PLUGIN.serverLogger.debug(u"_createFullDeviceDict: new device added: \n%s" % str(self.newDeviceDict))
-            returnDict[str(self.devId)] = self.newDeviceDict
+        ahbDev = indigo.devices[ahbDevId]
+        publishedAlexaDevices =  json.loads(ahbDev.pluginProps['alexaDevices'])
+
+        for alexaDeviceNameKey, AlexaDeviceData in publishedAlexaDevices.iteritems():
+            alexaDeviceHashKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['hashKey']
+            newDeviceDict = self._createDeviceDict(ahbDevId, alexaDeviceHashKey, PLUGIN.globals['showDiscoveryInEventLog'])
+            PLUGIN.serverLogger.debug(u"_createFullDeviceDict: new device added: \n%s" % str(newDeviceDict))
+            returnDict[alexaDeviceHashKey] = newDeviceDict
         return returnDict
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -66,12 +66,12 @@ class Broadcaster(threading.Thread):
 
         try:
             self.ahbDevId = ahbDevId
-            self._host = PLUGIN.globals['hueBridge'][self.ahbDevId]['host']
-            self._port = PLUGIN.globals['hueBridge'][self.ahbDevId]['port']
-            self.uuid = PLUGIN.globals['hueBridge'][self.ahbDevId]['uuid']
-            self._timeout = PLUGIN.globals['hueBridge'][self.ahbDevId]['expireMinutes']
+            self._host = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host']
+            self._port = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']
+            self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
+            self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
 
-            PLUGIN.broadcasterLogger.debug("Broadcaster.__init__ for '%s' is running" % PLUGIN.globals['hueBridge'][self.ahbDevId]['hubName'])
+            PLUGIN.broadcasterLogger.debug("Broadcaster.__init__ for '%s' is running" % PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName'])
 
             self.interrupted = False
 
@@ -104,7 +104,7 @@ class Broadcaster(threading.Thread):
                         sock.close()
                         return
             PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
-            PLUGIN.broadcasterLogger.debug("Broadcaster.run for '%s' is ending" % PLUGIN.globals['hueBridge'][self.ahbDevId]['hubName'])
+            PLUGIN.broadcasterLogger.debug("Broadcaster.run for '%s' is ending" % PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName'])
 
         except StandardError, e:
             PLUGIN.broadcasterLogger.error(u"StandardError detected in Broadcaster.Run for '%s'. Line '%s' has error='%s'" % (indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
@@ -147,12 +147,12 @@ class Responder(threading.Thread):
 
         try:
             self.ahbDevId = ahbDevId
-            self._host = PLUGIN.globals['hueBridge'][self.ahbDevId]['host']
-            self._port = PLUGIN.globals['hueBridge'][self.ahbDevId]['port']
-            self.uuid = PLUGIN.globals['hueBridge'][self.ahbDevId]['uuid']
-            self._timeout = PLUGIN.globals['hueBridge'][self.ahbDevId]['expireMinutes']
+            self._host = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host']
+            self._port = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']
+            self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
+            self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
 
-            PLUGIN.responderLogger.debug("Responder.__init__ for '%s' is running" % PLUGIN.globals['hueBridge'][self.ahbDevId]['hubName'])
+            PLUGIN.responderLogger.debug("Responder.__init__ for '%s' is running" % PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName'])
 
             self.interrupted = False
 

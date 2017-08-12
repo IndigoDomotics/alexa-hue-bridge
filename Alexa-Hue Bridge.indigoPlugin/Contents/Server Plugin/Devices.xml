@@ -1,76 +1,186 @@
 <Devices>
-	<Device type="relay" id="emulatedHueBridge">
-		<Name>Emulated Hue Bridge</Name>
+    <Device type="relay" id="emulatedHueBridge">
+        <Name>Emulated Hue Bridge [Devices]</Name>
         <ConfigUI>
             <Field type="textfield" id="port" defaultValue="auto" hidden="false">
                 <Label>Port:</Label>
                 <Description>Unique Port for this Alexa-Hue Bridge.</Description>
             </Field>
-            <Field id="separator-1" type="separator" alwaysUseInDialogHeightCalc="true"/>
+            <Field id="separator-1" type="separator" alwaysUseInDialogHeightCalc="true"/>   <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ -->
+
 
             <Field type="checkbox" id="autoStartDiscovery" defaultValue="true" hidden="false">
                 <Label>Auto Start:</Label>
                 <Description>Automatically start discovery on Device Start.</Description>
             </Field>
-            <Field id="expireMinutes" type="textfield" defaultValue="0">
-                <Label>Expiration in minutes:</Label>
+            <Field id="discoveryExpiration" type="menu" defaultValue="0">
+                <Label>Auto Start Discovery Expiration:</Label>
+                <List>
+                    <Option value="0">Discovery Permanently On</Option>
+                    <Option value="1">1 Minute</Option>
+                    <Option value="2">2 Minutes</Option>
+                    <Option value="3">3 Minutes</Option>
+                    <Option value="4">4 Minutes</Option>
+                    <Option value="5">5 Minutes</Option>
+                    <Option value="6">6 Minutes</Option>
+                    <Option value="7">7 Minutes</Option>
+                    <Option value="8">8 Minutes</Option>
+                    <Option value="9">9 Minutes</Option>
+                    <Option value="10">10 Minutes [Default]</Option>
+                </List>
             </Field>
             <Field id="expireMinutesLabel" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>This is the number of minutes the discovery process will broadcast and Alexa devices will find Indigo devices when you say "Alexa, discover devices". It must be a whole number from 0 to 10 minutes. During this time, other apps on your Mac may not be able to use UPNP. If you specify 0, once started, discovery will run until you explicitly stop it. You can start and stop discovery broadcasting by turning the Alexa-Hue Bridge device 'on' and 'off'.</Label>
+                <Label>This is for how long the auto-start discovery process will broadcast and Alexa devices will find Indigo devices when you say "Alexa, discover devices". It must be a whole number from 1 to 10 minutes or if you specify 'Discovery Permanently On', once auto-started, discovery will run until you explicitly stop it. You can start and stop discovery broadcasting by turning the Alexa-Hue Bridge device 'on' and 'off'. While discovery is running, other apps on your Mac may not be able to use UPNP. </Label>
             </Field>
-            <Field id="separator-2" type="separator" alwaysUseInDialogHeightCalc="true"/>
+
+            <Field id="separator-2" type="separator" alwaysUseInDialogHeightCalc="true"/>  <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ -->
+
+            <Field id="alexaDevicesListGlobal" type="menu"  default="_selectalexadevice|_SelectAlexaDevice|0" readonly="YES" rows="5">
+                <Label>Allocated Alexa names:</Label>
+                <List class="self" method="alexaDevicesListGlobal" dynamicReload="true"/>
+                <CallbackMethod>alexaDevicesListGlobalSelection</CallbackMethod>
+            </Field>
             <Field id="help-01" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>You can use the Assigned Alexa names menu below to check if the name is already assigned as an Alexa device. Selecting a menu entry will identify the corresponding Indigo device and on which Hue Bridge it resides.</Label>
+                <Label>^ You can use the Allocated Alexa names menu above to check if the name is already allocated as an Alexa device. Selecting a menu entry will identify on which Hue Bridge it resides and the corresponding Indigo Device or Action(s).</Label>
             </Field>
-            <Field id="alexaNamesList" type="menu"  default="0" readonly="YES" rows="5">
-                <Label>Assigned Alexa names:</Label>
-                <List class="self" method="alexaNamesList" dynamicReload="true"/>
-                <CallbackMethod>identifyAssignedDeviceAndHueBridgeForAlexaName</CallbackMethod>
+
+            <Field id="alexaNameActionDevice" type="menu" hidden="true"  readonly="YES" defaultValue="X">
+                <Label>Actions or Device?:</Label>
+                <List>
+                    <Option value="X">None</Option>
+                    <Option value="D">Device</Option>
+                    <Option value="A">Action</Option>
+                </List>
             </Field>
-            <Field id="alexaNameIndigoDevice" type="textfield" readonly="YES" >
-                <Label>Indigo Device:</Label>
-            </Field>
-            <Field id="alexaNameHueBridge" type="textfield" readonly="YES" >
+
+            <Field id="alexaNameHueBridge" type="textfield" readonly="YES" visibleBindingId="alexaNameActionDevice" visibleBindingValue="A,D">
                 <Label>Hue Bridge:</Label>
             </Field>
-            <Field id="separator-2B" type="separator" alwaysUseInDialogHeightCalc="true"/>
+
+            <Field id="alexaNameIndigoDevice" type="textfield" readonly="YES" visibleBindingId="alexaNameActionDevice" visibleBindingValue="D">
+                <Label>Indigo Device:</Label>
+            </Field>
+            <Field id="alexaNameIndigoOnAction" type="textfield" readonly="YES" visibleBindingId="alexaNameActionDevice" visibleBindingValue="A">
+                <Label>Indigo ON Action:</Label>
+            </Field>
+            <Field id="alexaNameIndigoOffAction" type="textfield" readonly="YES" visibleBindingId="alexaNameActionDevice" visibleBindingValue="A">
+                <Label>Indigo OFF Action:</Label>
+            </Field>
+            <Field id="alexaNameIndigoOnOffActionVariable" type="textfield" readonly="YES" visibleBindingId="alexaNameActionDevice" visibleBindingValue="A">
+                <Label>Indigo ON/OFF Action Variable:</Label>
+            </Field>
+            <Field id="alexaNameIndigoDimAction" type="textfield" readonly="YES" visibleBindingId="alexaNameActionDevice" visibleBindingValue="A">
+                <Label>Indigo DIM Action:</Label>
+            </Field>
+            <Field id="alexaNameIndigoDimActionVariable" type="textfield" readonly="YES" visibleBindingId="alexaNameActionDevice" visibleBindingValue="A">
+                <Label>Indigo DIM Action Variable:</Label>
+            </Field>
+
+            <Field id="separator-3" type="separator" alwaysUseInDialogHeightCalc="true"/>  <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ -->
 
             <Field id="showLimitMessage" type="checkbox" hidden="true" defaultValue="False">
                 <Label/>
             </Field>
             <Field id="showLimitMessageLabel" type="label" fontColor="red" fontSize="small" visibleBindingId="showLimitMessage" visibleBindingValue="true">
-                <Label>You have reached 27 device limit imposed by Amazon Alexa for this Bridge. Create a new Bridge Device or consider Device Groups to group similar devices into a single device.</Label>
+                <Label>You have now reached the 27 device limit imposed by Amazon Alexa for this Bridge. Create a new Alexa-Hue Bridge Device to define additional Alexa Devices.</Label>
             </Field>
-            <Field id="sourceDeviceMenu" type="menu" default="0">
-                <Label>Device to publish:</Label>
+
+            <!--  PUBLISH ACTION / PUBLISH DEVICE: COMMON -->
+
+            <Field id="alexaDevicesList" type="menu"  default="_newalexaname|_NewAlexaName|0" readonly="YES" rows="5" alwaysUseInDialogHeightCalc="true">
+                <Label>Alexa Option:</Label>
+                <List class="self" method="alexaDevicesListLocal" dynamicReload="true"/>
+                <CallbackMethod>alexaDevicesListLocalSelection</CallbackMethod>
+            </Field>
+
+            <Field id="updateAlexaNamesListLabel" type="label" fontColor="darkgray" alwaysUseInDialogHeightCalc="true" alignWithControl="true">
+                <Label>^ Choose 'Add New Alexa Device' to set-up a new Alexa Device, an existing Alexa Device from the list to update it or 'Enable Save' to enable changes to be saved.</Label>
+            </Field>
+
+            <Field id="newAlexaDevice" type="textfield" hidden="true" defaultValue="NEW">
+                <Label/>
+            </Field>
+
+            <Field id="newAlexaName" type="textfield" visibleBindingId="newAlexaDevice" visibleBindingValue="NEW" alwaysUseInDialogHeightCalc="true">
+                <Label>New Alexa Device Name:</Label>
+            </Field>
+            <Field id="updatedAlexaDeviceName" type="textfield" visibleBindingId="newAlexaDevice" visibleBindingValue="EXISTING" alwaysUseInDialogHeightCalc="true">
+                <Label>Alexa Device Name:</Label>
+            </Field>
+            <Field id="newupdatedAlexaDeviceNameLabel" type="label" fontColor="darkgray" alignWithControl="true" visibleBindingId="newAlexaDevice" visibleBindingValue="NEW, EXISTING" alwaysUseInDialogHeightCalc="true">
+                <Label>^ Choose a unique name for the Alexa device. You may leave it empty if you are going to assign an Indigo Device to this Alexa Device, in which case the Indigo Device Name will be used.</Label>
+            </Field>
+
+
+            <Field id="actionOrDevice" type="menu" default="d" dynamicReload="true" visibleBindingId="newAlexaDevice" visibleBindingValue="NEW, EXISTING" alwaysUseInDialogHeightCalc="true">
+                <Label>Indigo Device or Action(s)?:</Label>
+                <List>
+                    <Option value="A">Indigo Action(s)</Option>
+                    <Option value="D">Indigo Device</Option>
+                </List>
+            </Field>
+
+            <!--  SELECT DEVICE -->
+
+            <Field id="sourceDeviceMenu" type="menu" default="0" visibleBindingId="actionOrDevice" visibleBindingValue="D" alwaysUseInDialogHeightCalc="true">
+                <Label>Indigo Device:</Label>
                 <List class="self" method="devicesWithOnState"/>
-                <CallbackMethod>selectDeviceToAdd</CallbackMethod>
+                <CallbackMethod>selectDeviceToAddUpdate</CallbackMethod>
             </Field>
-            <Field id="enableAltNameField" type="checkbox" hidden="true" defaultValue="false">
-                <Label/>
+
+            <!--  SELECT ACTIONs -->
+
+            <Field id="sourceOnActionMenu" type="menu" default="0" visibleBindingId="actionOrDevice" visibleBindingValue="A" alwaysUseInDialogHeightCalc="true">
+                <Label>Indigo ON Action:</Label>
+                <List class="self" method="actionsToList" dynamicReload="true"/>
             </Field>
-            <Field id="altName" type="textfield" enabledBindingId="enableAltNameField">
-                <Label>Alternate name:</Label>
+            <Field id="sourceOffActionMenu" type="menu" default="0" visibleBindingId="actionOrDevice" visibleBindingValue="A" alwaysUseInDialogHeightCalc="true">
+                <Label>Indigo OFF Action:</Label>
+                <List class="self" method="actionsToList" dynamicReload="true"/>
             </Field>
-            <Field id="altNameLabel" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>If you want Alexa to recognize a different name for this device, enter it above. Otherwise, leave it blank to use the default device name.</Label>
+            <Field id="sourceOnOffActionVariableMenu" type="menu" default="0" visibleBindingId="actionOrDevice" visibleBindingValue="A" alwaysUseInDialogHeightCalc="true">
+                <Label>Indigo On/Off Action Variable:</Label>
+                <List class="self" method="dimVariablesToList" dynamicReload="true"/>
             </Field>
-            <Field id="addDevice" type="button" enabledBindingId="enableAltNameField">
-                <Label/>
-                <Title>Add/Update Device</Title>
-                <CallbackMethod>addDevice</CallbackMethod>
+            <Field id="sourceOnOffActionVariableLabel" type="label" fontColor="darkgray" visibleBindingId="actionOrDevice" visibleBindingValue="AA,AU" alwaysUseInDialogHeightCalc="true" alignWithControl="true">
+                <Label>^ The variable above will be pre-filled with the ON/OFF value returned by Alexa prior to invoking the ON/OFF Action (The value in this variable can therefore be accessed in the ON/OFF Action).</Label>
             </Field>
-            <Field id="sep1" type="separator"/>
+            <Field id="sourceDimActionMenu" type="menu" default="0" visibleBindingId="actionOrDevice" visibleBindingValue="A" alwaysUseInDialogHeightCalc="true">
+                <Label>Indigo DIM Action:</Label>
+                <List class="self" method="actionsToListIncludingNone" dynamicReload="true"/>
+            </Field>
+            <Field id="sourceDimActionVariableMenu" type="menu" default="0" visibleBindingId="actionOrDevice" visibleBindingValue="A" alwaysUseInDialogHeightCalc="true">
+                <Label>Indigo Dim Action Variable:</Label>
+                <List class="self" method="dimVariablesToList" dynamicReload="true"/>
+            </Field>
+            <Field id="sourceDimActionVariableLabel" type="label" fontColor="darkgray" visibleBindingId="actionOrDevice" visibleBindingValue="AA,AU" alwaysUseInDialogHeightCalc="true" alignWithControl="true">
+                <Label>^ The variable above will be pre-filled with the DIM value returned by Alexa prior to invoking the DIM Action (The value in this  variable can therefore be accessed in the DIM Action).</Label>
+            </Field>
+
+            <!--  ADD / UPDATE DEVICE / ACTIONS -->
+
+            <Field id="addNewAlexaDevice" type="button" visibleBindingId="newAlexaDevice" visibleBindingValue="NEW" alwaysUseInDialogHeightCalc="true">
+                <Title>Add New Alexa Device</Title>
+                <CallbackMethod>addNewAlexaDevice</CallbackMethod>
+            </Field>
+
+            <Field id="updateAlexaDevice" type="button" visibleBindingId="newAlexaDevice" visibleBindingValue="EXISTING" alwaysUseInDialogHeightCalc="true">
+                <Title>Update Alexa Device</Title>
+                <CallbackMethod>updateAlexaDevice</CallbackMethod>
+            </Field>
+
+            <Field id="separator-4" type="separator"/>  <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++++ ++ -->
+
             <Field id="publishedLabel" type="label" fontColor="darkgray">
-                <Label>This is the list of devices currently published to this bridge. There is a limit of 27 devices currently imposed by the Amazon implementation for each bridge. If you specified an alternate name, it will show in parenthesis after the Indigo name.</Label>
+                <Label>This is the list of Alexa Devices that will be published for this Alexe-Hue Bridge when you click Save. There is a limit of 27 devices currently imposed by the Amazon implementation for each bridge.</Label>
             </Field>
-            <Field id="memberDeviceList" type="list" rows="15">
-                <Label>Published devices:</Label>
-                <List class="self" method="memberDevices" dynamicReload="true"/>
+            <Field id="publishedAlexaDevicesList" type="list" rows="3">
+                <Label>Published Alexa Devices:</Label>
+                <List class="self" method="publishedAlexaDevicesList" dynamicReload="true"/>
             </Field>
             <Field id="deleteDevices" type="button">
                 <Label/>
-                <Title>Delete Devices</Title>
+                <Title>Delete Device(s)</Title>
                 <CallbackMethod>deleteDevices</CallbackMethod>
             </Field>
             <Field id="instructions" type="label" fontSize="regular" fontColor="darkgray">
@@ -79,7 +189,7 @@
 
         </ConfigUI>
 
-    	<UiDisplayStateId>onOffState</UiDisplayStateId>
-	</Device>
+        <UiDisplayStateId>onOffState</UiDisplayStateId>
+    </Device>
 
 </Devices>
