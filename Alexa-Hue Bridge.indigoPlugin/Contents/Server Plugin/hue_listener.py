@@ -228,7 +228,7 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                         # ON == TRUE, OFF == FALSE
                         PLUGIN.turnOnOffDevice(ahbDevId, alexaDeviceNameKey, request[key])
                     if key.lower() == "bri":
-                        PLUGIN.setDeviceBrightness(ahbDevId, alexaDeviceNameKey, int(float(request[key])/254.0*100.0))
+                        PLUGIN.setDeviceBrightness(ahbDevId, alexaDeviceNameKey, int(round((float(request[key]) * 100.0 ) / 255.0)))  # 2017-AUG-15
                 return json.dumps(list)
         except StandardError, e:
             PLUGIN.serverLogger.error(u"StandardError detected in put_response for device %s. Line '%s' has error='%s'" % (ahbDevId, sys.exc_traceback.tb_lineno, e))
