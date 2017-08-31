@@ -96,6 +96,8 @@ class Broadcaster(threading.Thread):
                 sock.sendto(self.broadcast_packet, (BCAST_IP, UPNP_PORT))
                 for x in range(BROADCAST_INTERVAL):
                     time.sleep(1)
+                    # Following code will only time out the Broadcaster Thread if self._timeout > 0 (valid values 0 thru 10 inclusive)
+                    # A value of zero means 'always on'
                     if self._timeout and time.time() > end_time:
                         PLUGIN.broadcasterLogger.debug("Broadcaster thread timed out")
                         self.stop()
@@ -179,6 +181,8 @@ class Responder(threading.Thread):
                 while True:
                     try:
                         data, addr = sock.recvfrom(1024)
+                        # Following code will only time out the Broadcaster Thread if self._timeout > 0 (valid values 0 thru 10 inclusive)
+                        # A value of zero means 'always on'
                         if self._timeout and time.time() > end_time:
                             PLUGIN.responderLogger.debug("Responder.run thread timed out")
                             self.stop()

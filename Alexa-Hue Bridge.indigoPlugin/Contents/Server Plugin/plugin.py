@@ -817,7 +817,7 @@ class Plugin(indigo.PluginBase):
             elif numberPublished == 1:
                 numberPublishedUI = 'one Alexa Device'
             else:
-                numberPublishedUI = str('%s Alexe Devices' % numberPublished)
+                numberPublishedUI = str('%s Alexa Devices' % numberPublished)
             self.generalLogger.info(u"'%s' updated and now has %s published" % (self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))
 
             self.generalLogger.debug(u"'closePrefsConfigUi' completed for '%s'" % self.globals['alexaHueBridge'][ahbDevId]['hubName'])
@@ -958,29 +958,56 @@ class Plugin(indigo.PluginBase):
                         variableOnOffId = int(self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['variableOnOffId'])
                         actionDimId = int(self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['actionDimId'])
                         variableDimId = int(self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['variableDimId'])
+                        
                         if actionOnId == 0:
                             valuesDict["alexaNameIndigoOnAction"] = 'NO ACTION'
                         else:
-                            valuesDict["alexaNameIndigoOnAction"] = indigo.actionGroups[actionOnId].name
+                            if actionOnId in indigo.actionGroups:
+                                valuesDict["alexaNameIndigoOnAction"] = indigo.actionGroups[actionOnId].name
+                            else:
+                                valuesDict["alexaNameIndigoOnAction"] = 'Action #%s not found' % actionOnId
+                        
                         if actionOffId == 0:
                             valuesDict["alexaNameIndigoOffAction"] = 'NO ACTION'
                         else:
-                            valuesDict["alexaNameIndigoOffAction"] = indigo.actionGroups[actionOffId].name
+                            if actionOffId in indigo.actionGroups:
+                                valuesDict["alexaNameIndigoOffAction"] = indigo.actionGroups[actionOffId].name
+                            else:
+                                valuesDict["alexaNameIndigoOffAction"] = 'Action #%s not found' % actionOffId
+                        
                         if variableOnOffId == 0:
                             valuesDict["alexaNameIndigoOnOffActionVariable"] = 'NO VARIABLE'
                         else:
-                            valuesDict["alexaNameIndigoOnOffActionVariable"] = indigo.variables[variableOnOffId].name
+                            if variableOnOffId in indigo.variables:
+                                valuesDict["alexaNameIndigoOnOffActionVariable"] = indigo.variables[variableOnOffId].name
+                            else:
+                                valuesDict["alexaNameIndigoOnOffActionVariable"] = 'Variable #%s not found' % variableOnOffId
+                        
                         if actionDimId == 0:
                             valuesDict["alexaNameIndigoDimAction"] = 'NO ACTION'
                         else:
-                            valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
+                            if actionDimId in indigo.actionGroups:
+                                valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
+                            else:
+                                valuesDict["alexaNameIndigoDimAction"] = 'Action #%s not found' % actionDimId
+                        
                         if variableDimId == 0:
                             valuesDict["alexaNameIndigoDimActionVariable"] = 'NO VARIABLE'
                         else:
-                            valuesDict["alexaNameIndigoDimActionVariable"] = indigo.variables[variableDimId].name
+                            if variableDimId in indigo.variables:
+                                valuesDict["alexaNameIndigoDimActionVariable"] = indigo.variables[variableDimId].name
+                            else:
+                                valuesDict["alexaNameIndigoDimActionVariable"] = 'Variable #%s not found' % variableDimId
+
                     else:
                         valuesDict["alexaNameActionDevice"] = "D"
-                        valuesDict["alexaNameIndigoDevice"] = self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['devName']
+                        deviceName = self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['devName']
+                        deviceId = int(self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['devId'])
+                        if deviceId in indigo.devices:
+                            valuesDict["alexaNameIndigoDevice"] = deviceName
+                        else:
+                            valuesDict["alexaNameIndigoDevice"] = 'Device #%s not found (\'%s\' )' % (deviceId, deviceName)
+
                 else:
                     mode = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['mode'] 
                     if mode == 'A':
@@ -990,29 +1017,54 @@ class Plugin(indigo.PluginBase):
                         variableOnOffId = int(self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['variableOnOffId'])
                         actionDimId = int(self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['actionDimId'])
                         variableDimId = int(self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['variableDimId'])
+                        
                         if actionOnId == 0:
                             valuesDict["alexaNameIndigoOnAction"] = 'NO ACTION'
                         else:
-                            valuesDict["alexaNameIndigoOnAction"] = indigo.actionGroups[actionOnId].name
+                            if actionOnId in indigo.actionGroups:
+                                valuesDict["alexaNameIndigoOnAction"] = indigo.actionGroups[actionOnId].name
+                            else:
+                                valuesDict["alexaNameIndigoOnAction"] = 'Action #%s not found' % actionOnId
+
                         if actionOffId == 0:
                             valuesDict["alexaNameIndigoOffAction"] = 'NO ACTION'
                         else:
-                            valuesDict["alexaNameIndigoOffAction"] = indigo.actionGroups[actionOffId].name
+                            if actionOffId in indigo.actionGroups:
+                                valuesDict["alexaNameIndigoOffAction"] = indigo.actionGroups[actionOffId].name
+                            else:
+                                valuesDict["alexaNameIndigoOffAction"] = 'Action #%s not found' % actionOffId
+                        
                         if variableOnOffId == 0:
                             valuesDict["alexaNameIndigoOnOffActionVariable"] = 'NO VARIABLE'
                         else:
-                            valuesDict["alexaNameIndigoOnOffActionVariable"] = indigo.variables[variableOnOffId].name
+                            if variableOnOffId in indigo.variables:
+                                valuesDict["alexaNameIndigoOnOffActionVariable"] = indigo.variables[variableOnOffId].name
+                            else:
+                                valuesDict["alexaNameIndigoOnOffActionVariable"] = 'Variable #%s not found' % variableOnOffId
+                        
                         if actionDimId == 0:
                             valuesDict["alexaNameIndigoDimAction"] = 'NO ACTION'
                         else:
-                            valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
+                            if actionDimId in indigo.actionGroups:
+                                valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
+                            else:
+                                valuesDict["alexaNameIndigoDimAction"] = 'Action #%s not found' % actionDimId
+                        
                         if variableDimId == 0:
                             valuesDict["alexaNameIndigoDimActionVariable"] = 'NO VARIABLE'
                         else:
-                            valuesDict["alexaNameIndigoDimActionVariable"] = indigo.variables[variableDimId].name
+                            if variableDimId in indigo.variables:
+                                valuesDict["alexaNameIndigoDimActionVariable"] = indigo.variables[variableDimId].name
+                            else:
+                                valuesDict["alexaNameIndigoDimActionVariable"] = 'Variable #%s not found' % variableDimId
                     else:
                         valuesDict["alexaNameActionDevice"] = "D"
-                        valuesDict["alexaNameIndigoDevice"] = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['devName']
+                        deviceName = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['devName']
+                        deviceId = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['devId']
+                        if deviceId in indigo.devices:
+                            valuesDict["alexaNameIndigoDevice"] = deviceName
+                        else:
+                            valuesDict["alexaNameIndigoDevice"] = 'Device #%s not found (\'%s\' )' % (deviceId, deviceName)
                 valuesDict["alexaNameHueBridge"] = indigo.devices[int(alexaHueBridgeId)].name
 
         return valuesDict
@@ -1370,9 +1422,12 @@ class Plugin(indigo.PluginBase):
                 alexaDeviceName = alexaData['name']
                 listName = alexaDeviceName
                 if alexaData['mode'] == 'D':  # Device
-                    dev = indigo.devices[alexaData['devId']]
-                    if dev.name != alexaDeviceName:
-                        listName += " = %s" % dev.name
+                    if alexaData['devId'] in indigo.devices:
+                        dev = indigo.devices[alexaData['devId']]
+                        if dev.name != alexaDeviceName:
+                            listName += " = %s" % dev.name
+                    else:
+                        listName += " = MISSING!"
                 else:  # Assume 'A' = Action
                     listName += " = ACTIONS"
                 alexaDeviceListKey = '%s|%s' % (alexaDeviceNameKey, alexaDeviceName)
