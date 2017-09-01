@@ -246,7 +246,7 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                 # Return the JSON for a single device
                 alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
                 PLUGIN.serverLogger.debug(u"getHueDeviceJSON called with Alexa Device Hash Key [Name]: %s [%s]" % (alexaDeviceHashedKey, alexaDeviceNameKey))
-                deviceDict = self._createDeviceDict(ahbDevId, alexaDeviceHashedKey, False)
+                deviceDict = self._createDeviceDict('access', ahbDevId, alexaDeviceHashedKey, False)
                 PLUGIN.serverLogger.debug(u"json: \n%s" % json.dumps(deviceDict, indent=4))
                 PLUGIN.serverLogger.debug(u"CALLER - GET_HUE_DEVICE_JSON [END-DEVICE]: '%s', SELF=%s" % (self.ahbDevName, self.selfId))
                 return json.dumps(deviceDict)
@@ -273,12 +273,12 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
     ################################################################################
     # Utility methods to create the Hue dicts that will be converted to JSON
     ################################################################################
-    def _createDeviceDict(self, ahbDevId, alexaDeviceHashedKey, isShowDiscoveryInEventLog):
+    def _createDeviceDict(self, function, ahbDevId, alexaDeviceHashedKey, isShowDiscoveryInEventLog):
         PLUGIN.serverLogger.debug(u"_createDeviceDict called")
 
         try:
-
             ahbDev = indigo.devices[ahbDevId]
+            ahbDevName = ahbDev.name
             publishedAlexaDevices =  json.loads(ahbDev.pluginProps['alexaDevices'])
 
             alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
@@ -287,21 +287,33 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                 alexaDeviceName = alexaDeviceData['name']
                 if alexaDeviceData['mode'] == 'D':  # Device
                     devId = int(alexaDeviceData['devId'])
-                    dev = indigo.devices[devId]
-                    onState = dev.onState
-                    reachable = dev.enabled
-                    brightness = dev.states.get("brightness", 255)
-                    uniqueId = alexaDeviceHashedKey
+                    if devId in indigo.devices:
+                        dev = indigo.devices[devId]
+                        onState = dev.onState
+                        reachable = dev.enabled
+                        brightness = dev.states.get("brightness", 255)
+                        uniqueId = alexaDeviceHashedKey
+                    else:
+                        PLUGIN.serverLogger.error(u"Unable to %s '%s' from '%s', associated device #%s not found" % (function, alexaDeviceName, ahbDevName, devId))
+                        return {}
                 elif alexaDeviceData['mode'] == 'A':  # Action
                     onOffVariableId = int(alexaDeviceData["variableOnOffId"])
                     if onOffVariableId != 0:
-                        onState = bool(indigo.variables[onOffVariableId].value)
+                        if onOffVariableId in indigo.variables:
+                            onState = bool(indigo.variables[onOffVariableId].value)
+                        else:
+                            PLUGIN.serverLogger.error(u"Unable to %s '%s' from '%s', associated On/Off variable #%s not found" % (function, alexaDeviceName, ahbDevName, onOffVariableId))
+                            return {}
                     else:
                         onState = True  # Default to On ???
                     reachable = True
                     dimVariableId = int(alexaDeviceData["variableDimId"])
                     if dimVariableId != 0:
-                        brightness = int(indigo.variables[dimVariableId].value)
+                        if dimVariableId in indigo.variables:                        
+                            brightness = int(indigo.variables[dimVariableId].value)
+                        else:
+                            PLUGIN.serverLogger.error(u"Unable to %s '%s' from '%s', associated Dim variable #%s not found" % (function, alexaDeviceName, ahbDevName, dimVariableId))
+                            return {}
                     else:
                         brightness = 255  # Default to 255 (max brightness)
                     uniqueId = alexaDeviceHashedKey
@@ -360,7 +372,7 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
 
         for alexaDeviceNameKey, AlexaDeviceData in publishedAlexaDevices.iteritems():
             alexaDeviceHashKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['hashKey']
-            newDeviceDict = self._createDeviceDict(ahbDevId, alexaDeviceHashKey, PLUGIN.globals['showDiscoveryInEventLog'])
+            newDeviceDict = self._createDeviceDict('publish', ahbDevId, alexaDeviceHashKey, PLUGIN.globals['showDiscoveryInEventLog'])
             PLUGIN.serverLogger.debug(u"_createFullDeviceDict: new device added: \n%s" % str(newDeviceDict))
             returnDict[alexaDeviceHashKey] = newDeviceDict
         return returnDict
