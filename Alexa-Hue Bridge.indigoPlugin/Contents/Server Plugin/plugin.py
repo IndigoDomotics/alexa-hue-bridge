@@ -1270,7 +1270,7 @@ class Plugin(indigo.PluginBase):
     # This is the method that's called to create a 64 character hash key generated from the Alexa Device Name Key
     ########################################
     def createHashKey(self, alexaDeviceNameKey):
-        hashKey =  hashlib.sha256(alexaDeviceNameKey).digest().encode("hex")  # [0:16]
+        hashKey =  hashlib.sha256(alexaDeviceNameKey.encode('ascii', 'ignore')).digest().encode("hex")  # [0:16]
         # hashKey = '12153392101'
         return hashKey
 
