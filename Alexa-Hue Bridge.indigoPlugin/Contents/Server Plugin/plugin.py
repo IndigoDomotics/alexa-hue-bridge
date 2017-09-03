@@ -926,7 +926,7 @@ class Plugin(indigo.PluginBase):
             alexaDeviceNameKey = alexaDeviceNameKey.lower()
             alexaDeviceName = alexaDeviceData['name']
             self.globals['alexaDevicesListGlobal'][alexaDeviceNameKey] = ahbDevId
-            alexaDeviceListKey= str('%s|%s|%s' %(alexaDeviceNameKey, alexaDeviceName, ahbDevId))
+            alexaDeviceListKey = alexaDeviceNameKey + '|' + alexaDeviceName + '|' + str(ahbDevId)
             allocatedAlexaDevicesListGlobal.append((alexaDeviceListKey, alexaDeviceName))
 
         if len(allocatedAlexaDevicesListGlobal) == 1:  # No Alexa Devices found
@@ -941,7 +941,7 @@ class Plugin(indigo.PluginBase):
         if "alexaDevicesListGlobal" in valuesDict:
             alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId = valuesDict["alexaDevicesListGlobal"].split("|")
             # mode: 'A' = Action, 'D' = Device
-            # Action has 4 ids: On,Off,DIM,VAR
+            # Action has 4 ids: On,Off,DIM,VAR x 2
             # Device has 1 id: device
 
             alexaHueBridgeId = int(alexaHueBridgeId)
@@ -1081,7 +1081,7 @@ class Plugin(indigo.PluginBase):
         for alexaDeviceNameKey, alexaDeviceData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():
             alexaDeviceNameKey = alexaDeviceNameKey.lower()
             alexaDeviceName = alexaDeviceData['name']
-            alexaDeviceListKey= str('%s|%s|%s' %(alexaDeviceNameKey.lower(), alexaDeviceName, ahbDevId))
+            alexaDeviceListKey = alexaDeviceNameKey + '|' + alexaDeviceName + '|' + str(ahbDevId)
             allocatedAlexaDevicesList.append((alexaDeviceListKey, alexaDeviceName))
 
         allocatedAlexaDevicesList = sorted(allocatedAlexaDevicesList, key= lambda item: item[0])
