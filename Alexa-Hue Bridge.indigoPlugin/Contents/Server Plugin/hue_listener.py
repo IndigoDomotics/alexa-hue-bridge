@@ -265,7 +265,7 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                     PLUGIN.serverLogger.debug(u"CALLER - PUT OF DISCOVERY LIST %s for '%s', SELF=%s = '%s'" % (self.discoveryId, self.ahbDevName, self.selfId, PLUGIN.globals['discoveryLists'][self.discoveryId]))
                     PLUGIN.globals['queues']['discoveryLogging'].put([self.discoveryId, self.threadName, self.ahbDevName, PLUGIN.globals['discoveryLists'][self.discoveryId]])
                 # PLUGIN.serverLogger.info(u"CALLER - GET_HUE_DEVICE_JSON [END-ALL]: '%s', SELF=%s, LENGTH=%s" % (self.ahbDevName, self.selfId, len(json.dumps(deviceListDict))))
-                PLUGIN.serverLogger.info(u"CALLER - GET_HUE_DEVICE_JSON [END-ALL]: '%s', SELF=%s" % (self.ahbDevName, self.selfId))
+                PLUGIN.serverLogger.debug(u"CALLER - GET_HUE_DEVICE_JSON [END-ALL]: '%s', SELF=%s" % (self.ahbDevName, self.selfId))
                 return json.dumps(deviceListDict)
         except Exception, e:
             PLUGIN.serverLogger.error(u"getHueDeviceJSON exception: \n%s" % str(traceback.format_exc(10)))
