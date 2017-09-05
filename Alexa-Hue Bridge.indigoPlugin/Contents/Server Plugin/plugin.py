@@ -916,7 +916,7 @@ class Plugin(indigo.PluginBase):
 
         self.globals['alexaDevicesListGlobal'] = {}
 
-        allocatedAlexaDevicesListGlobal = [(SELECT_FROM_ALEXA_DEVICE_LIST, "-- Select Alexa Device to Display Info --"), '0']
+        allocatedAlexaDevicesListGlobal = [(SELECT_FROM_ALEXA_DEVICE_LIST, "-- Select Alexa Device to Display Info --")]
 
         # scan list of other Alexa-Hue Bridges
         for alexaHueBridgeId, alexaHueBridgeData in self.globals['alexaHueBridge']['publishedOtherAlexaDevices'].iteritems():
@@ -1080,7 +1080,7 @@ class Plugin(indigo.PluginBase):
     def alexaDevicesListLocal(self, filter, valuesDict, typeId, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-        allocatedAlexaDevicesList = [(ALEXA_NEW_DEVICE, "-- Add New Alexa Device --"), '0']
+        allocatedAlexaDevicesList = [(ALEXA_NEW_DEVICE, "-- Add New Alexa Device --")]
 
 
         for alexaDeviceNameKey, alexaDeviceData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():
