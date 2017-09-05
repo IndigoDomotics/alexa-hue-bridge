@@ -82,7 +82,7 @@
                 <Label/>
             </Field>
             <Field id="showLimitMessageLabel" type="label" fontColor="red" fontSize="small" visibleBindingId="showLimitMessage" visibleBindingValue="true">
-                <Label>You have now reached the 27 device limit imposed by Amazon Alexa for this Bridge. Create a new Alexa-Hue Bridge Device to define additional Alexa Devices.</Label>
+                <Label>You have now reached the 20 device limit imposed by Amazon Alexa for this Bridge. Create a new Alexa-Hue Bridge Device to define additional Alexa Devices.</Label>
             </Field>
 
             <!--  PUBLISH ACTION / PUBLISH DEVICE: COMMON -->

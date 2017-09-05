@@ -818,7 +818,12 @@ class Plugin(indigo.PluginBase):
                 numberPublishedUI = 'one Alexa Device'
             else:
                 numberPublishedUI = str('%s Alexa Devices' % numberPublished)
-            self.generalLogger.info(u"'%s' updated and now has %s published" % (self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))
+
+            if numberPublished <= DEVICE_LIMIT:
+                self.generalLogger.info(u"'%s' updated and now has %s published" % (self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))
+            else:
+                self.generalLogger.error(u"'%s' updated and now has %s published [LIMIT OF %s DEVICES EXCEEDED - DISCOVERY MAY NOT WORK!!!]" % (self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI, DEVICE_LIMIT))
+                self.generalLogger.error(u"Move excess Alexa devices to another existing or new Alexa-Hue Bridge")
 
             self.generalLogger.debug(u"'closePrefsConfigUi' completed for '%s'" % self.globals['alexaHueBridge'][ahbDevId]['hubName'])
 
@@ -911,7 +916,7 @@ class Plugin(indigo.PluginBase):
 
         self.globals['alexaDevicesListGlobal'] = {}
 
-        allocatedAlexaDevicesListGlobal = [(SELECT_FROM_ALEXA_DEVICE_LIST, "-- Select Alexa Device to Display Info --")]
+        allocatedAlexaDevicesListGlobal = [(SELECT_FROM_ALEXA_DEVICE_LIST, "-- Select Alexa Device to Display Info --"), '0']
 
         # scan list of other Alexa-Hue Bridges
         for alexaHueBridgeId, alexaHueBridgeData in self.globals['alexaHueBridge']['publishedOtherAlexaDevices'].iteritems():
@@ -1075,7 +1080,7 @@ class Plugin(indigo.PluginBase):
     def alexaDevicesListLocal(self, filter, valuesDict, typeId, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-        allocatedAlexaDevicesList = [(ALEXA_NEW_DEVICE, "-- Add New Alexa Device --")]
+        allocatedAlexaDevicesList = [(ALEXA_NEW_DEVICE, "-- Add New Alexa Device --"), '0']
 
 
         for alexaDeviceNameKey, alexaDeviceData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():
@@ -1170,7 +1175,7 @@ class Plugin(indigo.PluginBase):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         if len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']) >= DEVICE_LIMIT:
-            errorText = "You can't publish any more Alexa Devices - you've reached the maximum of %i imposed by Amazon Alexa." % DEVICE_LIMIT
+            errorText = "You can't publish any more Alexa Devices - you've reached the maximum of %i imposed by the plugin on behalf of Amazon Alexa." % DEVICE_LIMIT
             self.generalLogger.error(errorText)
             errorsDict = indigo.Dict()
             errorsDict["showAlertText"] = errorText

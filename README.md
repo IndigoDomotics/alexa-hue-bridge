@@ -6,7 +6,7 @@ V3.x of this plugin emulates multiple Philips Hue bridges to publish Indigo devi
 The 3.x and higher versions of this plugin require Indigo V7.0+.
 Use the latest 1.x release for Indigo 6.
 
-There is a 27 device limit for each emulated Hue Bridge which is a limitation in Amazon's Alexa implementation. By supporting more than one emulated Hue Bridge this limit is now effectively bypassed.
+There is a 20 device limit for each emulated Hue Bridge which is imposed by the plugin to handle a limitation in Amazon's Alexa implementation. By supporting more than one emulated Hue Bridge this limit is now effectively bypassed.
 
 Version 3 adds the ability to directly control Indigo Actions in addition to Indigo Devices.
 
@@ -27,7 +27,20 @@ The plugin is quite straight-forward: the first thing you’ll want to do is ins
 Migration from Version 2
 ------------------------
 
-On the initial install there will be no Version 3 definitions for any of the V2 Alexa Devices previously known to an Alexa-Hue Bridge device. You will need to do an Edit Device Settings for each Alexa-Hue Bridge. When you do this, there will be a short delay while the plugin scans Indigo devices for V2 definitions associated with the Alexa-Hue Bridge you are editing. It will convert each Version 2 definition it discovers to Version 3 and output a message to the Indigo Event Log. When the Edit Device Settings displays, review the list of Published Devices and **very important do a Save**. Repeat this for each Alexa-Hue Bridge.
+On the initial install there will be no Version 3 definitions for any of the V2 Alexa Devices previously known to an Alexa-Hue Bridge device. You will need to do an Edit Device Settings for each Alexa-Hue Bridge. When you do this, there will be a short delay while the plugin scans Indigo devices for V2 definitions associated with the Alexa-Hue Bridge you are editing. It will convert each Version 2 definition it discovers to Version 3 and output a message to the Indigo Event Log.
+<pre><code>
+Alexa Device (Plugin V2.x.x) 'Device One' definition detected in Indigo Device 'Device One': Converting to V3 format.
+Alexa Device (Plugin V2.x.x) 'Device Two' definition detected in Indigo Device 'Device Two': Converting to V3 format.
+</code></pre>
+if you have more than 20 devices defined to a Version 2 Alexa-Hue Bridge, you will get a warning message (shown as an error to make sure you don't miss it!), similar to:
+<span style="color:red">
+'Alexa-Hue Bridge 1' updated and now has 25 Alexa Devices published [LIMIT OF 20 DEVICES EXCEEDED - DISCOVERY MAY NOT WORK!!!]
+Move excess Alexa devices to another existing or new Alexa-Hue Bridge
+</span>
+
+Although the plugin will convert more than 20 Alexa devices, it may result in the discovery appearing to work from the plugin's perspective but not for Alexa.
+
+When the Edit Device Settings displays, review the list of Published Devices and **very important do a Save**. Repeat this for each Alexa-Hue Bridge.
 
 Now the next important part, use the iOS Alexa App to forget all devices and then do a discovery which is best done by asking Alexa to 'Discover Devices'. If all goes to plan your devices will be discovered and your V2 definitions will have been converted to V3.
 
@@ -96,7 +109,7 @@ See the ** Migration from Version 2 ** section above for a description of Versio
 
 * **Port**
 
-    Default is Auto or specify a port. Normally leave as *Auto* and the plugin will select a port starting from *8178*. Once a port had been allocated the device properties will be updated with the allocated value and the port will assigned as the device's address.
+    Default is Auto or specify a port. Normally leave as *Auto* and the plugin will select a port inthe range *8178* thru *8200* and will start from *8178*. Once a port had been allocated the device properties will be updated with the allocated value and the port will assigned as the device's address. This can be subsequently changed if desired.
 
 * **Auto Start**
 
@@ -142,7 +155,7 @@ See the ** Migration from Version 2 ** section above for a description of Versio
 
 * **Add New Alexa Device / Update Alexa Device** 
 
-    When you’re ready to add a new or update an existing Alexa Device, click either the **Add New Alexa Device** button or **Update Alexa Device** button. The device will be added into the Published Alexa Devices list (see below). If you try and add more than 27 devices you will get an error message: "You have now reached the 27 device limit imposed by Amazon Alexa for this Bridge. Create a new Alexa-Hue Bridge Device to define additional Alexa Devices."
+    When you’re ready to add a new or update an existing Alexa Device, click either the **Add New Alexa Device** button or **Update Alexa Device** button. The device will be added into the Published Alexa Devices list (see below). If you try and add more than 20 devices you will get an error message: "You can't publish any more Alexa Devices - you've reached the maximum of 20 imposed by the plugin on behalf of Amazon Alexa."
 
     **Note:** You must click the *Save* button to make the changes permanent; see below.
 
@@ -162,8 +175,15 @@ See the ** Migration from Version 2 ** section above for a description of Versio
 
     Once you’re finished adding/editing/deleting published devices, click the *Save* button to make the changes permanent. Click the *Cancel* button to discard all changes.
 
-    **Note:** The **New Alexa Device Name** / **Alexa Device Name** must be empty to be able to save. This is to avoid any loss of data i.e. you have entered new or updated Alexa Device details and forgotten to do the add or update. If this occurs, you will get the following error, e.g. for a new Alexa Device:
+    **Note:** The **New Alexa Device Name** / **Alexa Device Name** must be empty to be able to save. This is to avoid any loss of data i.e. you have entered new or updated Alexa Device details and have forgotten to do the add or update. If this occurs, you will get the following error, e.g. for a new Alexa Device:
     ![Configure Device](doc-images/config_device_3.png)
+
+**Note:** From version 3.0.10 onwards, the plugin has reduced the limit of Alexa Devices per Alexa-Hue Bridge to 20. If you have an existing Alexa-Hue Bridge (pre 3.0.10) and you edit it with with more than 20 devices you will get a warning.
+<span style="color:red">
+'Alexa-Hue Bridge 1' updated and now has 25 Alexa Devices published [LIMIT OF 20 DEVICES EXCEEDED - DISCOVERY MAY NOT WORK!!!]
+Move excess Alexa devices to another existing or new Alexa-Hue Bridge
+</span>
+You will not be able to add any more devices to the Alexa-Hue bridge and should reduce the number of Alexa devices to 20 or less.
 
 
 Discovery
@@ -300,6 +320,8 @@ their Macs that use that port. It is by no means an exhaustive list.
 -   MythTV
 
 -   Sighthound Video
+
+-   HDHomeRun
 
 Feel free to add more, or report any other conflicts you find on [the forum
 thread](http://forums.indigodomo.com/viewtopic.php?f=65&t=15374) and we'll add

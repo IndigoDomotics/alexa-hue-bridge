@@ -13,7 +13,7 @@ PUBLISHED_KEY = "published"
 ALT_NAME_KEY = "alternate-name"
 ACTION_TYPE = "action-type"
 # DEVICE_LIMIT = 5 #  TESTING (30-JUL-2017)
-DEVICE_LIMIT = 27 # Imposed by the built-in Hue support in Alexa
+DEVICE_LIMIT = 20 # Imposed by the built-in Hue support in Alexa
 EMULATED_HUE_BRIDGE_TYPEID = 'emulatedHueBridge'  # See definition in Devices.xml
 
 NETWORK_AVAILABLE_CHECK_REMOTE_SERVER = 'www.google.com'
