@@ -94,7 +94,7 @@
             </Field>
 
             <Field id="updateAlexaNamesListLabel" type="label" fontColor="darkgray" alwaysUseInDialogHeightCalc="true" alignWithControl="true">
-                <Label>^ Choose 'Add New Alexa Device' to set-up a new Alexa Device, an existing Alexa Device from the list to update it or 'Enable Save' to enable changes to be saved.</Label>
+                <Label>^ To set-up a new Alexa Device, select 'Add New Alexa Device' otherwise select an existing Alexa Device from the pull-down list to update it.</Label>
             </Field>
 
             <Field id="newAlexaDevice" type="textfield" hidden="true" defaultValue="NEW">

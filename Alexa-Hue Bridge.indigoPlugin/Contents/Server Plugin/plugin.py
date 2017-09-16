@@ -127,7 +127,7 @@ class Plugin(indigo.PluginBase):
 
     def checkRateLimit(self):
         limiter = self.globals['update']['updater'].getRateLimit()
-        indigo.server.log('RateLimit {limit:%d remaining:%d resetAt:%d}' % limiter)
+        self.generalLogger.info('RateLimit {limit:%d remaining:%d resetAt:%d}' % limiter)
 
 
     def startup(self):
@@ -604,6 +604,25 @@ class Plugin(indigo.PluginBase):
         return super(Plugin, self).getDeviceConfigUiValues(pluginProps, typeId, ahbDevId)
 
     ########################################
+    # This method is called to load the stored json data and make sure the Alexa Name keys are valid before returning data
+    # i.e. remove leading/trailing spaces, remove caharcters ',', ';', replace multiple concurrent spaces with one space, force to lower case
+    ########################################
+    def jsonLoadsProcess(self, dataToLoad):
+
+        publishedAlexaDevices = json.loads(dataToLoad)
+
+        alexaDeviceNameKeyList = []
+        for alexaDeviceNameKey, alexaDeviceData in publishedAlexaDevices.iteritems():
+            alexaDeviceNameKeyList.append(alexaDeviceNameKey)
+
+        for alexaDeviceNameKey in alexaDeviceNameKeyList:
+            alexaDeviceNameKeyProcessed = ' '. join((alexaDeviceNameKey.strip().lower().replace(',',' ').replace(';',' ')).split())
+            if alexaDeviceNameKeyProcessed != alexaDeviceNameKey:
+                publishedAlexaDevices[alexaDeviceNameKeyProcessed] = publishedAlexaDevices.pop(alexaDeviceNameKey)
+
+        return publishedAlexaDevices
+
+    ########################################
     # This method is called to refresh the list of published Alexa devices for a hueBridge device.
     ########################################
     def retrievePublishedDevices(self, valuesDict, ahbDevId, infoMsg, convertVersionTwoDevices):
@@ -615,7 +634,7 @@ class Plugin(indigo.PluginBase):
             if 'alexaDevices' not in valuesDict:
                 valuesDict['alexaDevices'] = json.dumps({})  # Empty dictionary in JSON container
 
-            publishedAlexaDevices = json.loads(valuesDict['alexaDevices'])
+            publishedAlexaDevices = self.jsonLoadsProcess(valuesDict['alexaDevices'])
 
             for alexaDeviceNameKey, alexaDeviceData in publishedAlexaDevices.iteritems():
                 if alexaDeviceData['mode'] == 'D':  # Device
@@ -658,12 +677,12 @@ class Plugin(indigo.PluginBase):
                                     versionTwoAlexaDeviceName = dev.name
                                     if 'alternate-name' in versionTwoAlexaDeviceData:
                                         versionTwoAlexaDeviceName = versionTwoAlexaDeviceData['alternate-name']
-                                    versionTwoAlexaDeviceNameKey = versionTwoAlexaDeviceName.lower()
+                                    versionTwoAlexaDeviceNameKey = ' '. join((versionTwoAlexaDeviceName.strip().lower()).split())
                                     if 'published' in versionTwoAlexaDeviceData:
                                         if versionTwoAlexaDeviceData['published'].lower() == 'true':
                                             # Do validity checks and discard (with message) if invalid
-                                            if '|' in versionTwoAlexaDeviceName:
-                                                indigo.server.error(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Unable to convert as Alexa Device Name cannot contain the vertical bar character i.e. '|'." % (versionTwoAlexaDeviceName, dev.name)) 
+                                            if ('|' in versionTwoAlexaDeviceName) or (',' in versionTwoAlexaDeviceName) or (';' in versionTwoAlexaDeviceName):
+                                                self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Unable to convert as Alexa Device Name cannot contain the vertical bar character i.e. '|', the comma character i.e. ',' or the semicolon character i.e. ';'." % (versionTwoAlexaDeviceName, dev.name)) 
                                                 continue
 
                                             duplicateDetected = False
@@ -677,7 +696,7 @@ class Plugin(indigo.PluginBase):
                                                             self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Unable to convert as Alexa Device Name this Alexa-Hue Bridge." % (alexaDeviceName, dev.name)) 
                                                         else:
                                                             alexaHueBridgeName = indigo.devices[alexaHueBridgeId].name
-                                                            self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Unable to convert as Alexa Device Name is already allocated  on Alexa-Hue Bridge '%s'" % (alexaDeviceName, dev.name, alexaHueBridgeName)) 
+                                                            self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Unable to convert as Alexa Device Name is already allocated on Alexa-Hue Bridge '%s'" % (alexaDeviceName, dev.name, alexaHueBridgeName)) 
                                             if duplicateDetected:
                                                 continue
             
@@ -735,7 +754,7 @@ class Plugin(indigo.PluginBase):
                     props = alexaHueBridge.pluginProps
                     alexaHueBridgeId = alexaHueBridge.id
                     if 'alexaDevices' in props:
-                        publishedAlexaDevices = json.loads(props['alexaDevices'])
+                        publishedAlexaDevices = self.jsonLoadsProcess(props['alexaDevices'])
                         self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId] = {}
                         for alexaDeviceNameKey, alexaDeviceData in publishedAlexaDevices.iteritems():
                             if alexaDeviceData['mode'] == 'D':  # Device
@@ -756,7 +775,7 @@ class Plugin(indigo.PluginBase):
                             else:  # Not used
                                 continue
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in retrieveOtherPublishedDevices for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDev.id].name, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in retrieveOtherPublishedDevices for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def validateDeviceConfigUi(self, valuesDict, typeId, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
@@ -921,15 +940,16 @@ class Plugin(indigo.PluginBase):
         # scan list of other Alexa-Hue Bridges
         for alexaHueBridgeId, alexaHueBridgeData in self.globals['alexaHueBridge']['publishedOtherAlexaDevices'].iteritems():
            for alexaDeviceNameKey, alexaDeviceData in alexaHueBridgeData.iteritems():
-                alexaDeviceNameKey = alexaDeviceNameKey.lower()
-                alexaDeviceName = alexaDeviceData['name']
+                alexaDeviceNameKey = alexaDeviceNameKey.lower().replace(',',' ').replace(';',' ')
+                alexaDeviceName = alexaDeviceData['name'].replace(',',' ').replace(';',' ')
                 self.globals['alexaDevicesListGlobal'][alexaDeviceNameKey] = int(alexaHueBridgeId)
+                alexaDeviceListKey = alexaDeviceNameKey + '|' + alexaDeviceName + '|' + str(alexaHueBridgeId)
                 alexaDeviceListKey = str('%s|%s|%s' %(alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId))
                 allocatedAlexaDevicesListGlobal.append((alexaDeviceListKey, alexaDeviceName))
 
         for alexaDeviceNameKey, alexaDeviceData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():
-            alexaDeviceNameKey = alexaDeviceNameKey.lower()
-            alexaDeviceName = alexaDeviceData['name']
+            alexaDeviceNameKey = alexaDeviceNameKey.lower().replace(',',' ').replace(';',' ')
+            alexaDeviceName = alexaDeviceData['name'].replace(',',' ').replace(';',' ')
             self.globals['alexaDevicesListGlobal'][alexaDeviceNameKey] = ahbDevId
             alexaDeviceListKey = alexaDeviceNameKey + '|' + alexaDeviceName + '|' + str(ahbDevId)
             allocatedAlexaDevicesListGlobal.append((alexaDeviceListKey, alexaDeviceName))
@@ -1006,7 +1026,7 @@ class Plugin(indigo.PluginBase):
 
                     else:
                         valuesDict["alexaNameActionDevice"] = "D"
-                        deviceName = self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['devName']
+                        deviceName = self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['devName'].replace(',',' ').replace(';',' ')
                         deviceId = int(self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['devId'])
                         if deviceId in indigo.devices:
                             valuesDict["alexaNameIndigoDevice"] = deviceName
@@ -1064,7 +1084,7 @@ class Plugin(indigo.PluginBase):
                                 valuesDict["alexaNameIndigoDimActionVariable"] = 'Variable #%s not found' % variableDimId
                     else:
                         valuesDict["alexaNameActionDevice"] = "D"
-                        deviceName = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['devName']
+                        deviceName = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['devName'].replace(',',' ').replace(';',' ')
                         deviceId = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['devId']
                         if deviceId in indigo.devices:
                             valuesDict["alexaNameIndigoDevice"] = deviceName
@@ -1084,8 +1104,8 @@ class Plugin(indigo.PluginBase):
 
 
         for alexaDeviceNameKey, alexaDeviceData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():
-            alexaDeviceNameKey = alexaDeviceNameKey.lower()
-            alexaDeviceName = alexaDeviceData['name']
+            alexaDeviceNameKey = alexaDeviceNameKey.lower().replace(',',' ').replace(';',' ')
+            alexaDeviceName = alexaDeviceData['name'].replace(',',' ').replace(';',' ')
             alexaDeviceListKey = alexaDeviceNameKey + '|' + alexaDeviceName + '|' + str(ahbDevId)
             allocatedAlexaDevicesList.append((alexaDeviceListKey, alexaDeviceName))
 
@@ -1097,6 +1117,8 @@ class Plugin(indigo.PluginBase):
 
         if "alexaDevicesList" in valuesDict:
             alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId = valuesDict["alexaDevicesList"].split("|")
+            alexaDeviceNameKey.replace(',',' ').replace(';',' ')
+            alexaDeviceName.replace(',',' ').replace(';',' ')
 
             alexaHueBridgeId = int(alexaHueBridgeId)
             if  alexaHueBridgeId == 0:
@@ -1193,6 +1215,18 @@ class Plugin(indigo.PluginBase):
             errorsDict["showAlertText"] = "New Alexa Name cannot contain the vertical bar character i.e. '|'"
             return (valuesDict, errorsDict) 
 
+        if ',' in valuesDict["newAlexaName"]:
+            errorsDict = indigo.Dict()
+            errorsDict["newAlexaName"] = "New Alexa Name cannot contain the comma character i.e. ','"
+            errorsDict["showAlertText"] = "New Alexa Name cannot contain the comma character i.e. ','"
+            return (valuesDict, errorsDict) 
+
+        if ';' in valuesDict["newAlexaName"]:
+            errorsDict = indigo.Dict()
+            errorsDict["newAlexaName"] = "New Alexa Name cannot contain the semicolon character i.e. ';'"
+            errorsDict["showAlertText"] = "New Alexa Name cannot contain the semicolon character i.e. ';'"
+            return (valuesDict, errorsDict) 
+
         newAlexaName = valuesDict["newAlexaName"]
         newAlexaNameKey = newAlexaName.lower()
         if newAlexaNameKey in self.globals['alexaDevicesListGlobal']:
@@ -1227,7 +1261,7 @@ class Plugin(indigo.PluginBase):
 
 
         try:
-            publishedAlexaDevices = json.loads(valuesDict['alexaDevices'])
+            publishedAlexaDevices = self.jsonLoadsProcess(valuesDict['alexaDevices'])
             publishedAlexaDevices[newAlexaNameKey] = {}                
             publishedAlexaDevices[newAlexaNameKey]['hashKey'] = self.createHashKey(newAlexaNameKey) 
             publishedAlexaDevices[newAlexaNameKey]['name'] = newAlexaName
@@ -1266,7 +1300,7 @@ class Plugin(indigo.PluginBase):
                 valuesDict["showLimitMessage"] = True                
 
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in addDevice for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in updateAlexaDevice for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
         self.generalLogger.debug(u'addNewAlexaDevice VALUESDICT = %s' % valuesDict)
         return valuesDict
@@ -1298,6 +1332,18 @@ class Plugin(indigo.PluginBase):
             errorsDict = indigo.Dict()
             errorsDict["updatedAlexaDeviceName"] = "New Alexa Name cannot contain the vertical bar character i.e. '|'"
             errorsDict["showAlertText"] = "New Alexa Name cannot contain the vertical bar character i.e. '|'"
+            return (valuesDict, errorsDict)
+
+        if ',' in updatedAlexaDeviceName:
+            errorsDict = indigo.Dict()
+            errorsDict["updatedAlexaDeviceName"] = "New Alexa Name cannot contain the comma character i.e. ','"
+            errorsDict["showAlertText"] = "New Alexa Name cannot contain the comma character i.e. ','"
+            return (valuesDict, errorsDict)
+
+        if ';' in updatedAlexaDeviceName:
+            errorsDict = indigo.Dict()
+            errorsDict["updatedAlexaDeviceName"] = "New Alexa Name cannot contain the semicolon character i.e. ';'"
+            errorsDict["showAlertText"] = "New Alexa Name cannot contain the semicolon character i.e. ';'"
             return (valuesDict, errorsDict)
 
         if valuesDict["actionOrDevice"] == 'D':
@@ -1334,7 +1380,7 @@ class Plugin(indigo.PluginBase):
 
 
         try:
-            publishedAlexaDevices = json.loads(valuesDict['alexaDevices'])
+            publishedAlexaDevices = self.jsonLoadsProcess(valuesDict['alexaDevices'])
 
             updatedAlexaDeviceData = {}
             updatedAlexaDeviceData['hashKey'] = self.createHashKey(updatedAlexaDeviceNameKey) 
@@ -1344,7 +1390,7 @@ class Plugin(indigo.PluginBase):
                 dev = indigo.devices[devId]
                 updatedAlexaDeviceData['mode'] = 'D' 
                 updatedAlexaDeviceData['devId'] = devId 
-                updatedAlexaDeviceData['devName'] = dev.name
+                updatedAlexaDeviceData['devName'] = dev.name.replace(',',' ').replace(';',' ')
             else: # Assume 'A' = Action
                 updatedAlexaDeviceData['mode'] = 'A' 
                 updatedAlexaDeviceData['actionOnId']      = valuesDict["sourceOnActionMenu"]
@@ -1380,7 +1426,7 @@ class Plugin(indigo.PluginBase):
                 valuesDict["showLimitMessage"] = True                
 
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in addDevice for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in updateAlexaDevice for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
         self.generalLogger.debug(u'updateAlexaDevice VALUESDICT = %s' % valuesDict)
         return valuesDict
@@ -1396,7 +1442,7 @@ class Plugin(indigo.PluginBase):
 
         # Delete the device's properties for this plugin and delete the entry in self.globals['alexaHueBridge'][ahbDev.id]['publishedAlexaDevices']
 
-        publishedAlexaDevices = json.loads(valuesDict['alexaDevices'])
+        publishedAlexaDevices = self.jsonLoadsProcess(valuesDict['alexaDevices'])
 
         for alexaDevice in valuesDict['publishedAlexaDevicesList']:
             alexaDeviceNameKey, alexaDeviceName = alexaDevice.split('|')
@@ -1424,7 +1470,8 @@ class Plugin(indigo.PluginBase):
         returnList = list()
         if 'publishedAlexaDevices' in self.globals['alexaHueBridge'][ahbDevId]:
             for alexaDeviceNameKey, alexaData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():
-                alexaDeviceName = alexaData['name']
+                alexaDeviceNameKey = alexaDeviceNameKey.replace(',',' ').replace(';',' ')
+                alexaDeviceName = alexaData['name'].replace(',',' ').replace(';',' ')
                 listName = alexaDeviceName
                 if alexaData['mode'] == 'D':  # Device
                     if alexaData['devId'] in indigo.devices:
@@ -1467,7 +1514,7 @@ class Plugin(indigo.PluginBase):
     def turnOnOffDevice(self, ahbDevId, alexaDeviceNameKey, turnOn):
 
         ahbDev = indigo.devices[ahbDevId]
-        publishedAlexaDevices =  json.loads(ahbDev.pluginProps['alexaDevices'])
+        publishedAlexaDevices =  self.jsonLoadsProcess(ahbDev.pluginProps['alexaDevices'])
         alexaDeviceNameKey = alexaDeviceNameKey.lower()
         if alexaDeviceNameKey in publishedAlexaDevices:
             alexaDeviceData = publishedAlexaDevices[alexaDeviceNameKey]
@@ -1513,7 +1560,7 @@ class Plugin(indigo.PluginBase):
     def setDeviceBrightness(self, ahbDevId, alexaDeviceNameKey, brightness):
 
         ahbDev = indigo.devices[ahbDevId]
-        publishedAlexaDevices =  json.loads(ahbDev.pluginProps['alexaDevices'])
+        publishedAlexaDevices =  self.jsonLoadsProcess(ahbDev.pluginProps['alexaDevices'])
         alexaDeviceNameKey = alexaDeviceNameKey.lower()
         if alexaDeviceNameKey in publishedAlexaDevices:
             alexaDevice = publishedAlexaDevices[alexaDeviceNameKey]

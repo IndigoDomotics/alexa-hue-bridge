@@ -280,7 +280,7 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
         try:
             ahbDev = indigo.devices[ahbDevId]
             ahbDevName = ahbDev.name
-            publishedAlexaDevices =  json.loads(ahbDev.pluginProps['alexaDevices'])
+            publishedAlexaDevices =  self.jsonLoadsProcess(ahbDev.pluginProps['alexaDevices'])
 
             alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
             if alexaDeviceNameKey in publishedAlexaDevices:
@@ -369,7 +369,7 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
         PLUGIN.serverLogger.debug(u"_createFullDeviceDict: publishedAlexaDevices: \n%s" % str(PLUGIN.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']))
 
         ahbDev = indigo.devices[ahbDevId]
-        publishedAlexaDevices =  json.loads(ahbDev.pluginProps['alexaDevices'])
+        publishedAlexaDevices =  self.jsonLoadsProcess(ahbDev.pluginProps['alexaDevices'])
 
         for alexaDeviceNameKey, AlexaDeviceData in publishedAlexaDevices.iteritems():
             alexaDeviceHashKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['hashKey']
@@ -377,6 +377,27 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
             PLUGIN.serverLogger.debug(u"_createFullDeviceDict: new device added: \n%s" % str(newDeviceDict))
             returnDict[alexaDeviceHashKey] = newDeviceDict
         return returnDict
+
+    ########################################
+    # This method is called to load the stored json data and make sure the Alexa Name keys are valid before returning data
+    # i.e. remove leading/trailing spaces, remove caharcters ',', ';', replace multiple concurrent spaces with one space, force to lower case
+    ########################################
+    def jsonLoadsProcess(self, dataToLoad):
+
+        publishedAlexaDevices = json.loads(dataToLoad)
+
+        alexaDeviceNameKeyList = []
+        for alexaDeviceNameKey, alexaDeviceData in publishedAlexaDevices.iteritems():
+            alexaDeviceNameKeyList.append(alexaDeviceNameKey)
+
+        for alexaDeviceNameKey in alexaDeviceNameKeyList:
+            alexaDeviceNameKeyProcessed = ' '. join((alexaDeviceNameKey.strip().lower().replace(',',' ').replace(';',' ')).split())
+            if alexaDeviceNameKeyProcessed != alexaDeviceNameKey:
+                publishedAlexaDevices[alexaDeviceNameKeyProcessed] = publishedAlexaDevices.pop(alexaDeviceNameKey)
+
+        return publishedAlexaDevices
+
+
 
 
 

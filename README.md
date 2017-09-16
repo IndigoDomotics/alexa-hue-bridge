@@ -27,13 +27,16 @@ The plugin is quite straight-forward: the first thing you’ll want to do is ins
 Migration from Version 2
 ------------------------
 
-On the initial install there will be no Version 3 definitions for any of the V2 Alexa Devices previously known to an Alexa-Hue Bridge device. You will need to do an Edit Device Settings for each Alexa-Hue Bridge. When you do this, there will be a short delay while the plugin scans Indigo devices for V2 definitions associated with the Alexa-Hue Bridge you are editing. It will convert each Version 2 definition it discovers to Version 3 and output a message to the Indigo Event Log.
+On the initial install there will be no Version 3 definitions for any of the V2 Alexa Devices previously known to an Alexa-Hue Bridge device. You will need to do an Edit Device Settings for each Alexa-Hue Bridge. When you do this, there will be a short delay while the plugin scans Indigo devices for V2 definitions associated with the Alexa-Hue Bridge you are editing. It will convert each valid Version 2 definition it discovers to Version 3 and output a message to the Indigo Event Log.
 <pre><code>
 Alexa Device (Plugin V2.x.x) 'Device One' definition detected in Indigo Device 'Device One': Converting to V3 format.
 Alexa Device (Plugin V2.x.x) 'Device Two' definition detected in Indigo Device 'Device Two': Converting to V3 format.
 </code></pre>
-if you have more than 20 devices defined to a Version 2 Alexa-Hue Bridge, you will get a warning message (shown as an error to make sure you don't miss it!), similar to:
-<span style="color:red">
+In the event that the version 2 assigned Alexa name is invalid the migration will be skipped for this device. The name can't contain a vertical bar character ('|'), a comma character (',') or a semicolon character (';'). In the event that thsi happens an error message will be output to the Indigo Event log, similar to:<span style="color:red">
+Alexa Device (Plugin V2.x.x) 'detector, one' definition detected in Indigo Device 'Detector 1': Unable to convert as Alexa Device Name cannot contain the vertical bar character i.e. '|', the comma character i.e. ',' or the semicolon character i.e. ';'.
+</span>    
+
+if you have more than 20 devices defined to a Version 2 Alexa-Hue Bridge, you will get a warning message (shown as an error to make sure you don't miss it!), similar to:<span style="color:red">
 'Alexa-Hue Bridge 1' updated and now has 25 Alexa Devices published [LIMIT OF 20 DEVICES EXCEEDED - DISCOVERY MAY NOT WORK!!!]
 Move excess Alexa devices to another existing or new Alexa-Hue Bridge
 </span>
@@ -133,7 +136,7 @@ See the ** Migration from Version 2 ** section above for a description of Versio
 
 * **New Alexa Device Name**
 
-    If adding a new Alexa Device, enter the name that you want Alexa to respond to. If you are going to associate this new Alexa Device with an Indigo Device, you can leave the field blank and the plugin will use the Indigo device name as the Alexa name. Otherwise, if you are going to associate this new Alexa Device with Indigo Actions you have to provide a name. The name field is not allowed to contain a vertical bar character ('|'). You are not allowed to define duplicate Alexa Names (across all Alexa-Hue Bridges) and this will will be flagged as an error
+    If adding a new Alexa Device, enter the name that you want Alexa to respond to. If you are going to associate this new Alexa Device with an Indigo Device, you can leave the field blank and the plugin will use the Indigo device name as the Alexa name. Otherwise, if you are going to associate this new Alexa Device with Indigo Actions you have to provide a name. The name field is not allowed to contain a vertical bar character ('|'), a comma character (',') or a semicolon character (';'). You are not allowed to define duplicate Alexa Names (across all Alexa-Hue Bridges) and this will will be flagged as an error
 
 * **Alexa Device Name**
 
