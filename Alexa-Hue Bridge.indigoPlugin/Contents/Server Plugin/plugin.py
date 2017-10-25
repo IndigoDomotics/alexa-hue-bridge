@@ -133,38 +133,6 @@ class Plugin(indigo.PluginBase):
     def startup(self):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-        def is_connected():
-            try:
-                # see if we can resolve the host name -- tells us if there is
-                # a DNS listening
-                host = socket.gethostbyname(self.globals['networkAvailable']['checkUrl'])
-                # connect to the host -- tells us if the host is actually
-                # reachable
-                s = socket.create_connection((host, 80), 2)
-                self.generalLogger.info(u"Alexa-Hue Bridge network access check to %s successfully completed." % self.globals['networkAvailable']['checkUrl'])
-                return True
-            except:
-                pass
-            return False
-
-        isConnectedRetryCount = 0
-        self.globals['networkAvailable']['retryInterval'] = NETWORK_AVAILABLE_CHECK_RETRY_SECONDS_ONE
-        self.generalLogger.info(u"Alexa-Hue Bridge checking network access by attempting to access '%s'" % self.globals['networkAvailable']['checkUrl'])
-        while not is_connected():
-            isConnectedRetryCount += 1
-            if isConnectedRetryCount > NETWORK_AVAILABLE_CHECK_LIMIT_ONE:
-                self.globals['networkAvailable']['retryInterval'] = NETWORK_AVAILABLE_CHECK_RETRY_SECONDS_TWO
-            if isConnectedRetryCount < NETWORK_AVAILABLE_CHECK_LIMIT_TWO:
-                self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt %i - retrying in %i seconds" % (isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
-            elif isConnectedRetryCount == NETWORK_AVAILABLE_CHECK_LIMIT_TWO:
-                self.globals['networkAvailable']['retryInterval'] = NETWORK_AVAILABLE_CHECK_RETRY_SECONDS_THREE
-                self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt %i - will now silently retry every %i seconds" % (isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
-            elif isConnectedRetryCount > NETWORK_AVAILABLE_CHECK_LIMIT_TWO and isConnectedRetryCount % 12 == 0:
-                self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt %i - will continue to silently retry every %i seconds" % (isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
-
-            self.sleep(self.globals['networkAvailable']['retryInterval'])  # In seconds
-
-        self.globals['networkAvailable']['online'] = True  # Used by runConcurrent Thread which is waiting for this to go True
 
 
 
@@ -329,6 +297,40 @@ class Plugin(indigo.PluginBase):
         # This thread is used to detect plugin close down and check for updates
         try:
             self.sleep(5) # in seconds - Allow startup to complete
+
+
+            def is_connected():
+                try:
+                    # see if we can resolve the host name -- tells us if there is
+                    # a DNS listening
+                    host = socket.gethostbyname(self.globals['networkAvailable']['checkUrl'])
+                    # connect to the host -- tells us if the host is actually
+                    # reachable
+                    s = socket.create_connection((host, 80), 2)
+                    self.generalLogger.info(u"Alexa-Hue Bridge network access check to %s successfully completed." % self.globals['networkAvailable']['checkUrl'])
+                    return True
+                except:
+                    pass
+                return False
+
+            isConnectedRetryCount = 0
+            self.globals['networkAvailable']['retryInterval'] = NETWORK_AVAILABLE_CHECK_RETRY_SECONDS_ONE
+            self.generalLogger.info(u"Alexa-Hue Bridge checking network access by attempting to access '%s'" % self.globals['networkAvailable']['checkUrl'])
+            while not is_connected():
+                isConnectedRetryCount += 1
+                if isConnectedRetryCount > NETWORK_AVAILABLE_CHECK_LIMIT_ONE:
+                    self.globals['networkAvailable']['retryInterval'] = NETWORK_AVAILABLE_CHECK_RETRY_SECONDS_TWO
+                if isConnectedRetryCount < NETWORK_AVAILABLE_CHECK_LIMIT_TWO:
+                    self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt %i - retrying in %i seconds" % (isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
+                elif isConnectedRetryCount == NETWORK_AVAILABLE_CHECK_LIMIT_TWO:
+                    self.globals['networkAvailable']['retryInterval'] = NETWORK_AVAILABLE_CHECK_RETRY_SECONDS_THREE
+                    self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt %i - will now silently retry every %i seconds" % (isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
+                elif isConnectedRetryCount > NETWORK_AVAILABLE_CHECK_LIMIT_TWO and isConnectedRetryCount % 12 == 0:
+                    self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt %i - will continue to silently retry every %i seconds" % (isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
+
+                self.sleep(self.globals['networkAvailable']['retryInterval'])  # In seconds
+
+            self.globals['networkAvailable']['online'] = True  # Used by runConcurrent Thread which is waiting for this to go True
 
             while True:
                 if self.globals['networkAvailable']['online'] and self.globals['update']['check']:
