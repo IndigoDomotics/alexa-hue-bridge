@@ -30,10 +30,30 @@
                 </List>
             </Field>
             <Field id="expireMinutesLabel" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>This is for how long the auto-start discovery process will broadcast and Alexa devices will find Indigo devices when you say "Alexa, discover devices". It must be a whole number from 1 to 10 minutes or if you specify 'Discovery Permanently On', once auto-started, discovery will run until you explicitly stop it. You can start and stop discovery broadcasting by turning the Alexa-Hue Bridge device 'on' and 'off'. While discovery is running, other apps on your Mac may not be able to use UPNP. </Label>
+                <Label>^ This is for how long the auto-start discovery process will broadcast and Alexa devices will find Indigo devices when you say "Alexa, discover devices". It must be a whole number from 1 to 10 minutes or if you specify 'Discovery Permanently On', once auto-started, discovery will run until you explicitly stop it. You can start and stop discovery broadcasting by turning the Alexa-Hue Bridge device 'on' and 'off'. While discovery is running, other apps on your Mac may not be able to use UPNP. </Label>
             </Field>
 
             <Field id="separator-2" type="separator" alwaysUseInDialogHeightCalc="true"/>  <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ -->
+
+            <Field id="disableAlexaVariableList" type="menu"  default="0" readonly="YES" rows="5">
+                <Label>Disable Alexa (by Variable):</Label>
+                <List class="self" method="disableAlexaVariableList" dynamicReload="true"/>
+            </Field>
+
+            <Field id="disableAlexaVariableLabel" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true">
+                <Label>^ If you want to disable Alexa commands from being able to control any devices or actions defined by this Alexa-Hue Bridge, select a pre-defined "Disable Alexa" variable that must have been previously set to 'false' (allow Alexa commands) or 'true' (disable Alexa commands). The plugin will check this variable and depending on its setting either enable or disable Alexa commands being actioned for this Alexa-Hue Bridge.</Label>
+            </Field>
+
+            <Field id="hideDisableAlexaVariableMessages" type="checkbox" defaultValue="false" hidden="false">
+                <Label>Hide:</Label>
+                <Description>Hide Alexa Command ignored messages.</Description>
+            </Field>
+
+            <Field id="hideDisableAlexaVariableMessagesLabel" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true">
+                <Label>^ Hide Alexa Command ignored messages when the Disable Alexa variable is true (disable Alexa commands).</Label>
+            </Field>
+
+            <Field id="separator-3" type="separator" alwaysUseInDialogHeightCalc="true"/>  <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ -->
 
             <Field id="alexaDevicesListGlobal" type="menu"  default="_selectalexadevice|_SelectAlexaDevice|0" readonly="YES" rows="5">
                 <Label>Allocated Alexa names:</Label>
@@ -76,7 +96,11 @@
                 <Label>Indigo DIM Action Variable:</Label>
             </Field>
 
-            <Field id="separator-3" type="separator" alwaysUseInDialogHeightCalc="true"/>  <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ -->
+            <Field id="alexaNameIndigoHashKey" type="textfield" readonly="YES" visibleBindingId="alexaNameActionDevice" visibleBindingValue="A,D">
+                <Label>Indigo Hash Key:</Label>
+            </Field>
+
+            <Field id="separator-4" type="separator" alwaysUseInDialogHeightCalc="true"/>  <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ -->
 
             <Field id="showLimitMessage" type="checkbox" hidden="true" defaultValue="False">
                 <Label/>
@@ -169,7 +193,7 @@
                 <CallbackMethod>updateAlexaDevice</CallbackMethod>
             </Field>
 
-            <Field id="separator-4" type="separator"/>  <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++++ ++ -->
+            <Field id="separator-5" type="separator"/>  <!-- ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++++ ++ -->
 
             <Field id="publishedLabel" type="label" fontColor="darkgray">
                 <Label>This is the list of Alexa Devices that will be published for this Alexe-Hue Bridge when you click Save. There is a limit of 20 devices currently imposed by the plugin on behalf of Amazon Alexa for each bridge.</Label>

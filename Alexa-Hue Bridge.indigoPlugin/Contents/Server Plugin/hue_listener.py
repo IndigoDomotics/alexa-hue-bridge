@@ -144,8 +144,11 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
             if put_match and put_data_match:
                 put_request_full = put_match.group(1).replace("..","")
                 put_data = put_data_match.group(1)
-                self.send_headers("file.json")
-                self.request.sendall(self.put_response(self.server.alexaHueBridgeId, put_request_full, put_data))
+
+                put_reponse_data = self.put_response(self.server.alexaHueBridgeId, put_request_full, put_data)
+                if put_reponse_data is not None:
+                    self.send_headers("file.json")
+                    self.request.sendall(put_reponse_data)
         except StandardError, e:
             PLUGIN.serverLogger.error(u"StandardError detected in HttpdRequestHandler for device %s. Line '%s' has error='%s'" % (self.server.alexaHueBridgeId, sys.exc_traceback.tb_lineno, e))
 
@@ -218,7 +221,23 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
             put_device_match = re.search(r'/lights/([a-fA-F0-9]+)/state$',request_string)
             if put_device_match:
                 alexaDeviceHashedKey = str(put_device_match.group(1))
-                alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
+                if alexaDeviceHashedKey not in PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys']:
+                    PLUGIN.serverLogger.error(u"Alexa-Hue Bridge '%s' does not publish a device/action with Hash Key '%s'" % (indigo.devices[ahbDevId].name, alexaDeviceHashedKey))
+                    if alexaDeviceHashedKey in PLUGIN.globals['alexaHueBridge']['publishedHashKeys']:
+                        PLUGIN.serverLogger.error(u"Device/Action with Hash Key '{}' is published by Alexa-Hue Bridge '{}'".format(alexaDeviceHashedKey, indigo.devices[PLUGIN.globals['alexaHueBridge']['publishedHashKeys'][alexaDeviceHashedKey]].name))
+                        PLUGIN.serverLogger.error(u"Re-run discovery to correct this problem.")
+
+                    return
+                else:
+                    alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
+
+                disableAlexaVariableId = PLUGIN.globals['alexaHueBridge'][ahbDevId]['disableAlexaVariableId']
+
+                if disableAlexaVariableId in indigo.variables and indigo.variables[disableAlexaVariableId].value == 'true':
+                    if not PLUGIN.globals['alexaHueBridge'][ahbDevId]['hideDisableAlexaVariableMessages']:
+                        PLUGIN.serverLogger.info(u"Alexa-Hue Bridge '{}' Alexa commands disabled (by variable): Alexa command for device/ action '{}' ignored.".format(indigo.devices[ahbDevId].name, alexaDeviceNameKey))
+                    return
+
                 request = json.loads(request_data)
                 list = []
                 for key in request:
