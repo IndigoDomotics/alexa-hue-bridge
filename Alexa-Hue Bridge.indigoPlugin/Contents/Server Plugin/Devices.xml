@@ -41,7 +41,7 @@
             </Field>
 
             <Field id="disableAlexaVariableLabel" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true">
-                <Label>^ If you want to disable Alexa commands from being able to control any devices or actions defined by this Alexa-Hue Bridge, select a pre-defined "Disable Alexa" variable that must have been previously set to 'false' (allow Alexa commands) or 'true' (disable Alexa commands). The plugin will check this variable and depending on its setting either enable or disable Alexa commands being actioned for this Alexa-Hue Bridge.</Label>
+                <Label>^ If you want to disable Alexa commands from controlling any devices or actions defined by this Alexa-Hue Bridge, select a pre-defined "Disable Alexa" variable that must have been previously set to 'false' (allow Alexa commands) or 'true' (disable Alexa commands). The plugin checks this variable and depending on its setting will either enable or disable Alexa commands being actioned for this Alexa-Hue Bridge.</Label>
             </Field>
 
             <Field id="hideDisableAlexaVariableMessages" type="checkbox" defaultValue="false" hidden="false">

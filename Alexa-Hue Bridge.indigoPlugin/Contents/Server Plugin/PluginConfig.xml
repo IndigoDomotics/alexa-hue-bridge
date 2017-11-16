@@ -2,7 +2,7 @@
 <PluginConfig>
     <SupportURL>https://github.com/IndigoDomotics/alexa-hue-bridge</SupportURL>
     <Field id="description" type="label">
-        <Label>This plugin emulates multiple Philips Hue Hubs for the purpose of publishing up to 27 devices per hub to any Amazon Alexa device (Echo, FireTV, etc.). It provides a bridge between Indigo and Amazon Alexa. 😄</Label>
+        <Label>This plugin emulates multiple Philips Hue Hubs for the purpose of publishing up to 20 devices per hub to most Amazon Alexa devices (Echo, Dot, etc.). It provides a bridge between Indigo and Amazon Alexa. 😄</Label>
     </Field>
     
     <Field id="separator-1" type="separator" visibleBindingValue="true"/>

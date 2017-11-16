@@ -736,7 +736,7 @@ class Plugin(indigo.PluginBase):
                                             self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][versionTwoAlexaDeviceNameKey]['devName'] = dev.name
                                             self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][versionTwoAlexaDeviceNameKey]['devId']   = dev.id
 
-                                            self.globals['alexaHueBridge']['publishedHashKeys'][alexaDeviceData['hashKey']] = ahbDevId
+                                            self.globals['alexaHueBridge']['publishedHashKeys'][hashKey] = ahbDevId
 
                                             self.generalLogger.info(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Converting to V3 format." % (versionTwoAlexaDeviceName, dev.name)) 
 
