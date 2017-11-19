@@ -199,20 +199,21 @@ class Plugin(indigo.PluginBase):
             # DAILY 
             self.globals['update']['checkTimeIncrement'] = (24 * 60 * 60)  # In seconds
 
-        # Set Host IP Address override
+        # Set Host IP Address
+        self.globals['overriddenHostIpAddress'] = ''  # Assume not overridden
         if bool(valuesDict.get('overrideHostIpAddress', False)): 
             self.globals['overriddenHostIpAddress'] = valuesDict.get('overriddenHostIpAddress', '')
-            if self.globals['overriddenHostIpAddress'] != '':
-                self.generalLogger.info(u"Host IP Address overridden and specified as: '%s'" % (valuesDict.get('overriddenHostIpAddress', 'INVALID ADDRESS')))
 
         if self.globals['overriddenHostIpAddress'] != '':
             self.globals['hostAddress'] = self.globals['overriddenHostIpAddress']
+            self.generalLogger.info(u"Plugin Host IP Address overridden and specified as: '{}'".format(self.globals['hostAddress']))
         else:
             try:
                 self.globals['hostAddress'] = socket.gethostbyname(socket.gethostname())
             except socket.gaierror:
                 self.generalLogger.error("Computer has no host name specified. Check the Sharing system preference and restart the plugin once the name is resolved.")
                 self.globals['hostAddress'] = None
+            self.generalLogger.info(u"Plugin Host IP Address is discovered as: '{}'".format(self.globals['hostAddress']))
 
         # Set Discovery Logging
         self.globals['showDiscoveryInEventLog'] = bool(valuesDict.get("showDiscoveryInEventLog", True))
@@ -391,12 +392,8 @@ class Plugin(indigo.PluginBase):
 
             host_changed = False
             host = ahbDev.pluginProps.get("host", None)  # host is stored in dev.pluginprops (no user visability)
-            if host is None:
-                self.generalLogger.error("Unknown host computer - specify in Plugin Config")
-                # CAN'T START Alexa-Hue Bridge Device !!!
-                return
-
-            if host != self.globals['hostAddress']:
+            if host is None or host != self.globals['hostAddress']:
+                host = self.globals['hostAddress']
                 host_changed = True
 
             self.globals['alexaHueBridge'][ahbDev.id]['host'] = host
