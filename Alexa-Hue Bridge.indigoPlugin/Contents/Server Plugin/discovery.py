@@ -66,10 +66,10 @@ class Broadcaster(threading.Thread):
 
         try:
             self.ahbDevId = ahbDevId
-            self._host = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host']
-            self._port = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']
-            self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
-            self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
+            # self._host = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host']
+            # self._port = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']
+            # self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
+            # self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
 
             PLUGIN.broadcasterLogger.debug("Broadcaster.__init__ for '%s' is running" % PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName'])
 
@@ -77,9 +77,9 @@ class Broadcaster(threading.Thread):
 
             broadcast_data = {"broadcast_ip": BCAST_IP, 
                               "upnp_port": UPNP_PORT, 
-                              "server_ip": self._host, 
-                              "server_port": self._port, 
-                              "uuid": self.uuid}
+                              "server_ip": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host'], 
+                              "server_port": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port'], 
+                              "uuid": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']}
             self.broadcast_packet = broadcast_packet % broadcast_data
         except StandardError, e:
             PLUGIN.broadcasterLogger.error(u"StandardError detected in Broadcaster.Init for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
@@ -90,15 +90,15 @@ class Broadcaster(threading.Thread):
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 20)
             start_time = time.time()
-            end_time = start_time + (self._timeout * 60)
+            end_time = start_time + (PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] * 60)
             PLUGIN.broadcasterLogger.debug("Broadcaster.run: sending first broadcast:\n%s" % self.broadcast_packet)
             while True:
                 sock.sendto(self.broadcast_packet, (BCAST_IP, UPNP_PORT))
                 for x in range(BROADCAST_INTERVAL):
                     time.sleep(1)
-                    # Following code will only time out the Broadcaster Thread if self._timeout > 0 (valid values 0 thru 10 inclusive)
+                    # Following code will only time out the Broadcaster Thread if PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] > 0 (valid values 0 thru 10 inclusive)
                     # A value of zero means 'always on'
-                    if self._timeout and time.time() > end_time:
+                    if PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] and time.time() > end_time:
                         PLUGIN.broadcasterLogger.debug("Broadcaster thread timed out")
                         self.stop()
                     if self.interrupted:
@@ -116,29 +116,29 @@ class Broadcaster(threading.Thread):
         PLUGIN.broadcasterLogger.debug("Broadcaster thread stopped")
         self.interrupted = True
 
-    @property
-    def host(self):
-        return self._host
+    # @property
+    # def host(self):
+    #     return self._host
 
-    @host.setter
-    def host(self, host):
-        self._host = host
+    # @host.setter
+    # def host(self, host):
+    #     self._host = host
 
-    @property
-    def port(self):
-        return self._port
+    # @property
+    # def port(self):
+    #     return self._port
 
-    @port.setter
-    def port(self, port):
-        self._port = port
+    # @port.setter
+    # def port(self, port):
+    #     self._port = port
 
-    @property
-    def timeout(self):
-        return self._timeout
+    # @property
+    # def timeout(self):
+    #     return self._timeout
 
-    @timeout.setter
-    def timeout(self, timeout):
-        self._timeout = timeout
+    # @timeout.setter
+    # def timeout(self, timeout):
+    #     self._timeout = timeout
 
 class Responder(threading.Thread):
     def __init__(self, plugin,  ahbDevId):
@@ -149,18 +149,18 @@ class Responder(threading.Thread):
 
         try:
             self.ahbDevId = ahbDevId
-            self._host = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host']
-            self._port = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']
-            self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
-            self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
+            # self._host = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host']
+            # self._port = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']
+            # self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
+            # self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
 
             PLUGIN.responderLogger.debug("Responder.__init__ for '%s' is running" % PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName'])
 
             self.interrupted = False
 
-            response_data = {"server_ip": self._host, 
-                             "server_port": self._port, 
-                             "uuid": self.uuid}
+            response_data = {"server_ip": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host'], 
+                             "server_port": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port'], 
+                             "uuid": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']}
             self.response_packet = response_packet % response_data
         except StandardError, e:
             PLUGIN.responderLogger.error(u"StandardError detected in Responder.Init for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
@@ -174,16 +174,16 @@ class Responder(threading.Thread):
                 sock.bind(('', UPNP_PORT))
                 sock.setsockopt(socket.IPPROTO_IP,
                                 socket.IP_ADD_MEMBERSHIP,
-                                socket.inet_aton(BCAST_IP) + socket.inet_aton(self._host))
+                                socket.inet_aton(BCAST_IP) + socket.inet_aton(PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host']))
                 sock.settimeout(1)
                 start_time = time.time()
-                end_time = start_time + (self._timeout * 60)
+                end_time = start_time + (PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] * 60)
                 while True:
                     try:
                         data, addr = sock.recvfrom(1024)
-                        # Following code will only time out the Broadcaster Thread if self._timeout > 0 (valid values 0 thru 10 inclusive)
+                        # Following code will only time out the Broadcaster Thread if PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] > 0 (valid values 0 thru 10 inclusive)
                         # A value of zero means 'always on'
-                        if self._timeout and time.time() > end_time:
+                        if PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] and time.time() > end_time:
                             PLUGIN.responderLogger.debug("Responder.run thread timed out")
                             self.stop()
                             raise socket.error
@@ -227,27 +227,27 @@ class Responder(threading.Thread):
         PLUGIN.responderLogger.debug("Responder.respond: UDP Response sent to %s" % str(addr))
 
 
-    @property
-    def host(self):
-        return self._host
+    # @property
+    # def host(self):
+    #     return self._host
 
-    @host.setter
-    def host(self, host):
-        self._host = host
+    # @host.setter
+    # def host(self, host):
+    #     self._host = host
 
-    @property
-    def port(self):
-        return self._port
+    # @property
+    # def port(self):
+    #     return self._port
 
-    @port.setter
-    def port(self, port):
-        self._port = port
+    # @port.setter
+    # def port(self, port):
+    #     self._port = port
 
-    @property
-    def timeout(self):
-        return self._timeout
+    # @property
+    # def timeout(self):
+    #     return self._timeout
 
-    @timeout.setter
-    def timeout(self, timeout):
-        self._timeout = timeout
+    # @timeout.setter
+    # def timeout(self, timeout):
+    #     self._timeout = timeout
 

@@ -33,8 +33,7 @@ class ThreadDiscoveryLogging(threading.Thread):
             while True:
 
                 try:
-                    discoveryId, threadName, discoveryName, discoveryList = PLUGIN.globals['queues']['discoveryLogging'].get(True, 5)
-                    # PLUGIN.serverLogger.info(u"GET OF DISCOVERY LIST [%s, '%s'] for '%s' = '%s'" % (discoveryId, threadName, discoveryName, discoveryList))
+                    discoveryId, discoveryName, discoveryList = PLUGIN.globals['queues']['discoveryLogging'].get(True, 5)
                     if len(discoveryList) > 0:
                         discoveryList.sort()
                         PLUGIN.serverLogger.info(u"Alexa-Hue Bridge '%s' responding to Alexa discovery [request id: %s] ..." % (discoveryName, discoveryId))

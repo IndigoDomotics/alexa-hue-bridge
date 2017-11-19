@@ -44,6 +44,7 @@ class Plugin(indigo.PluginBase):
         self.globals['networkAvailable']['retryInterval'] = 10  # seconds
 
         self.globals['overriddenHostIpAddress'] = ''  # If needed, set in Plugin config
+        self.globals['hostAddress'] = ''
 
         self.globals['discoveryId'] = 0  # An id (count) of discoveries to be used by discovery logging (if enabled)
         self.globals['discoveryLists'] = {}  # Dictionary of discovery lists (entries will be keyed by 'discoveryId')
@@ -95,11 +96,12 @@ class Plugin(indigo.PluginBase):
 
         AlexaHueBridgeDeviceCount = 0
         for dev in indigo.devices.iter("self"):
-            if dev.deviceTypeId == EMULATED_HUE_BRIDGE_TYPEID and dev.enabled:
-                dev.setErrorStateOnServer(u"no ack")  # Default to 'no ack' status
-                AlexaHueBridgeDeviceCount += 1
+            if dev.deviceTypeId == EMULATED_HUE_BRIDGE_TYPEID:
+                if dev.enabled:
+                    dev.setErrorStateOnServer(u"no ack")  # Default to 'no ack' status
+                    AlexaHueBridgeDeviceCount += 1
                 try:
-                    self.globals['portList'].append(int(dev.address))
+                    self.globals['portList'].append(int(dev.address))  # Do this regardless whether device enabled or not
                 except:
                     pass
         self.generalLogger.debug(u'PORTLIST @Plugin INIT: %s' % self.globals['portList'])
@@ -203,6 +205,14 @@ class Plugin(indigo.PluginBase):
             if self.globals['overriddenHostIpAddress'] != '':
                 self.generalLogger.info(u"Host IP Address overridden and specified as: '%s'" % (valuesDict.get('overriddenHostIpAddress', 'INVALID ADDRESS')))
 
+        if self.globals['overriddenHostIpAddress'] != '':
+            self.globals['hostAddress'] = self.globals['overriddenHostIpAddress']
+        else:
+            try:
+                self.globals['hostAddress'] = socket.gethostbyname(socket.gethostname())
+            except socket.gaierror:
+                self.generalLogger.error("Computer has no host name specified. Check the Sharing system preference and restart the plugin once the name is resolved.")
+                self.globals['hostAddress'] = None
 
         # Set Discovery Logging
         self.globals['showDiscoveryInEventLog'] = bool(valuesDict.get("showDiscoveryInEventLog", True))
@@ -363,7 +373,6 @@ class Plugin(indigo.PluginBase):
             if not 'hubName' in self.globals['alexaHueBridge'][ahbDev.id]:    
                 self.globals['alexaHueBridge'][ahbDev.id]['hubName'] = ahbDev.name
 
-
             props = ahbDev.pluginProps
             if 'alexaDevices' not in props:
                 props['alexaDevices'] = json.dumps({})  # Empty dictionary in JSON container
@@ -374,44 +383,30 @@ class Plugin(indigo.PluginBase):
             uuid_changed = False
             uuidValue = ahbDev.pluginProps.get("uuid", str(uuid.uuid1()))
             if not 'uuid' in self.globals['alexaHueBridge'][ahbDev.id]:
-                self.globals['alexaHueBridge'][ahbDev.id]['uuid'] = uuidValue
                 uuid_changed = True
             else:
                 if self.globals['alexaHueBridge'][ahbDev.id]['uuid'] != uuidValue:
-                    self.globals['alexaHueBridge'][ahbDev.id]['uuid'] = uuidValue
                     uuid_changed = True
+            self.globals['alexaHueBridge'][ahbDev.id]['uuid'] = uuidValue
 
             host_changed = False
-            if self.globals['overriddenHostIpAddress'] != '':
-                host = self.globals['overriddenHostIpAddress']
-            else:
-                host = ahbDev.pluginProps.get("host", "auto")
-                if host == "auto":
-                    try:
-                        host = socket.gethostbyname(socket.gethostname())
-                    except socket.gaierror:
-                        self.generalLogger.error("Computer has no host name specified. Check the Sharing system preference and restart the plugin once the name is resolved.")
-                        host = None
+            host = ahbDev.pluginProps.get("host", None)  # host is stored in dev.pluginprops (no user visability)
+            if host is None:
+                self.generalLogger.error("Unknown host computer - specify in Plugin Config")
+                # CAN'T START Alexa-Hue Bridge Device !!!
+                return
 
-                    # CAN'T START HUB ?
-
-            if not 'host' in self.globals['alexaHueBridge'][ahbDev.id]:
-                self.globals['alexaHueBridge'][ahbDev.id]['host'] = host
+            if host != self.globals['hostAddress']:
                 host_changed = True
-            else:
-                if self.globals['alexaHueBridge'][ahbDev.id]['host'] != host:
-                    self.globals['alexaHueBridge'][ahbDev.id]['host'] = host
-                    host_changed = True
 
-            self.generalLogger.info(u"Hue Bridge '%s' Host: %s" % (self.globals['alexaHueBridge'][ahbDev.id]['hubName'], self.globals['alexaHueBridge'][ahbDev.id]['host']))
+            self.globals['alexaHueBridge'][ahbDev.id]['host'] = host
 
             port_changed = False
-            port = ahbDev.pluginProps.get("port", "auto")
-            if port != 'auto':
-                try:
-                    port = int(port)
-                except:
-                    port = 'auto'
+            port = ahbDev.pluginProps.get("port", 'auto')
+            try:
+                port = int(port)
+            except:
+                port = 'auto'
 
             if port == 'auto':
                 port_changed = True
@@ -420,31 +415,31 @@ class Plugin(indigo.PluginBase):
                         self.globals['portList'].append(int(port))
                         break
                 else:
-                    self.generalLogger.error("No available ports for auto allocation - specify in device Config")
+                    self.generalLogger.error("No available ports for auto allocation - specify in Device Config")
                     port = None
-                    # CAN'T START HUB ?
+                    # CAN'T START Alexa-Hue Bridge Device !!!
                     return
 
-            if not 'port' in self.globals['alexaHueBridge'][ahbDev.id]:
-                self.globals['alexaHueBridge'][ahbDev.id]['port'] = port
-                port_changed = True
-            else:
-                if self.globals['alexaHueBridge'][ahbDev.id]['port'] != port:
-                    self.globals['alexaHueBridge'][ahbDev.id]['port'] = port
-                    port_changed = True
-
-            self.globals['alexaHueBridge'][ahbDev.id]['forceDeviceStopStart'] = False   
-            if port_changed or (port not in self.globals['portList']):
+            if port not in self.globals['portList']:
                 self.globals['portList'].append(port)
 
-                props = ahbDev.pluginProps
-                props["port"] = str(port)
-                props["address"]= str(port)
-                props["version"] = '3.0'
-                self.globals['alexaHueBridge'][ahbDev.id]['forceDeviceStopStart'] = True   
-                ahbDev.replacePluginPropsOnServer(props)
-                return  # Replacing Plugin Props on Server will force a device stop /start
+            try:
+                if int(ahbDev.address) != int(port):
+                    port_changed = True
+            except:
+                self.generalLogger.error("Alexa-Hue Bridge '{}' at address {} either has an invalid address or invalif port {} - specify in Device Config".format(ahbDev.address, port))
+                return
 
+            self.globals['alexaHueBridge'][ahbDev.id]['port'] = port
+
+            if host_changed or port_changed or uuid_changed:
+                self.globals['alexaHueBridge'][ahbDev.id]['forceDeviceStopStart'] = False   
+                props["host"] = self.globals['alexaHueBridge'][ahbDev.id]['host']
+                props["port"] = str(self.globals['alexaHueBridge'][ahbDev.id]['port'])
+                props["address"]= str(self.globals['alexaHueBridge'][ahbDev.id]['port'])
+                props["uuid"] = self.globals['alexaHueBridge'][ahbDev.id]['uuid']
+                props["version"] = '3.0'
+                ahbDev.replacePluginPropsOnServer(props)  # Replacing Plugin Props on Server will NOT force a device stop /start
 
             self.globals['alexaHueBridge'][ahbDev.id]['autoStartDiscovery'] = ahbDev.pluginProps.get("autoStartDiscovery", True)
 
@@ -452,12 +447,12 @@ class Plugin(indigo.PluginBase):
             discoveryExpiration = int(ahbDev.pluginProps.get("discoveryExpiration", '0'))  # Default 'Discovery Permanently On'
 
             if not 'discoveryExpiration' in self.globals['alexaHueBridge'][ahbDev.id]:
-                self.globals['alexaHueBridge'][ahbDev.id]['discoveryExpiration'] = discoveryExpiration
                 discoveryExpirationChanged = True
             else:
                 if self.globals['alexaHueBridge'][ahbDev.id]['discoveryExpiration'] != discoveryExpiration:
-                    self.globals['alexaHueBridge'][ahbDev.id]['discoveryExpiration'] = discoveryExpiration
                     discoveryExpirationChanged = True
+            self.globals['alexaHueBridge'][ahbDev.id]['discoveryExpiration'] = discoveryExpiration
+
 
             self.globals['alexaHueBridge'][ahbDev.id]['disableAlexaVariableId'] = int(ahbDev.pluginProps.get("disableAlexaVariableList", "0"))
 
@@ -477,7 +472,7 @@ class Plugin(indigo.PluginBase):
             else:
                 if host_changed or port_changed:
                     self.globals['alexaHueBridge'][ahbDev.id]['webServer'].stop()
-                    self.sleep(2)  # wait 2 seconds (temporary fix?)
+                    self.sleep(5)  # wait 5 seconds (temporary fix?)
                     del self.globals['alexaHueBridge'][ahbDev.id]['webServer']
                     start_webserver_required = True
             if start_webserver_required == True:
@@ -523,6 +518,11 @@ class Plugin(indigo.PluginBase):
 
                 self.setDeviceDiscoveryState(True, ahbDev.id)
  
+
+
+
+            self.generalLogger.info(u"Alexa-Hue Bridge '{}' started: Host: {} Port: {}".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName'], self.globals['alexaHueBridge'][ahbDev.id]['host'], self.globals['alexaHueBridge'][ahbDev.id]['port']))
+
         except StandardError, e:
             self.generalLogger.error(u"StandardError detected in deviceStartComm for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDev.id].name, sys.exc_traceback.tb_lineno, e))
 
@@ -551,15 +551,15 @@ class Plugin(indigo.PluginBase):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
         self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE: Old [%s] vs New [%s]' % (origDev.name, newDev.name))
         if newDev.deviceTypeId == EMULATED_HUE_BRIDGE_TYPEID and origDev.enabled and newDev.enabled:
-            if newDev.pluginProps['port'] == "auto":
-                self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE: PORT AUTO')
-                return True
+            # if newDev.pluginProps['port'] == "auto" or newDev.pluginProps['port'] != newDev.address:
+            #     self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE: PORT AUTO OR CHANGED')
+            #     return True
             if 'discoveryExpiration' in origDev.pluginProps and 'discoveryExpiration' in newDev.pluginProps:
                 if origDev.pluginProps['discoveryExpiration'] != newDev.pluginProps['discoveryExpiration']:
                     self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE [EXPIRE MINUTES]: Old [%s] vs New [%s]' % (origDev.pluginProps['discoveryExpiration'], newDev.pluginProps['discoveryExpiration']))
                     self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE [AUTO START]: Old [%s] vs New [%s]' % (origDev.pluginProps['autoStartDiscovery'], newDev.pluginProps['autoStartDiscovery']))
                     return True
-            if self.globals['alexaHueBridge'][newDev.id]['forceDeviceStopStart']: # If a a force device stop start requested turn off request and action 
+            if self.globals['alexaHueBridge'][newDev.id]['forceDeviceStopStart']: # If a force device stop start requested turn off request and action 
                 self.globals['alexaHueBridge'][newDev.id]['forceDeviceStopStart'] = False
                 return True
         return False
@@ -860,6 +860,16 @@ class Plugin(indigo.PluginBase):
 
             if typeId != EMULATED_HUE_BRIDGE_TYPEID:
                 return
+
+            port = valuesDict.get("port", 'auto')
+            port_changed = False
+            try:
+                if int(indigo.devices[ahbDevId].address) != int(port):
+                    port_changed = True
+            except:
+                port_changed = True
+            if port_changed:    
+                self.globals['alexaHueBridge'][ahbDevId]['forceDeviceStopStart'] = True 
 
             self.globals['alexaHueBridge'][ahbDevId]['autoStartDiscovery'] = valuesDict.get("autoStartDiscovery", True)
 
