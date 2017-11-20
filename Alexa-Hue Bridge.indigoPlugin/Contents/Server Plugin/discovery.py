@@ -11,6 +11,8 @@ try:
     import indigo
 except ImportError, e:
     pass
+
+import errno
 import socket
 import sys
 import time
@@ -71,7 +73,7 @@ class Broadcaster(threading.Thread):
             # self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
             # self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
 
-            PLUGIN.broadcasterLogger.debug("Broadcaster.__init__ for '%s' is running" % PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName'])
+            PLUGIN.broadcasterLogger.debug("Broadcaster.__init__ for '{}' is running".format(PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName']))
 
             self.interrupted = False
 
@@ -82,7 +84,7 @@ class Broadcaster(threading.Thread):
                               "uuid": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']}
             self.broadcast_packet = broadcast_packet % broadcast_data
         except StandardError, e:
-            PLUGIN.broadcasterLogger.error(u"StandardError detected in Broadcaster.Init for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.broadcasterLogger.error(u"StandardError detected in Broadcaster.Init for '{}'. Line '{}' has error='{}'".format(indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def run(self):
         try:
@@ -91,7 +93,7 @@ class Broadcaster(threading.Thread):
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 20)
             start_time = time.time()
             end_time = start_time + (PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] * 60)
-            PLUGIN.broadcasterLogger.debug("Broadcaster.run: sending first broadcast:\n%s" % self.broadcast_packet)
+            PLUGIN.broadcasterLogger.debug("Broadcaster.run: sending first broadcast:\n{}".format(self.broadcast_packet))
             while True:
                 sock.sendto(self.broadcast_packet, (BCAST_IP, UPNP_PORT))
                 for x in range(BROADCAST_INTERVAL):
@@ -105,11 +107,9 @@ class Broadcaster(threading.Thread):
                         PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
                         sock.close()
                         return
-            PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
-            PLUGIN.broadcasterLogger.debug("Broadcaster.run for '%s' is ending" % PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName'])
 
         except StandardError, e:
-            PLUGIN.broadcasterLogger.error(u"StandardError detected in Broadcaster.Run for '%s'. Line '%s' has error='%s'" % (indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.broadcasterLogger.error(u"StandardError detected in Broadcaster.Run for '{}'. Line '{}' has error='{}'".format(indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def stop(self):
         PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
@@ -154,7 +154,7 @@ class Responder(threading.Thread):
             # self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
             # self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
 
-            PLUGIN.responderLogger.debug("Responder.__init__ for '%s' is running" % PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName'])
+            PLUGIN.responderLogger.debug("Responder.__init__ for '{}' is running".format(PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName']))
 
             self.interrupted = False
 
@@ -163,7 +163,7 @@ class Responder(threading.Thread):
                              "uuid": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']}
             self.response_packet = response_packet % response_data
         except StandardError, e:
-            PLUGIN.responderLogger.error(u"StandardError detected in Responder.Init for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.responderLogger.error(u"StandardError detected in Responder.Init for '{}'. Line '{}' has error='{}'".format(indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def run(self):
         try:
@@ -197,19 +197,23 @@ class Responder(threading.Thread):
                         if M_SEARCH_REQ_MATCH in data:
                             PLUGIN.responderLogger.debug("Responder.run: received: %s" % str(data))
                             self.respond(addr)
-            except socket.error, (value, message):
+            except socket.error as e:
                 # This is the exception thrown when someone else has bound to the UPNP port, so write some errors and
                 # stop the thread (which really isn't needed, but it logs a nice stop debug message).
-                if value == 48:
-                    PLUGIN.responderLogger.error(u"Responder startup failed because another app or plugin is using the UPNP port.")
-                    PLUGIN.responderLogger.error(u"Open a terminal window and type 'sudo lsof -i :%i' to see a list of processes that have bound to that port and quit those applications." % UPNP_PORT)
+                if e.errno == errno.EADDRINUSE:
+                    PLUGIN.responderLogger.error(u"'{}' Responder startup failed because another app or plugin is using the UPNP port.".format(indigo.devices[self.ahbDevId].name))
+                    PLUGIN.responderLogger.error(u"Open a terminal window and type 'sudo lsof -i :{}}' to see a list of processes that have bound to that port and quit those applications.".format(UPNP_PORT))
+                    self.stop()
+                elif e.errno == errno.EADDRNOTAVAIL:
+                    PLUGIN.responderLogger.error(u"'{}' Responder startup failed because host address is not available.".format(indigo.devices[self.ahbDevId].name))
+                    PLUGIN.responderLogger.error(u"Double check that the host is specified correctly in the Plugin Config. Correct if invalid and then reload the plugin.")
                     self.stop()
                 else:
-                    PLUGIN.responderLogger.error("Responder.run: socket error: %s - %s" % (str(value), message))
+                    PLUGIN.responderLogger.error("'{}' Responder.run: socket error: {}".format(indigo.devices[self.ahbDevId].name, e))
 
             PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
         except StandardError, e:
-            PLUGIN.responderLogger.error(u"StandardError detected in Responder.Run for '%s'. Line '%s' has error='%s'" % (indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.responderLogger.error(u"StandardError detected in Responder.Run for '{}'. Line '{}' has error='{}'".format(indigo.devices[self.ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def stop(self):
         PLUGIN.setDeviceDiscoveryState(False, self.ahbDevId)
@@ -217,7 +221,7 @@ class Responder(threading.Thread):
         self.interrupted = True
 
     def respond(self, addr):
-        PLUGIN.responderLogger.debug("Responder.respond called from address %s\n%s" % (str(addr), self.response_packet))
+        PLUGIN.responderLogger.debug("Responder.respond called from address {}\n{}".format(str(addr), self.response_packet))
         PLUGIN.responderLogger.debug("Responder.respond: creating output_socket")
         output_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         PLUGIN.responderLogger.debug("Responder.respond: calling output_socket.sendto")

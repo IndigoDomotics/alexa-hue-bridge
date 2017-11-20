@@ -424,7 +424,7 @@ class Plugin(indigo.PluginBase):
                 if int(ahbDev.address) != int(port):
                     port_changed = True
             except:
-                self.generalLogger.error("Alexa-Hue Bridge '{}' at address {} either has an invalid address or invalif port {} - specify in Device Config".format(ahbDev.address, port))
+                self.generalLogger.error("Alexa-Hue Bridge '{}' at address {} either has an invalid address or invalid port {} - specify in Device Config".format(ahbDev.name, ahbDev.address, port))
                 return
 
             self.globals['alexaHueBridge'][ahbDev.id]['port'] = port
@@ -515,14 +515,10 @@ class Plugin(indigo.PluginBase):
 
                 self.setDeviceDiscoveryState(True, ahbDev.id)
  
-
-
-
             self.generalLogger.info(u"Alexa-Hue Bridge '{}' started: Host: {} Port: {}".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName'], self.globals['alexaHueBridge'][ahbDev.id]['host'], self.globals['alexaHueBridge'][ahbDev.id]['port']))
 
         except StandardError, e:
             self.generalLogger.error(u"StandardError detected in deviceStartComm for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDev.id].name, sys.exc_traceback.tb_lineno, e))
-
 
     def deviceStopComm(self, ahbDev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
@@ -543,7 +539,6 @@ class Plugin(indigo.PluginBase):
         except StandardError, e:
             self.generalLogger.error(u"StandardError detected in deviceStopComm for '%s'. Line '%s' has error='%s'" % (stoppedName, sys.exc_traceback.tb_lineno, e))
 
-
     def didDeviceCommPropertyChange(self, origDev, newDev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
         self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE: Old [%s] vs New [%s]' % (origDev.name, newDev.name))
@@ -560,7 +555,6 @@ class Plugin(indigo.PluginBase):
                 self.globals['alexaHueBridge'][newDev.id]['forceDeviceStopStart'] = False
                 return True
         return False
-
 
     def getDeviceConfigUiValues(self, pluginProps, typeId, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
@@ -608,7 +602,6 @@ class Plugin(indigo.PluginBase):
             pluginProps["sourceOnOffActionVariableMenu"] = "0"  # NO VARIABLE
             pluginProps["sourceDimActionMenu"] = "0"  # NO ACTION
             pluginProps["sourceDimActionVariableMenu"] = "0"  # NO VARIABLE
-
 
         return super(Plugin, self).getDeviceConfigUiValues(pluginProps, typeId, ahbDevId)
 
