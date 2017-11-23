@@ -166,6 +166,9 @@ class Plugin(indigo.PluginBase):
         else:
             prefsConfigUiValues["networkCheckURL"] = NETWORK_AVAILABLE_CHECK_REMOTE_SERVER
 
+        if "showDiscoveryInEventLog" not in prefsConfigUiValues:
+            prefsConfigUiValues["showDiscoveryInEventLog"] = True
+
         return prefsConfigUiValues
 
     def validatePrefsConfigUi(self, valuesDict):
@@ -421,7 +424,7 @@ class Plugin(indigo.PluginBase):
                 self.globals['portList'].append(port)
 
             try:
-                if int(ahbDev.address) != int(port):
+                if ahbDev.address is None or ahbDev.address == '' or int(ahbDev.address) != int(port):
                     port_changed = True
             except:
                 self.generalLogger.error("Alexa-Hue Bridge '{}' at address {} either has an invalid address or invalid port {} - specify in Device Config".format(ahbDev.name, ahbDev.address, port))

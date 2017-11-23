@@ -21,7 +21,7 @@
 
     <Field id="separator-2" type="separator" visibleBindingValue="true"/> 
 
-     <Field type="checkbox" id="showDiscoveryInEventLog" default="true" alwaysUseInDialogHeightCalc="true">
+     <Field id="showDiscoveryInEventLog" type="checkbox" default="true" alwaysUseInDialogHeightCalc="true">
         <Label>Log Discovery:</Label>
         <Description>Log Alexa discovery requests in Event Log.</Description>
     </Field>
