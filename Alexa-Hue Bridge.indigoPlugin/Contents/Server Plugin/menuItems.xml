@@ -12,4 +12,8 @@
     <Name>Force Plugin Update</Name>
     <CallbackMethod>forceUpdate</CallbackMethod>
   </MenuItem>
+  <MenuItem id="checkRateLimit" hidden="true">
+    <Name>Check Rate Limit</Name>
+    <CallbackMethod>checkRateLimit</CallbackMethod>
+  </MenuItem>
 </MenuItems>

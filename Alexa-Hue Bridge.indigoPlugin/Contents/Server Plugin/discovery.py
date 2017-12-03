@@ -68,10 +68,6 @@ class Broadcaster(threading.Thread):
 
         try:
             self.ahbDevId = ahbDevId
-            # self._host = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host']
-            # self._port = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']
-            # self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
-            # self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
 
             PLUGIN.broadcasterLogger.debug("Broadcaster.__init__ for '{}' is running".format(PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName']))
 
@@ -116,29 +112,6 @@ class Broadcaster(threading.Thread):
         PLUGIN.broadcasterLogger.debug("Broadcaster thread stopped")
         self.interrupted = True
 
-    # @property
-    # def host(self):
-    #     return self._host
-
-    # @host.setter
-    # def host(self, host):
-    #     self._host = host
-
-    # @property
-    # def port(self):
-    #     return self._port
-
-    # @port.setter
-    # def port(self, port):
-    #     self._port = port
-
-    # @property
-    # def timeout(self):
-    #     return self._timeout
-
-    # @timeout.setter
-    # def timeout(self, timeout):
-    #     self._timeout = timeout
 
 class Responder(threading.Thread):
     def __init__(self, plugin,  ahbDevId):
@@ -149,17 +122,13 @@ class Responder(threading.Thread):
 
         try:
             self.ahbDevId = ahbDevId
-            # self._host = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host']
-            # self._port = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']
-            # self.uuid = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']
-            # self._timeout = PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration']
 
             PLUGIN.responderLogger.debug("Responder.__init__ for '{}' is running".format(PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['hubName']))
 
             self.interrupted = False
 
-            response_data = {"server_ip": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host'], 
-                             "server_port": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port'], 
+            response_data = {"server_ip": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host'],
+                             "server_port": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port'],
                              "uuid": PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['uuid']}
             self.response_packet = response_packet % response_data
         except StandardError, e:
@@ -195,7 +164,7 @@ class Responder(threading.Thread):
                             return
                     else:
                         if M_SEARCH_REQ_MATCH in data:
-                            PLUGIN.responderLogger.debug("Responder.run: received: %s" % str(data))
+                            PLUGIN.responderLogger.debug("Responder.run: received: {}".format(str(data)))
                             self.respond(addr)
             except socket.error as e:
                 # This is the exception thrown when someone else has bound to the UPNP port, so write some errors and
@@ -228,30 +197,4 @@ class Responder(threading.Thread):
         output_socket.sendto(self.response_packet, addr)
         PLUGIN.responderLogger.debug("Responder.respond: closing output_socket")
         output_socket.close()
-        PLUGIN.responderLogger.debug("Responder.respond: UDP Response sent to %s" % str(addr))
-
-
-    # @property
-    # def host(self):
-    #     return self._host
-
-    # @host.setter
-    # def host(self, host):
-    #     self._host = host
-
-    # @property
-    # def port(self):
-    #     return self._port
-
-    # @port.setter
-    # def port(self, port):
-    #     self._port = port
-
-    # @property
-    # def timeout(self):
-    #     return self._timeout
-
-    # @timeout.setter
-    # def timeout(self, timeout):
-    #     self._timeout = timeout
-
+        PLUGIN.responderLogger.debug("Responder.respond: UDP Response sent to {}".format(str(addr)))

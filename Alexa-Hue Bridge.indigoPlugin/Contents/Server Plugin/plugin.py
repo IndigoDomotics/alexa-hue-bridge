@@ -11,14 +11,14 @@ try:
     import indigo
 except ImportError, e:
     pass
-import inspect
+
 import hashlib
 import json
 import logging
 import Queue
 import socket
 import sys
-from time import localtime, time, sleep, strftime
+from time import localtime, time, strftime
 import traceback
 import uuid
 
@@ -36,7 +36,7 @@ class Plugin(indigo.PluginBase):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
 
         # Initialise dictionary to store plugin Globals
-        self.globals = {}
+        self.globals = dict()
 
         self.globals['networkAvailable'] = {}
         self.globals['networkAvailable']['checkUrl'] = NETWORK_AVAILABLE_CHECK_REMOTE_SERVER
@@ -104,7 +104,7 @@ class Plugin(indigo.PluginBase):
                     self.globals['portList'].append(int(dev.address))  # Do this regardless whether device enabled or not
                 except:
                     pass
-        self.generalLogger.debug(u'PORTLIST @Plugin INIT: %s' % self.globals['portList'])
+        self.generalLogger.debug(u"PORTLIST @Plugin INIT: {}".format(self.globals['portList']))
 
         # Initialise dictionary for update checking
         self.globals['update'] = {}
@@ -130,7 +130,7 @@ class Plugin(indigo.PluginBase):
 
     def checkRateLimit(self):
         limiter = self.globals['update']['updater'].getRateLimit()
-        self.generalLogger.info('RateLimit {limit:%d remaining:%d resetAt:%d}' % limiter)
+        self.generalLogger.info("RateLimit limit:{d[0]} remaining:{d[1]} resetAt:{d[2]}".format(d=limiter))
 
 
     def startup(self):
@@ -180,14 +180,14 @@ class Plugin(indigo.PluginBase):
                     errorDict = indigo.Dict()
                     errorDict["overriddenHostIpAddress"] = "Host IP Address missing"
                     errorDict["showAlertText"] = "You have elected to override the Host Ip Address but haven't specified it!"
-                    return (False, valuesDict, errorDict)
+                    return False, valuesDict, errorDict
 
         return True
 
     def closedPrefsConfigUi(self, valuesDict, userCancelled):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-        if userCancelled == True:
+        if userCancelled:
             return
 
         self.globals['networkAvailable']['checkUrl'] = valuesDict.get("networkCheckURL", NETWORK_AVAILABLE_CHECK_REMOTE_SERVER)
@@ -245,7 +245,7 @@ class Plugin(indigo.PluginBase):
         self.globals['debug']['debugBroadcaster'] = logging.INFO  # For general debugging of the Broadcaster thread(s)
         self.globals['debug']['debugResponder']   = logging.INFO  # For general debugging of the Responder thread(s)
 
-        if self.globals['debug']['debugEnabled'] == False:
+        if not self.globals['debug']['debugEnabled']:
             self.plugin_file_handler.setLevel(logging.INFO)
         else:
             self.plugin_file_handler.setLevel(logging.THREADDEBUG)
@@ -284,7 +284,7 @@ class Plugin(indigo.PluginBase):
             if debugMethodTrace:
                 debugTypes.append('Method Trace')
             message = self.activeLoggingTypes(debugTypes)   
-            self.generalLogger.warning(u"Debugging enabled for Alexa-Hue Bridge: %s" % (message))  
+            self.generalLogger.warning(u"Debugging enabled for Alexa-Hue Bridge: {}".format(message))
 
     def activeLoggingTypes(self, debugTypes):            
         self.methodTracer.threaddebug(u"CLASS: Plugin")
@@ -315,7 +315,7 @@ class Plugin(indigo.PluginBase):
                     # connect to the host -- tells us if the host is actually
                     # reachable
                     s = socket.create_connection((host, 80), 2)
-                    self.generalLogger.info(u"Alexa-Hue Bridge network access check to %s successfully completed." % self.globals['networkAvailable']['checkUrl'])
+                    self.generalLogger.info(u"Alexa-Hue Bridge network access check to {} successfully completed.".format(self.globals['networkAvailable']['checkUrl']))
                     return True
                 except:
                     pass
@@ -323,18 +323,18 @@ class Plugin(indigo.PluginBase):
 
             isConnectedRetryCount = 0
             self.globals['networkAvailable']['retryInterval'] = NETWORK_AVAILABLE_CHECK_RETRY_SECONDS_ONE
-            self.generalLogger.info(u"Alexa-Hue Bridge checking network access by attempting to access '%s'" % self.globals['networkAvailable']['checkUrl'])
+            self.generalLogger.info(u"Alexa-Hue Bridge checking network access by attempting to access '{}'".format(self.globals['networkAvailable']['checkUrl']))
             while not is_connected():
                 isConnectedRetryCount += 1
                 if isConnectedRetryCount > NETWORK_AVAILABLE_CHECK_LIMIT_ONE:
                     self.globals['networkAvailable']['retryInterval'] = NETWORK_AVAILABLE_CHECK_RETRY_SECONDS_TWO
                 if isConnectedRetryCount < NETWORK_AVAILABLE_CHECK_LIMIT_TWO:
-                    self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt %i - retrying in %i seconds" % (isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
+                    self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt {} - retrying in {} seconds".format(isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
                 elif isConnectedRetryCount == NETWORK_AVAILABLE_CHECK_LIMIT_TWO:
                     self.globals['networkAvailable']['retryInterval'] = NETWORK_AVAILABLE_CHECK_RETRY_SECONDS_THREE
-                    self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt %i - will now silently retry every %i seconds" % (isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
+                    self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt {} - will now silently retry every {} seconds".format(isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
                 elif isConnectedRetryCount > NETWORK_AVAILABLE_CHECK_LIMIT_TWO and isConnectedRetryCount % 12 == 0:
-                    self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt %i - will continue to silently retry every %i seconds" % (isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
+                    self.generalLogger.error(u"Alexa-Hue Bridge network access check failed - attempt {} - will continue to silently retry every {} seconds".format(isConnectedRetryCount, self.globals['networkAvailable']['retryInterval']))
 
                 self.sleep(self.globals['networkAvailable']['retryInterval'])  # In seconds
 
@@ -350,18 +350,11 @@ class Plugin(indigo.PluginBase):
                         self.globals['update']['updater'].checkForUpdate()
 
                         nextCheckTime = strftime('%A, %Y-%b-%d at %H:%M', localtime(self.globals['update']['nextCheckTime']))
-                        self.generalLogger.info(u"Alexa-Hue Bridge next update check scheduled for: %s" % nextCheckTime)
+                        self.generalLogger.info(u"Alexa-Hue Bridge next update check scheduled for: {}".format(nextCheckTime))
                 self.sleep(60) # in seconds
 
         except self.StopThread:
             self.generalLogger.info(u"Alexa-Hue Bridge shutdown requested")
-
-
-
-
-
-
-
 
     ################################################
     # start the Alexa-Hue Bridge device (aka ahbDev)
@@ -369,7 +362,7 @@ class Plugin(indigo.PluginBase):
     def deviceStartComm(self, ahbDev):
         try:
             self.methodTracer.threaddebug(u"CLASS: Plugin")
-            self.generalLogger.debug(u'DEVICE START: %s' % ahbDev.name)
+            self.generalLogger.debug(u"DEVICE START: {}".format(ahbDev.name))
 
             if not ahbDev.id in self.globals['alexaHueBridge']:
                 self.globals['alexaHueBridge'][ahbDev.id] = {}
@@ -464,7 +457,7 @@ class Plugin(indigo.PluginBase):
             props = ahbDev.pluginProps
             self.retrievePublishedDevices(props, ahbDev.id, True, False)  # List Alexa devices in this Alexa-Hue Bridge + output info message + don't Check for V2 definitions
         
-            self.generalLogger.info(u"Starting Hue Bridge '%s' web server thread" % self.globals['alexaHueBridge'][ahbDev.id]['hubName'])
+            self.generalLogger.info(u"Starting Hue Bridge '{}' web server thread".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName']))
 
             start_webserver_required = False
             if not 'webServer' in self.globals['alexaHueBridge'][ahbDev.id]:
@@ -475,16 +468,16 @@ class Plugin(indigo.PluginBase):
                     self.sleep(5)  # wait 5 seconds (temporary fix?)
                     del self.globals['alexaHueBridge'][ahbDev.id]['webServer']
                     start_webserver_required = True
-            if start_webserver_required == True:
+            if start_webserver_required:
                 self.globals['alexaHueBridge'][ahbDev.id]['webServer'] = Httpd(self, ahbDev.id)
                 self.globals['alexaHueBridge'][ahbDev.id]['webServer'].start()
 
             # Only start discovery if auto-start requested
             if not self.globals['alexaHueBridge'][ahbDev.id]['autoStartDiscovery']:
-                self.generalLogger.info(u"Hue Bridge '%s' 'Auto Start Discovery' NOT requested" % self.globals['alexaHueBridge'][ahbDev.id]['hubName'])
+                self.generalLogger.info(u"Hue Bridge '{}' 'Auto Start Discovery' NOT requested".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName']))
                 self.setDeviceDiscoveryState(False, ahbDev.id)
             else:
-                self.generalLogger.info(u"Starting Hue Bridge '%s' discovery thread as 'Auto Start Discovery' requested" % self.globals['alexaHueBridge'][ahbDev.id]['hubName'])
+                self.generalLogger.info(u"Starting Hue Bridge '{}' discovery thread as 'Auto Start Discovery' requested".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName']))
 
                 start_broadcaster_required = False
                 if not 'broadcaster' in self.globals['alexaHueBridge'][ahbDev.id]:
@@ -497,7 +490,7 @@ class Plugin(indigo.PluginBase):
                         self.globals['alexaHueBridge'][ahbDev.id]['broadcaster'].join(5)
                         del self.globals['alexaHueBridge'][ahbDev.id]['broadcaster']
                         start_broadcaster_required = True
-                if start_broadcaster_required == True:
+                if start_broadcaster_required:
                     self.globals['alexaHueBridge'][ahbDev.id]['broadcaster'] = Broadcaster(self, ahbDev.id)
                     self.globals['alexaHueBridge'][ahbDev.id]['broadcaster'].start()
 
@@ -512,7 +505,7 @@ class Plugin(indigo.PluginBase):
                         self.globals['alexaHueBridge'][ahbDev.id]['broadcaster'].join(5)
                         del self.globals['alexaHueBridge'][ahbDev.id]['responder']
                         start_responder_required = True
-                if start_responder_required == True:
+                if start_responder_required:
                     self.globals['alexaHueBridge'][ahbDev.id]['responder'] = Responder(self, ahbDev.id)
                     self.globals['alexaHueBridge'][ahbDev.id]['responder'].start()
 
@@ -521,7 +514,7 @@ class Plugin(indigo.PluginBase):
             self.generalLogger.info(u"Alexa-Hue Bridge '{}' started: Host: {} Port: {}".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName'], self.globals['alexaHueBridge'][ahbDev.id]['host'], self.globals['alexaHueBridge'][ahbDev.id]['port']))
 
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in deviceStartComm for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDev.id].name, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in deviceStartComm for '{}'. Line '{}' has error='{}'".format(indigo.devices[ahbDev.id].name, sys.exc_traceback.tb_lineno, e))
 
     def deviceStopComm(self, ahbDev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
@@ -540,19 +533,19 @@ class Plugin(indigo.PluginBase):
                 if self.globals['alexaHueBridge'][stoppedId]['responder']:
                     self.globals['alexaHueBridge'][stoppedId]['responder'].stop()
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in deviceStopComm for '%s'. Line '%s' has error='%s'" % (stoppedName, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in deviceStopComm for '{}'. Line '{}' has error='{}'".format(stoppedName, sys.exc_traceback.tb_lineno, e))
 
     def didDeviceCommPropertyChange(self, origDev, newDev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
-        self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE: Old [%s] vs New [%s]' % (origDev.name, newDev.name))
+        self.generalLogger.debug(u"DID-DEVICE-COMM-PROPERTY-CHANGE: Old [{}] vs New [{}]".format(origDev.name, newDev.name))
         if newDev.deviceTypeId == EMULATED_HUE_BRIDGE_TYPEID and origDev.enabled and newDev.enabled:
             # if newDev.pluginProps['port'] == "auto" or newDev.pluginProps['port'] != newDev.address:
             #     self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE: PORT AUTO OR CHANGED')
             #     return True
             if 'discoveryExpiration' in origDev.pluginProps and 'discoveryExpiration' in newDev.pluginProps:
                 if origDev.pluginProps['discoveryExpiration'] != newDev.pluginProps['discoveryExpiration']:
-                    self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE [EXPIRE MINUTES]: Old [%s] vs New [%s]' % (origDev.pluginProps['discoveryExpiration'], newDev.pluginProps['discoveryExpiration']))
-                    self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE [AUTO START]: Old [%s] vs New [%s]' % (origDev.pluginProps['autoStartDiscovery'], newDev.pluginProps['autoStartDiscovery']))
+                    self.generalLogger.debug(u"DID-DEVICE-COMM-PROPERTY-CHANGE [EXPIRE MINUTES]: Old [{}] vs New [{}]".format(origDev.pluginProps['discoveryExpiration'], newDev.pluginProps['discoveryExpiration']))
+                    self.generalLogger.debug(u"DID-DEVICE-COMM-PROPERTY-CHANGE [AUTO START]: Old [{}] vs New [{}]".format(origDev.pluginProps['autoStartDiscovery'], newDev.pluginProps['autoStartDiscovery']))
                     return True
             if self.globals['alexaHueBridge'][newDev.id]['forceDeviceStopStart']: # If a force device stop start requested turn off request and action 
                 self.globals['alexaHueBridge'][newDev.id]['forceDeviceStopStart'] = False
@@ -694,7 +687,7 @@ class Plugin(indigo.PluginBase):
                                         if versionTwoAlexaDeviceData['published'].lower() == 'true':
                                             # Do validity checks and discard (with message) if invalid
                                             if ('|' in versionTwoAlexaDeviceName) or (',' in versionTwoAlexaDeviceName) or (';' in versionTwoAlexaDeviceName):
-                                                self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Unable to convert as Alexa Device Name cannot contain the vertical bar character i.e. '|', the comma character i.e. ',' or the semicolon character i.e. ';'." % (versionTwoAlexaDeviceName, dev.name)) 
+                                                self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '{}' definition detected in Indigo Device '{}': Unable to convert as Alexa Device Name cannot contain the vertical bar character i.e. '|', the comma character i.e. ',' or the semicolon character i.e. ';'.".format(versionTwoAlexaDeviceName, dev.name)) 
                                                 continue
 
                                             duplicateDetected = False
@@ -705,10 +698,10 @@ class Plugin(indigo.PluginBase):
                                                         alexaDeviceName = AlexaDeviceData['name']
                                                         if ahbDevId == alexaHueBridgeData:
                                                             # In theory this can't happen as this logic is only executed when the Alexa-Hue bridge has no Alexa devices!
-                                                            self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Unable to convert as Alexa Device Name this Alexa-Hue Bridge." % (alexaDeviceName, dev.name)) 
+                                                            self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '{}' definition detected in Indigo Device '{}': Unable to convert as Alexa Device Name this Alexa-Hue Bridge.".format(alexaDeviceName, dev.name)) 
                                                         else:
                                                             alexaHueBridgeName = indigo.devices[alexaHueBridgeId].name
-                                                            self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Unable to convert as Alexa Device Name is already allocated on Alexa-Hue Bridge '%s'" % (alexaDeviceName, dev.name, alexaHueBridgeName)) 
+                                                            self.generalLogger.error(u"Alexa Device (Plugin V2.x.x) '{}' definition detected in Indigo Device '{}': Unable to convert as Alexa Device Name is already allocated on Alexa-Hue Bridge '{}'".format(alexaDeviceName, dev.name, alexaHueBridgeName)) 
                                             if duplicateDetected:
                                                 continue
             
@@ -731,7 +724,7 @@ class Plugin(indigo.PluginBase):
 
                                             self.globals['alexaHueBridge']['publishedHashKeys'][hashKey] = ahbDevId
 
-                                            self.generalLogger.info(u"Alexa Device (Plugin V2.x.x) '%s' definition detected in Indigo Device '%s': Converting to V3 format." % (versionTwoAlexaDeviceName, dev.name)) 
+                                            self.generalLogger.info(u"Alexa Device (Plugin V2.x.x) '{}' definition detected in Indigo Device '{}': Converting to V3 format.".format(versionTwoAlexaDeviceName, dev.name)) 
 
                 if len(valuesDict['alexaDevices']) > 0:
                     valuesDict['alexaDevices'] = json.dumps(publishedAlexaDevices)
@@ -744,17 +737,17 @@ class Plugin(indigo.PluginBase):
                 elif numberPublished == 1:
                     numberPublishedUI = 'one Alexa Device'
                 else:
-                    numberPublishedUI = str('%s Alexa Devices' % numberPublished)
+                    numberPublishedUI = str("{} Alexa Devices".format(numberPublished))
 
                 if numberPublished <= DEVICE_LIMIT:
-                    self.generalLogger.info(u"'%s' has %s published" % (self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))
+                    self.generalLogger.info(u"'{}' has {} published".format(self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))
                 else:
-                    self.generalLogger.error(u"'%s' has %s published [LIMIT OF %s DEVICES EXCEEDED - DISCOVERY MAY NOT WORK!!!]" % (self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI, DEVICE_LIMIT))
+                    self.generalLogger.error(u"'{}' has {} published [LIMIT OF {} DEVICES EXCEEDED - DISCOVERY MAY NOT WORK!!!]".format(self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI, DEVICE_LIMIT))
                     self.generalLogger.error(u"Move excess Alexa devices to another existing or new Alexa-Hue Bridge")
 
             return valuesDict
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in retrievePublishedDevices for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in retrievePublishedDevices for '{}'. Line '{}' has error='{}'".format(indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -795,40 +788,39 @@ class Plugin(indigo.PluginBase):
                             else:  # Not used
                                 continue
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in retrieveOtherPublishedDevices for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in retrieveOtherPublishedDevices for '{}'. Line '{}' has error='{}'".format(indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
     def validateDeviceConfigUi(self, valuesDict, typeId, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         if typeId == EMULATED_HUE_BRIDGE_TYPEID:
             self.generalLogger.debug(u"Validating Device config for type: " + typeId)
-            self.generalLogger.debug(u'validateDeviceConfigUi VALUESDICT = %s' % valuesDict)
+            self.generalLogger.debug(u"validateDeviceConfigUi VALUESDICT = {}".format(valuesDict))
 
             errorsDict = indigo.Dict()
 
             try:
                 amount = int(valuesDict["discoveryExpiration"])
                 if amount not in range(-1, 11):  # -1 = No Discovery, 0 = Always Discover, 1 - 10 = Number of minutes to discover
-                    raise
-            except:
+                    raise ValueError("'Discovery Expiration' is invalid")
+            except ValueError:
                 errorsDict["discoveryExpiration"] = "'Discovery Expiration' must be a positive integer from 1 to 10 (minutes) or 'No Discovery' or 'Discovery Permanently On'"
                 errorsDict["showAlertText"] = "'Discovery Expiration' is invalid"
-                return (False, valuesDict, errorsDict)
+                return False, valuesDict, errorsDict
 
             try:
                 disableAlexaVariableId = int(valuesDict.get("disableAlexaVariableList", "0"))
                 if disableAlexaVariableId != 0:
                     if indigo.variables[disableAlexaVariableId].value.lower() != 'true' and indigo.variables[disableAlexaVariableId].value.lower() != 'false':
-                        raise
-            except:
+                        raise ValueError("Selected variable is not valid")
+            except ValueError:
                 errorsDict["disableAlexaVariableList"] = "'Disable Alexa Variable' must be 'true' or 'false' or '-- NO SELECTION --'"
                 errorsDict["showAlertText"] = "Selected variable is not valid"
-                return (False, valuesDict, errorsDict)
+                return False, valuesDict, errorsDict
 
             alexaDeviceNameSorted, alexaDeviceName, alexaHueBridgeId = valuesDict["alexaDevicesList"].split("|")
             alexaHueBridgeId = int(alexaHueBridgeId)
 
-            alexaName = ''
             if alexaHueBridgeId == 0:
                 alexaName = valuesDict['newAlexaName']
                 errorMessage = "'New Alexa Device Name' is present. Have you done an 'Add New Alexa Device' for the new Alexa device? Either Add the Alexa device or clear 'New Alexa Device Name' to enable Save. This check is to prevent any changes being lost."
@@ -839,16 +831,16 @@ class Plugin(indigo.PluginBase):
             if alexaName != '':
                 errorsDict["alexaDevicesList"] = errorMessage
                 errorsDict["showAlertText"] = errorMessage
-                return (False, valuesDict, errorsDict)
+                return False, valuesDict, errorsDict
 
-        return (True, valuesDict)
+        return True, valuesDict
 
     def closedDeviceConfigUi(self, valuesDict, userCancelled, typeId, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
         try:
-            self.generalLogger.debug(u"'closePrefsConfigUi' called with userCancelled = %s" % (str(userCancelled)))  
+            self.generalLogger.debug(u"'closePrefsConfigUi' called with userCancelled = {}".format(str(userCancelled)))  
 
-            if userCancelled == True:
+            if userCancelled:
                 return
 
             if typeId != EMULATED_HUE_BRIDGE_TYPEID:
@@ -879,20 +871,20 @@ class Plugin(indigo.PluginBase):
             elif numberPublished == 1:
                 numberPublishedUI = 'one Alexa Device'
             else:
-                numberPublishedUI = str('%s Alexa Devices' % numberPublished)
+                numberPublishedUI = str("{} Alexa Devices".format(numberPublished))
 
             if numberPublished <= DEVICE_LIMIT:
-                self.generalLogger.info(u"'%s' updated and now has %s published" % (self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))
+                self.generalLogger.info(u"'{}' updated and now has {} published".format(self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))
             else:
-                self.generalLogger.error(u"'%s' updated and now has %s published [LIMIT OF %s DEVICES EXCEEDED - DISCOVERY MAY NOT WORK!!!]" % (self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI, DEVICE_LIMIT))
+                self.generalLogger.error(u"'{}' updated and now has {} published [LIMIT OF {} DEVICES EXCEEDED - DISCOVERY MAY NOT WORK!!!]".format(self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI, DEVICE_LIMIT))
                 self.generalLogger.error(u"Move excess Alexa devices to another existing or new Alexa-Hue Bridge")
 
-            self.generalLogger.debug(u"'closePrefsConfigUi' completed for '%s'" % self.globals['alexaHueBridge'][ahbDevId]['hubName'])
+            self.generalLogger.debug(u"'closePrefsConfigUi' completed for '{}'".format(self.globals['alexaHueBridge'][ahbDevId]['hubName']))
 
             return valuesDict
 
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in closedDeviceConfigUi for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in closedDeviceConfigUi for '{}'. Line '{}' has error='{}'".format(indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
     
 
 
@@ -907,7 +899,7 @@ class Plugin(indigo.PluginBase):
             for ahbDevId in self.globals['alexaHueBridge']:
                 if 'publishedAlexaDevices' in self.globals['alexaHueBridge'][ahbDevId]:
                     if dev.id in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']:
-                        self.generalLogger.info(u"A device (%s) that was published has been deleted - you'll probably want use the Alexa app to forget that device." % dev.name)
+                        self.generalLogger.info(u"A device ({}) that was published has been deleted - you'll probably want use the Alexa app to forget that device.".format(dev.name))
                         self.refreshDeviceList(ahbDevId)
 
         super(Plugin, self).deviceDeleted(dev)
@@ -979,8 +971,8 @@ class Plugin(indigo.PluginBase):
             disableAlexaVariableId = int(valuesDict.get("disableAlexaVariableList", "0"))
             if disableAlexaVariableId != 0:
                 if indigo.variables[disableAlexaVariableId].value.lower() != 'true' and indigo.variables[disableAlexaVariableId].value.lower() != 'false':
-                    raise
-        except:
+                    raise ValueError("VARIABLE IS MISSING / INVALID")
+        except ValueError:
             if disableAlexaVariableId in indigo.variables:
                 variableName = indigo.variables[disableAlexaVariableId].name
             else:
@@ -1010,7 +1002,7 @@ class Plugin(indigo.PluginBase):
                 alexaDeviceName = alexaDeviceData['name'].replace(',',' ').replace(';',' ')
                 self.globals['alexaDevicesListGlobal'][alexaDeviceNameKey] = int(alexaHueBridgeId)
                 alexaDeviceListKey = alexaDeviceNameKey + '|' + alexaDeviceName + '|' + str(alexaHueBridgeId)
-                alexaDeviceListKey = str('%s|%s|%s' %(alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId))
+                alexaDeviceListKey = str('{}|{}|{}'.format(alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId))
                 allocatedAlexaDevicesListGlobal.append((alexaDeviceListKey, alexaDeviceName))
 
         for alexaDeviceNameKey, alexaDeviceData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():
@@ -1057,7 +1049,7 @@ class Plugin(indigo.PluginBase):
                             if actionOnId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoOnAction"] = indigo.actionGroups[actionOnId].name
                             else:
-                                valuesDict["alexaNameIndigoOnAction"] = 'Action #%s not found' % actionOnId
+                                valuesDict["alexaNameIndigoOnAction"] = 'Action #{} not found'.format(actionOnId)
                         
                         if actionOffId == 0:
                             valuesDict["alexaNameIndigoOffAction"] = 'NO ACTION'
@@ -1065,7 +1057,7 @@ class Plugin(indigo.PluginBase):
                             if actionOffId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoOffAction"] = indigo.actionGroups[actionOffId].name
                             else:
-                                valuesDict["alexaNameIndigoOffAction"] = 'Action #%s not found' % actionOffId
+                                valuesDict["alexaNameIndigoOffAction"] = 'Action #{} not found'.format(actionOffId)
                         
                         if variableOnOffId == 0:
                             valuesDict["alexaNameIndigoOnOffActionVariable"] = 'NO VARIABLE'
@@ -1073,7 +1065,7 @@ class Plugin(indigo.PluginBase):
                             if variableOnOffId in indigo.variables:
                                 valuesDict["alexaNameIndigoOnOffActionVariable"] = indigo.variables[variableOnOffId].name
                             else:
-                                valuesDict["alexaNameIndigoOnOffActionVariable"] = 'Variable #%s not found' % variableOnOffId
+                                valuesDict["alexaNameIndigoOnOffActionVariable"] = 'Variable #{} not found'.format(variableOnOffId)
                         
                         if actionDimId == 0:
                             valuesDict["alexaNameIndigoDimAction"] = 'NO ACTION'
@@ -1081,7 +1073,7 @@ class Plugin(indigo.PluginBase):
                             if actionDimId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
                             else:
-                                valuesDict["alexaNameIndigoDimAction"] = 'Action #%s not found' % actionDimId
+                                valuesDict["alexaNameIndigoDimAction"] = 'Action #{} not found'.format(actionDimId)
                         
                         if variableDimId == 0:
                             valuesDict["alexaNameIndigoDimActionVariable"] = 'NO VARIABLE'
@@ -1089,7 +1081,7 @@ class Plugin(indigo.PluginBase):
                             if variableDimId in indigo.variables:
                                 valuesDict["alexaNameIndigoDimActionVariable"] = indigo.variables[variableDimId].name
                             else:
-                                valuesDict["alexaNameIndigoDimActionVariable"] = 'Variable #%s not found' % variableDimId
+                                valuesDict["alexaNameIndigoDimActionVariable"] = 'Variable #{} not found'.format(variableDimId)
 
                     else:
                         valuesDict["alexaNameActionDevice"] = "D"
@@ -1098,7 +1090,7 @@ class Plugin(indigo.PluginBase):
                         if deviceId in indigo.devices:
                             valuesDict["alexaNameIndigoDevice"] = deviceName
                         else:
-                            valuesDict["alexaNameIndigoDevice"] = 'Device #%s not found (\'%s\' )' % (deviceId, deviceName)
+                            valuesDict["alexaNameIndigoDevice"] = 'Device #{} not found (\'{}\' )'.format(deviceId, deviceName)
 
                 else:
                     mode = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['mode'] 
@@ -1118,7 +1110,7 @@ class Plugin(indigo.PluginBase):
                             if actionOnId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoOnAction"] = indigo.actionGroups[actionOnId].name
                             else:
-                                valuesDict["alexaNameIndigoOnAction"] = 'Action #%s not found' % actionOnId
+                                valuesDict["alexaNameIndigoOnAction"] = 'Action #{} not found'.format(actionOnId)
 
                         if actionOffId == 0:
                             valuesDict["alexaNameIndigoOffAction"] = 'NO ACTION'
@@ -1126,7 +1118,7 @@ class Plugin(indigo.PluginBase):
                             if actionOffId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoOffAction"] = indigo.actionGroups[actionOffId].name
                             else:
-                                valuesDict["alexaNameIndigoOffAction"] = 'Action #%s not found' % actionOffId
+                                valuesDict["alexaNameIndigoOffAction"] = 'Action #{} not found'.format(actionOffId)
                         
                         if variableOnOffId == 0:
                             valuesDict["alexaNameIndigoOnOffActionVariable"] = 'NO VARIABLE'
@@ -1134,7 +1126,7 @@ class Plugin(indigo.PluginBase):
                             if variableOnOffId in indigo.variables:
                                 valuesDict["alexaNameIndigoOnOffActionVariable"] = indigo.variables[variableOnOffId].name
                             else:
-                                valuesDict["alexaNameIndigoOnOffActionVariable"] = 'Variable #%s not found' % variableOnOffId
+                                valuesDict["alexaNameIndigoOnOffActionVariable"] = 'Variable #{} not found'.format(variableOnOffId)
                         
                         if actionDimId == 0:
                             valuesDict["alexaNameIndigoDimAction"] = 'NO ACTION'
@@ -1142,7 +1134,7 @@ class Plugin(indigo.PluginBase):
                             if actionDimId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
                             else:
-                                valuesDict["alexaNameIndigoDimAction"] = 'Action #%s not found' % actionDimId
+                                valuesDict["alexaNameIndigoDimAction"] = 'Action #{} not found'.format(actionDimId)
                         
                         if variableDimId == 0:
                             valuesDict["alexaNameIndigoDimActionVariable"] = 'NO VARIABLE'
@@ -1150,7 +1142,7 @@ class Plugin(indigo.PluginBase):
                             if variableDimId in indigo.variables:
                                 valuesDict["alexaNameIndigoDimActionVariable"] = indigo.variables[variableDimId].name
                             else:
-                                valuesDict["alexaNameIndigoDimActionVariable"] = 'Variable #%s not found' % variableDimId
+                                valuesDict["alexaNameIndigoDimActionVariable"] = 'Variable #{} not found'.format(variableDimId)
                     else:
                         valuesDict["alexaNameActionDevice"] = "D"
                         deviceName = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['devName'].replace(',',' ').replace(';',' ')
@@ -1158,7 +1150,7 @@ class Plugin(indigo.PluginBase):
                         if deviceId in indigo.devices:
                             valuesDict["alexaNameIndigoDevice"] = deviceName
                         else:
-                            valuesDict["alexaNameIndigoDevice"] = 'Device #%s not found (\'%s\' )' % (deviceId, deviceName)
+                            valuesDict["alexaNameIndigoDevice"] = 'Device #{} not found (\'{}\' )'.format(deviceId, deviceName)
                 valuesDict["alexaNameHueBridge"] = indigo.devices[int(alexaHueBridgeId)].name
 
         return valuesDict
@@ -1266,35 +1258,35 @@ class Plugin(indigo.PluginBase):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         if len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']) >= DEVICE_LIMIT:
-            errorText = "You can't publish any more Alexa Devices - you've reached the maximum of %i imposed by the plugin on behalf of Amazon Alexa." % DEVICE_LIMIT
+            errorText = "You can't publish any more Alexa Devices - you've reached the maximum of {} imposed by the plugin on behalf of Amazon Alexa.".format(DEVICE_LIMIT)
             self.generalLogger.error(errorText)
             errorsDict = indigo.Dict()
             errorsDict["showAlertText"] = errorText
-            return (valuesDict, errorsDict)
+            return valuesDict, errorsDict
 
         if valuesDict["newAlexaName"] == '':
             errorsDict = indigo.Dict()
             errorsDict["newAlexaName"] = "New Alexa Name is missing and must be present."
             errorsDict["showAlertText"] = "New Alexa Name is missing and must be present."
-            return (valuesDict, errorsDict)
+            return valuesDict, errorsDict
 
         if '|' in valuesDict["newAlexaName"]:
             errorsDict = indigo.Dict()
             errorsDict["newAlexaName"] = "New Alexa Name cannot contain the vertical bar character i.e. '|'"
             errorsDict["showAlertText"] = "New Alexa Name cannot contain the vertical bar character i.e. '|'"
-            return (valuesDict, errorsDict) 
+            return valuesDict, errorsDict
 
         if ',' in valuesDict["newAlexaName"]:
             errorsDict = indigo.Dict()
             errorsDict["newAlexaName"] = "New Alexa Name cannot contain the comma character i.e. ','"
             errorsDict["showAlertText"] = "New Alexa Name cannot contain the comma character i.e. ','"
-            return (valuesDict, errorsDict) 
+            return valuesDict, errorsDict
 
         if ';' in valuesDict["newAlexaName"]:
             errorsDict = indigo.Dict()
             errorsDict["newAlexaName"] = "New Alexa Name cannot contain the semicolon character i.e. ';'"
             errorsDict["showAlertText"] = "New Alexa Name cannot contain the semicolon character i.e. ';'"
-            return (valuesDict, errorsDict) 
+            return valuesDict, errorsDict
 
         newAlexaName = valuesDict["newAlexaName"]
         newAlexaNameKey = newAlexaName.lower()
@@ -1303,29 +1295,29 @@ class Plugin(indigo.PluginBase):
             if ahbDevId == alexaHueBridgeId:
                 errorsDict = indigo.Dict()
                 errorsDict["newAlexaName"] = "Duplicate Alexa Name"
-                errorsDict["showAlertText"] = "Alexa Device Name '%s' is already allocated on this Alexa-Hue Bridge" % newAlexaName
+                errorsDict["showAlertText"] = "Alexa Device Name '{}' is already allocated on this Alexa-Hue Bridge".format(newAlexaName)
             else: 
                 alexaHueBridgeName = indigo.devices[alexaHueBridgeId].name
                 errorsDict = indigo.Dict()
                 errorsDict["newAlexaName"] = "Duplicate Alexa Name"
-                errorsDict["showAlertText"] = "Alexa Device Name '%s' is already allocated on Alexa-Hue Bridge '%s'" % (newAlexaName, alexaHueBridgeName)
-            return (valuesDict, errorsDict)
+                errorsDict["showAlertText"] = "Alexa Device Name '{}' is already allocated on Alexa-Hue Bridge '{}'".format(newAlexaName, alexaHueBridgeName)
+            return valuesDict, errorsDict
 
         if valuesDict["actionOrDevice"] == 'D':
             devId = int(valuesDict["sourceDeviceMenu"])
             if devId == 0:
                 errorsDict = indigo.Dict()
                 errorsDict["newAlexaName"] = "Indigo Device not selected"
-                errorsDict["showAlertText"] = "No Indigo device selected for Alexa Device Name '%s'" % (newAlexaName)
-                return (valuesDict, errorsDict)
+                errorsDict["showAlertText"] = "No Indigo device selected for Alexa Device Name '{}'".format(newAlexaName)
+                return valuesDict, errorsDict
         else: # Assume 'A' = Action
             actionOnId = int(valuesDict["sourceOnActionMenu"])
             actionOffId = int(valuesDict["sourceOffActionMenu"])
             if actionOnId == 0 or actionOffId == 0:
                 errorsDict = indigo.Dict()
                 errorsDict["newAlexaName"] = "Indigo Actions not selected for On or Off or both"
-                errorsDict["showAlertText"] = "Indigo Actions not selected for On or Off or both, for Alexa Device Name '%s'" % (newAlexaName)
-                return (valuesDict, errorsDict)
+                errorsDict["showAlertText"] = "Indigo Actions not selected for On or Off or both, for Alexa Device Name '{}'".format(newAlexaName)
+                return valuesDict, errorsDict
 
 
 
@@ -1350,11 +1342,11 @@ class Plugin(indigo.PluginBase):
 
             valuesDict['alexaDevices'] = json.dumps(publishedAlexaDevices)
 
-            self.generalLogger.debug(u'NUMBER OF DEVICES PRE UPDATE = %s' % len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']))
+            self.generalLogger.debug(u"NUMBER OF DEVICES PRE UPDATE = {}".format(len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'])))
 
             self.retrievePublishedDevices(valuesDict, ahbDevId, False, False)  # This picks up the add of the new device + don't output info message + don't Check for V2 definitions
 
-            self.generalLogger.debug(u'NUMBER OF DEVICES POST UPDATE = %s' % len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']))
+            self.generalLogger.debug(u"NUMBER OF DEVICES POST UPDATE = {}".format(len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'])))
 
             valuesDict["newAlexaName"] = ''
             valuesDict["updatedAlexaDeviceName"] = ''
@@ -1369,9 +1361,9 @@ class Plugin(indigo.PluginBase):
                 valuesDict["showLimitMessage"] = True                
 
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in updateAlexaDevice for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in updateAlexaDevice for '{}'. Line '{}' has error='{}'".format(indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
-        self.generalLogger.debug(u'addNewAlexaDevice VALUESDICT = %s' % valuesDict)
+        self.generalLogger.debug(u"addNewAlexaDevice VALUESDICT = {}".format(valuesDict))
         return valuesDict
 
     ########################################
@@ -1395,41 +1387,41 @@ class Plugin(indigo.PluginBase):
             errorsDict = indigo.Dict()
             errorsDict["updatedAlexaDeviceName"] = "Alexa Name is missing and must be present."
             errorsDict["showAlertText"] = "Alexa Name is missing and must be present."
-            return (valuesDict, errorsDict)
+            return valuesDict, errorsDict
 
         if '|' in updatedAlexaDeviceName:
             errorsDict = indigo.Dict()
             errorsDict["updatedAlexaDeviceName"] = "New Alexa Name cannot contain the vertical bar character i.e. '|'"
             errorsDict["showAlertText"] = "New Alexa Name cannot contain the vertical bar character i.e. '|'"
-            return (valuesDict, errorsDict)
+            return valuesDict, errorsDict
 
         if ',' in updatedAlexaDeviceName:
             errorsDict = indigo.Dict()
             errorsDict["updatedAlexaDeviceName"] = "New Alexa Name cannot contain the comma character i.e. ','"
             errorsDict["showAlertText"] = "New Alexa Name cannot contain the comma character i.e. ','"
-            return (valuesDict, errorsDict)
+            return valuesDict, errorsDict
 
         if ';' in updatedAlexaDeviceName:
             errorsDict = indigo.Dict()
             errorsDict["updatedAlexaDeviceName"] = "New Alexa Name cannot contain the semicolon character i.e. ';'"
             errorsDict["showAlertText"] = "New Alexa Name cannot contain the semicolon character i.e. ';'"
-            return (valuesDict, errorsDict)
+            return valuesDict, errorsDict
 
         if valuesDict["actionOrDevice"] == 'D':
             devId = int(valuesDict["sourceDeviceMenu"])
             if devId == 0:
                 errorsDict = indigo.Dict()
                 errorsDict["updatedAlexaDeviceName"] = "Indigo Device not selected"
-                errorsDict["showAlertText"] = "No Indigo device selected for Alexa Device Name '%s'" % (updatedAlexaDeviceName)
-                return (valuesDict, errorsDict)
+                errorsDict["showAlertText"] = "No Indigo device selected for Alexa Device Name '{}'".format(updatedAlexaDeviceName)
+                return valuesDict, errorsDict
         else: # Assume 'A' = Action
             actionOnId = int(valuesDict["sourceOnActionMenu"])
             actionOffId = int(valuesDict["sourceOffActionMenu"])
             if actionOnId == 0 or actionOffId == 0:
                 errorsDict = indigo.Dict()
                 errorsDict["updatedAlexaDeviceName"] = "Indigo Actions not selected for On or Off or both"
-                errorsDict["showAlertText"] = "Indigo Actions not selected for On or Off or both, for Alexa Device Name '%s'" % (updatedAlexaDeviceName)
-                return (valuesDict, errorsDict)
+                errorsDict["showAlertText"] = "Indigo Actions not selected for On or Off or both, for Alexa Device Name '{}'".format(updatedAlexaDeviceName)
+                return valuesDict, errorsDict
 
         alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId = valuesDict["alexaDevicesList"].split("|")
 
@@ -1439,19 +1431,19 @@ class Plugin(indigo.PluginBase):
                 if ahbDevId == alexaHueBridgeId:
                     errorsDict = indigo.Dict()
                     errorsDict["updatedAlexaDeviceName"] = "Duplicate Alexa Name"
-                    errorsDict["showAlertText"] = "Alexa Device Name '%s' is already allocated on this Alexa-Hue Bridge" % updatedAlexaDeviceName
+                    errorsDict["showAlertText"] = "Alexa Device Name '{}' is already allocated on this Alexa-Hue Bridge".format(updatedAlexaDeviceName)
                 else: 
                     alexaHueBridgeName = indigo.devices[alexaHueBridgeId].name
                     errorsDict = indigo.Dict()
                     errorsDict["updatedAlexaDeviceName"] = "Duplicate Alexa Name"
-                    errorsDict["showAlertText"] = "Alexa Device Name '%s' is already allocated on Alexa-Hue Bridge '%s'" % (updatedAlexaDeviceName, alexaHueBridgeName)
-                return (valuesDict, errorsDict)
+                    errorsDict["showAlertText"] = "Alexa Device Name '{}' is already allocated on Alexa-Hue Bridge '{}'".format(updatedAlexaDeviceName, alexaHueBridgeName)
+                return valuesDict, errorsDict
 
 
         try:
             publishedAlexaDevices = self.jsonLoadsProcess(valuesDict['alexaDevices'])
 
-            updatedAlexaDeviceData = {}
+            updatedAlexaDeviceData = dict()
             updatedAlexaDeviceData['hashKey'] = self.createHashKey(updatedAlexaDeviceNameKey) 
             updatedAlexaDeviceData['name'] = updatedAlexaDeviceName 
             if valuesDict["actionOrDevice"] == 'D':
@@ -1476,11 +1468,11 @@ class Plugin(indigo.PluginBase):
 
             valuesDict['alexaDevices'] = json.dumps(publishedAlexaDevices)
 
-            self.generalLogger.debug(u'NUMBER OF DEVICES PRE UPDATE = %s' % len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']))
+            self.generalLogger.debug(u"NUMBER OF DEVICES PRE UPDATE = {}".format(len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'])))
 
             self.retrievePublishedDevices(valuesDict, ahbDevId, False, False)  # This picks up the update of the existing device + don't output info message + don't Check for V2 definitions
 
-            self.generalLogger.debug(u'NUMBER OF DEVICES POST UPDATE = %s' % len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']))
+            self.generalLogger.debug(u"NUMBER OF DEVICES POST UPDATE = {}".format(len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'])))
 
             valuesDict["newAlexaName"] = ''
             valuesDict["updatedAlexaDeviceName"] = ''
@@ -1495,9 +1487,9 @@ class Plugin(indigo.PluginBase):
                 valuesDict["showLimitMessage"] = True                
 
         except StandardError, e:
-            self.generalLogger.error(u"StandardError detected in updateAlexaDevice for '%s'. Line '%s' has error='%s'" % (indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
+            self.generalLogger.error(u"StandardError detected in updateAlexaDevice for '{}'. Line '{}' has error='{}'".format(indigo.devices[ahbDevId].name, sys.exc_traceback.tb_lineno, e))
 
-        self.generalLogger.debug(u'updateAlexaDevice VALUESDICT = %s' % valuesDict)
+        self.generalLogger.debug(u"updateAlexaDevice VALUESDICT = {}".format(valuesDict))
         return valuesDict
 
     ##########################################################################################
@@ -1534,7 +1526,7 @@ class Plugin(indigo.PluginBase):
     def publishedAlexaDevicesList(self, filter, valuesDict, typeId, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-        self.generalLogger.debug(u"memberDevices called with filter: %s  typeId: %s  Hue Hub: %s" % (filter, typeId, str(ahbDevId)))
+        self.generalLogger.debug(u"memberDevices called with filter: {}  typeId: {}  Hue Hub: {}".format(filter, typeId, str(ahbDevId)))
 
         returnList = list()
         if 'publishedAlexaDevices' in self.globals['alexaHueBridge'][ahbDevId]:
@@ -1546,12 +1538,12 @@ class Plugin(indigo.PluginBase):
                     if alexaData['devId'] in indigo.devices:
                         dev = indigo.devices[alexaData['devId']]
                         if dev.name != alexaDeviceName:
-                            listName += " = %s" % dev.name
+                            listName += " = {}".format(dev.name)
                     else:
                         listName += " = MISSING!"
                 else:  # Assume 'A' = Action
                     listName += " = ACTIONS"
-                alexaDeviceListKey = '%s|%s' % (alexaDeviceNameKey, alexaDeviceName)
+                alexaDeviceListKey = "{}|{}".format(alexaDeviceNameKey, alexaDeviceName)
                 returnList.append((alexaDeviceListKey, listName))
         returnList = sorted(returnList, key= lambda item: item[0])
         return returnList
@@ -1566,12 +1558,12 @@ class Plugin(indigo.PluginBase):
             try:
                 amount = int(valuesDict["discoveryExpiration"])
                 if amount not in range(0, 11):
-                    raise
-            except:
+                    raise ValueError("Amount must be a positive integer from 0 to 10")
+            except ValueError:
                 errorsDict["amount"] = "Amount must be a positive integer from 0 to 10"
         if len(errorsDict) > 0:
-            return (False, valuesDict, errorsDict)
-        return (True, valuesDict)
+            return False, valuesDict, errorsDict
+        return True, valuesDict
 
     ########################################
     # Method called from bridge thread to turn on/off an Alexa device
@@ -1583,7 +1575,7 @@ class Plugin(indigo.PluginBase):
     def turnOnOffDevice(self, ahbDevId, alexaDeviceNameKey, turnOn):
 
         ahbDev = indigo.devices[ahbDevId]
-        publishedAlexaDevices =  self.jsonLoadsProcess(ahbDev.pluginProps['alexaDevices'])
+        publishedAlexaDevices = self.jsonLoadsProcess(ahbDev.pluginProps['alexaDevices'])
         alexaDeviceNameKey = alexaDeviceNameKey.lower()
         if alexaDeviceNameKey in publishedAlexaDevices:
             alexaDeviceData = publishedAlexaDevices[alexaDeviceNameKey]
@@ -1593,13 +1585,13 @@ class Plugin(indigo.PluginBase):
                     devId = int(alexaDeviceData['devId'])
                     name = indigo.devices[devId].name
                     onOff = 'ON' if turnOn else 'OFF' 
-                    self.generalLogger.info(u"Set on state of Alexa device \"%s\" [\"%s\"] to %s" % (alexaDeviceName, name, onOff))
+                    self.generalLogger.info(u"Set on state of Alexa device \"{}\" [\"{}\"] to {}".format(alexaDeviceName, name, onOff))
                     if turnOn:
                         indigo.device.turnOn(devId)
                     else:
                         indigo.device.turnOff(devId)
                 except:
-                    self.generalLogger.error(u"Indigo Device with id %i doesn't exist for Alexa Device \"%s\" - Edit Alexa Hue Bridge \"%s\" and correct error." % (devId, alexaDeviceName, ahbDev.name))
+                    self.generalLogger.error(u"Indigo Device with id {} doesn't exist for Alexa Device \"{}\" - Edit Alexa Hue Bridge \"{}\" and correct error.".format(devId, alexaDeviceName, ahbDev.name))
             elif alexaDeviceData['mode'] == 'A':  # Action
                 onOffVarId = int(alexaDeviceData['variableOnOffId']) 
                 actionOnId = int(alexaDeviceData['actionOnId'])
@@ -1614,9 +1606,9 @@ class Plugin(indigo.PluginBase):
                         indigo.actionGroup.execute(actionOnId)
                     else:
                         indigo.actionGroup.execute(actionOffId)
-                    self.generalLogger.info(u"Set on state of Alexa device \"%s\" to %s" % (alexaDeviceName, onOff))
+                    self.generalLogger.info(u"Set on state of Alexa device \"{}\" to {}".format(alexaDeviceName, onOff))
                 except:
-                    self.generalLogger.error(u"Alexa Device \"%s\" doesn't have supporting Indigo Actions." % alexaDeviceName)
+                    self.generalLogger.error(u"Alexa Device \"{}\" doesn't have supporting Indigo Actions.".format(alexaDeviceName))
                    
 
     ########################################
@@ -1640,20 +1632,20 @@ class Plugin(indigo.PluginBase):
                     dev = indigo.devices[devId]
                     name = dev.name
                 except:
-                    self.generalLogger.error(u"Indigo Device with id %i doesn't exist for Alexa Device \"%s\" - Edit Alexa Hue Bridge \"%s\" and correct error." % (devId, alexaDeviceName, ahbDev.name))
+                    self.generalLogger.error(u"Indigo Device with id {} doesn't exist for Alexa Device \"{}\" - Edit Alexa Hue Bridge \"{}\" and correct error.".format(devId, alexaDeviceName, ahbDev.name))
                     return
                 if isinstance(dev, indigo.DimmerDevice):
-                    self.generalLogger.info(u"Set brightness of Alexa device \"%s\" [\"%s\"] to %i" % (alexaDeviceName, name, brightness))
+                    self.generalLogger.info(u"Set brightness of Alexa device \"{}\" [\"{}\"] to {}".format(alexaDeviceName, name, brightness))
                     indigo.dimmer.setBrightness(dev, value=brightness)
                 else:
-                    self.generalLogger.error(u"Alexa Device \"%s\" [\"%s\"] doesn't support dimming." % name)
+                    self.generalLogger.error(u"Alexa Device \"{}\" [\"{}\"] doesn't support dimming.".format(alexaDeviceName, name))
             elif alexaDevice['mode'] == 'A':  # Action 
                 dimVarId = int(alexaDevice['variableDimId'])
                 actionDimId = int(alexaDevice['actionDimId'])
                 if dimVarId == 0 and actionDimId == 0:
-                    self.generalLogger.error(u"Alexa Device \"%s\" doesn't support dimming." % alexaDeviceName)
+                    self.generalLogger.error(u"Alexa Device \"{}\" doesn't support dimming.".format(alexaDeviceName))
                 else:
-                    self.generalLogger.info(u"Set brightness of Alexa device \"%s\" to %i" % (alexaDeviceName, brightness))
+                    self.generalLogger.info(u"Set brightness of Alexa device \"{}\" to {}".format(alexaDeviceName, brightness))
                     if dimVarId != 0:
                         brightness = str(brightness)
                         indigo.variable.updateValue(dimVarId, value=brightness)
@@ -1667,19 +1659,19 @@ class Plugin(indigo.PluginBase):
 
         ###### TURN ON DISCOVERY ######
         if action.deviceAction == indigo.kDimmerRelayAction.TurnOn:
-            self.generalLogger.info(u"sent \"%s\" %s" % (ahbDev.name, "Discovery on"))
+            self.generalLogger.info(u"sent \"{}\" {}".format(ahbDev.name, "Discovery on"))
             self.startDiscovery(action, ahbDev)
 
         ###### TURN OFF DISCOVERY ######
         elif action.deviceAction == indigo.kDimmerRelayAction.TurnOff:
-            self.generalLogger.info(u"sent \"%s\" %s" % (ahbDev.name, "Discovery off"))
+            self.generalLogger.info(u"sent \"{}\" {}".format(ahbDev.name, "Discovery off"))
             self.stopDiscovery(action, ahbDev)
 
         ###### TOGGLE ######
         elif action.deviceAction == indigo.kDimmerRelayAction.Toggle:
-            self.generalLogger.info(u"sent \"%s\" %s" % (ahbDev.name, "Discovery Toggle"))
+            self.generalLogger.info(u"sent \"{}\" {}".format(ahbDev.name, "Discovery Toggle"))
             desiredOnState = not ahbDev.onState
-            if desiredOnState == True:
+            if desiredOnState:
                 self.startDiscovery(action, ahbDev)
             else:
                 self.stopDiscovery(action, ahbDev)
@@ -1695,7 +1687,7 @@ class Plugin(indigo.PluginBase):
         else:
             if not self.globals['alexaHueBridge'][ahbDev.id]['broadcaster'].is_alive():
                 start_broadcaster_required = True
-        if start_broadcaster_required == True:
+        if start_broadcaster_required:
             self.globals['alexaHueBridge'][ahbDev.id]['broadcaster'] = Broadcaster(self, ahbDev.id)
         try:
             self.globals['alexaHueBridge'][ahbDev.id]['broadcaster'].start()
@@ -1703,10 +1695,10 @@ class Plugin(indigo.PluginBase):
         except StandardError, e:
             # the broadcaster won't start for some reason, so just tell them to try restarting the plugin
 
-            self.generalLogger.error(u"Start Discovery action failed for '%s': broadcaster thread couldn't start. Try restarting the plugin.'" % self.globals['alexaHueBridge'][ahbDev.id]['hubName']) 
+            self.generalLogger.error(u"Start Discovery action failed for '{}': broadcaster thread couldn't start. Try restarting the plugin.'".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName'])) 
             errorLines = traceback.format_exc().splitlines()
             for errorLine in errorLines:
-                self.generalLogger.error(u"%s" % errorLine)   
+                self.generalLogger.error(u"{}".format(errorLine))
             return
 
 
@@ -1716,19 +1708,19 @@ class Plugin(indigo.PluginBase):
         else:
             if not self.globals['alexaHueBridge'][ahbDev.id]['responder'].is_alive():
                 start_responder_required = True
-        if start_responder_required == True:
+        if start_responder_required:
             self.globals['alexaHueBridge'][ahbDev.id]['responder'] = Responder(self, ahbDev.id)
         try:
             self.globals['alexaHueBridge'][ahbDev.id]['responder'].start()
             self.setDeviceDiscoveryState(True, ahbDev.id)
-            self.generalLogger.info(u"Starting Hue Bridge '%s' discovery threads as 'Turn On Discovery' requested" % self.globals['alexaHueBridge'][ahbDev.id]['hubName'])
+            self.generalLogger.info(u"Starting Hue Bridge '{}' discovery threads as 'Turn On Discovery' requested".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName']))
 
         except:
             self.generalLogger.info(u"Start Discovery action failed")
             self.setDeviceDiscoveryState(False, ahbDev.id)
 
             # the responder won't start for some reason, so just tell them to try restarting the plugin
-            self.generalLogger.error(u"Start Discovery action failed for '%s': responder thread couldn't start. Try restarting the plugin." % self.globals['alexaHueBridge'][ahbDev.id]['hubName']) 
+            self.generalLogger.error(u"Start Discovery action failed for '{}': responder thread couldn't start. Try restarting the plugin.".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName'])) 
             # If the broadcaster thread started correctly, then we need to shut it down since it won't work
             # without the responder thread.
             if self.globals['alexaHueBridge'][ahbDev.id]['broadcaster']:
@@ -1747,13 +1739,13 @@ class Plugin(indigo.PluginBase):
         if 'responder' in self.globals['alexaHueBridge'][ahbDev.id]:
             if self.globals['alexaHueBridge'][ahbDev.id]['responder']:
                 self.globals['alexaHueBridge'][ahbDev.id]['responder'].stop()
-        self.generalLogger.info(u"Stopping Hue Bridge '%s' discovery threads as 'Turn Off Discovery' requested" % self.globals['alexaHueBridge'][ahbDev.id]['hubName'])
+        self.generalLogger.info(u"Stopping Hue Bridge '{}' discovery threads as 'Turn Off Discovery' requested".format(self.globals['alexaHueBridge'][ahbDev.id]['hubName']))
 
     def setDeviceDiscoveryState(self, discoveryOn, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
-            self.generalLogger.debug(u'SET DEVICE DISCOVERY STATE = %s' % discoveryOn)
+            self.generalLogger.debug(u"SET DEVICE DISCOVERY STATE = {}".format(discoveryOn))
             if discoveryOn:
                 indigo.devices[ahbDevId].updateStateOnServer("onOffState", True, uiValue="Discovery: On")
                 if self.globals['alexaHueBridge'][ahbDevId]['discoveryExpiration'] == 0:
