@@ -1,4 +1,29 @@
 <Devices>
+    <Device type="custom" id="echoDevice">
+        <Name>Amazon Echo Device</Name>
+        <ConfigUI>
+            <Field type="textfield" id="address" defaultValue="- none -" hidden="false">
+                <Label>IP Address:</Label>
+            </Field>
+        </ConfigUI>
+        <States>
+            <State id="activityDetected">
+                <ValueType>Boolean</ValueType>
+                <TriggerLabel>Activity Detected</TriggerLabel>
+                <ControlPageLabel>Activity Detected</ControlPageLabel>
+            </State>
+            <State id="lastActiveDateTime">
+                <ValueType>String</ValueType>
+                <TriggerLabel>Last Activity Detected</TriggerLabel>
+                <ControlPageLabel>Last Activity Detected</ControlPageLabel>
+            </State>
+        </States>
+
+        <UiDisplayStateId>activityDetected</UiDisplayStateId>
+    </Device>
+
+
+
     <Device type="relay" id="emulatedHueBridge">
         <Name>Emulated Hue Bridge [Devices]</Name>
         <ConfigUI>

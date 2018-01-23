@@ -1,6 +1,6 @@
 # Overview
 
-The Alexa-Hue Bridge is a plugin for version 7+ of the [Indigo Home Automation system][1]. Version 3.x of this plugin emulates multiple Philips Hue bridges to publish Indigo actions and devices (on/off and dimmer types only) to most Amazon Alexa devices (Echo [Gen 1], Dot [Gen 1 & 2], FireTV, etc.).
+The Alexa-Hue Bridge is a plugin for version 7+ of the [Indigo Home Automation system][1]. Version 3.0.23+ of this plugin emulates multiple Philips Hue bridges to publish Indigo actions and devices (on/off and dimmer types only) to these Amazon Alexa devices: Echo [Gen 1], Echo Dot [Gen 1 & 2].
 
 Use the latest 1.x release for Indigo 6.
 

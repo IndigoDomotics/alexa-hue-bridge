@@ -12,6 +12,7 @@ try:
 except ImportError, e:
     pass
 
+import datetime
 import Queue
 import sys
 import threading
@@ -35,10 +36,11 @@ class ThreadDiscoveryLogging(threading.Thread):
             while True:
 
                 try:
-                    discoveryId, client_address, discoveryName, discoveryList = PLUGIN.globals['queues']['discoveryLogging'].get(True, 5)
+                    discoveryId, client_name_address, discoveryName, discoveryList = PLUGIN.globals['queues']['discoveryLogging'].get(True, 5)
+
                     if len(discoveryList) > 0:
                         discoveryList.sort()
-                        PLUGIN.serverLogger.info(u"Alexa-Hue Bridge '{}' responding to Alexa discovery from {} [request id: {}] ...".format(discoveryName, client_address, discoveryId))
+                        PLUGIN.serverLogger.info(u"Alexa-Hue Bridge '{}' responding to Alexa discovery from {} [request id: {}] ...".format(discoveryName, client_name_address, discoveryId))
                         deviceCount = 0
                         for deviceName in discoveryList:
                             deviceCount += 1

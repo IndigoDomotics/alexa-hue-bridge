@@ -11,6 +11,8 @@ try:
     import indigo
 except ImportError, e:
     pass
+
+import datetime
 import json
 import mimetypes
 import re
@@ -108,9 +110,11 @@ class Httpd(threading.Thread):
             except SocketServer.socket.error as exc:
                 if self.stopped:
                     self.retryLimit = 0  # Force Thread end
-                elif exc.args[0] != 48: # 48 = Port In Use
+                elif exc.args[0] != 48:  # 48 = Port In Use
+                    PLUGIN.serverLogger.debug(u"Socket Error {} for {} accessing Port: {} ".format(exc.args[0], indigo.devices[self.ahbDevId].name, PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']))
                     raise
                 else:
+                    PLUGIN.serverLogger.debug(u"Socket Error {} for {} accessing Port: {} ".format(exc.args[0], indigo.devices[self.ahbDevId].name, PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']))
                     self.retry = True
                     self.retryCount += 1
                     PLUGIN.serverLogger.error("'{}' unable to access HTTP port {} as already in use - waiting 15 seconds to try again (will retry {} more times)".format(indigo.devices[self.ahbDevId].name, PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port'], self.retryLimit))
@@ -143,9 +147,29 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
 
     def handle(self): 
         try:
+            client_ip = self.client_address[0]
+            client_port = self.client_address[1]
+            self.client_name_address = u"{}:{}".format(self.client_address[0],self.client_address[1])
+            for aeDevId in PLUGIN.globals['amazonEchoDevices']:
+                if PLUGIN.globals['amazonEchoDevices'][aeDevId] == self.client_address[0]:
+                    self.client_name_address = u"'{}':{}".format(indigo.devices[aeDevId].name, self.client_address[1])
+                    datetimeNowUi = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                    keyValueList = [
+                        {'key': 'activityDetected', 'value': True, 'uiValue': 'Active'},
+                        {'key': 'lastActiveDateTime', 'value': datetimeNowUi}
+                    ]
+                    indigo.devices[aeDevId].updateStatesOnServer(keyValueList)
+
+                    indigo.devices[aeDevId].updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+
+                    PLUGIN.globals['queues']['amazonEchoDeviceTimer'].put(aeDevId)  # Queue a message to set a timer to set device inactive after a short period of time
+
+                    break
+
             ahbDev = indigo.devices[self.server.alexaHueBridgeId]
             data = self.request.recv(1024)
-            PLUGIN.serverLogger.debug(str("HttpdRequestHandler.handle invoked for '{}' by {} with data:\n{}\n\n".format(ahbDev.name, self.client_address, data)))
+            PLUGIN.serverLogger.debug(str("HttpdRequestHandler.handle invoked for '{}' by {} with data:\n{}\n\n".format(ahbDev.name, self.client_name_address, data)))
 
             get_match = re.search(r'GET (.*?(/[^\s^/]*?))\s', data)
             if get_match:
@@ -162,6 +186,10 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                 if put_reponse_data is not None:
                     self.send_headers("file.json")
                     self.request.sendall(put_reponse_data)
+
+                a = 1
+                b = 2
+                c = a + b
         except StandardError, e:
             PLUGIN.serverLogger.error(u"StandardError detected in HttpdRequestHandler for '{}'. Line '{}' has error='{}'".format(ahbDev.name, sys.exc_traceback.tb_lineno, e))
 
@@ -180,7 +208,7 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
     def get_response(self, ahbDevId, request_string):
         try:
             ahbDev = indigo.devices[ahbDevId]
-            PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, request string: {}".format(ahbDev.name, self.client_address, request_string))
+            PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, request string: {}".format(ahbDev.name, self.client_name_address, request_string))
 
             # get device list
             get_match = re.search(r'(/[^\s^/]+)$',request_string)
@@ -192,14 +220,14 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                 request_file = "/index.html"
             PLUGIN.serverLogger.debug("hue_listener.get_response request file: " + request_file)
             if re.search(r'/lights$',request_string):
-                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, discovery request, returning the full list of devices in Hue JSON format".format(ahbDev.name, self.client_address))
+                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, discovery request, returning the full list of devices in Hue JSON format".format(ahbDev.name, self.client_name_address))
                 return self.getHueDeviceJSON(ahbDevId)
 
             # Get individual device status - I'm actually not sure what the last two cases are for, but this is taken directly
             # from the source script so I just left it in.
             get_device_match = re.search(r'/lights/([a-fA-F0-9]+)$',request_string)
             if get_device_match:
-                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, found /lights/ in request string: {}".format(ahbDev.name, self.client_address, request_string))
+                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, found /lights/ in request string: {}".format(ahbDev.name, self.client_name_address, request_string))
                 return self.getHueDeviceJSON(ahbDevId, get_device_match.group(1))  # Hash key
             elif request_file in FILE_LIST:
                 PLUGIN.serverLogger.debug("hue_listener.get_response for '{}', serving from a local file: {}".format(ahbDev.name, request_file))
@@ -271,9 +299,9 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                     list.append({"success":{key:request[key]}})
                     if key.lower() == "on":
                         # ON == TRUE, OFF == FALSE
-                        PLUGIN.turnOnOffDevice(ahbDevId, alexaDeviceNameKey, request[key])
+                        PLUGIN.turnOnOffDevice(self.client_name_address, ahbDevId, alexaDeviceNameKey, request[key])
                     if key.lower() == "bri":
-                        PLUGIN.setDeviceBrightness(ahbDevId, alexaDeviceNameKey, int(round((float(request[key]) * 100.0 ) / 255.0)))  # 2017-AUG-15
+                        PLUGIN.setDeviceBrightness(self.client_name_address, ahbDevId, alexaDeviceNameKey, int(round((float(request[key]) * 100.0 ) / 255.0)))  # 2017-AUG-15
                 return json.dumps(list)
         except StandardError, e:
             PLUGIN.serverLogger.error(u"StandardError detected in put_response for device '{}'. Line '{}' has error='{}'".format(ahbDev.name, sys.exc_traceback.tb_lineno, e))
@@ -317,7 +345,7 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                 PLUGIN.serverLogger.debug('deviceListDict: {}'.format(str(deviceListDict)))
                 PLUGIN.serverLogger.debug(u"'{}' json data: \n{}".format(self.ahbDevName, json.dumps(deviceListDict, indent=4)))
                 if PLUGIN.globals['showDiscoveryInEventLog']:
-                    PLUGIN.globals['queues']['discoveryLogging'].put([self.discoveryId, self.client_address, self.ahbDevName, PLUGIN.globals['discoveryLists'][self.discoveryId]])
+                    PLUGIN.globals['queues']['discoveryLogging'].put([self.discoveryId, self.client_name_address, self.ahbDevName, PLUGIN.globals['discoveryLists'][self.discoveryId]])
                 PLUGIN.serverLogger.debug(u"getHueDeviceJSON invocation completed for '{}'".format(self.ahbDevName))
                 return json.dumps(deviceListDict)
         except Exception, e:

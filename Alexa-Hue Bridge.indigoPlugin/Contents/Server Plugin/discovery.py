@@ -93,7 +93,7 @@ class Broadcaster(threading.Thread):
             while True:
                 sock.sendto(self.broadcast_packet, (BCAST_IP, UPNP_PORT))
                 for x in range(BROADCAST_INTERVAL):
-                    time.sleep(1)
+                    time.sleep(1.5)
                     # Following code will only time out the Broadcaster Thread if PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] > 0 (valid values 0 thru 10 inclusive)
                     # A value of zero means 'always on'
                     if PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] and time.time() > end_time:
@@ -190,6 +190,7 @@ class Responder(threading.Thread):
         self.interrupted = True
 
     def respond(self, addr):
+        time.sleep(1.5)
         PLUGIN.responderLogger.debug("Responder.respond called from address {}\n{}".format(str(addr), self.response_packet))
         PLUGIN.responderLogger.debug("Responder.respond: creating output_socket")
         output_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
