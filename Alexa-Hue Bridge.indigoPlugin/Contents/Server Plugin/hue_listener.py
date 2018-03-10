@@ -150,11 +150,12 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
             client_ip = self.client_address[0]
             client_port = self.client_address[1]
             self.client_name_address = u"{}:{}".format(self.client_address[0],self.client_address[1])
-            for aeDevId in PLUGIN.globals['amazonEchoDevices']:
-                if PLUGIN.globals['amazonEchoDevices'][aeDevId] == self.client_address[0]:
+            knownEchoaddress = False
+            for aeDevId, aeIpAddress in PLUGIN.globals['amazonEchoDevices'].iteritems():
+                if aeIpAddress == self.client_address[0]:
+                    knownEchoaddress = True
                     self.client_name_address = u"'{}':{}".format(indigo.devices[aeDevId].name, self.client_address[1])
                     datetimeNowUi = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
                     keyValueList = [
                         {'key': 'activityDetected', 'value': True, 'uiValue': 'Active'},
                         {'key': 'lastActiveDateTime', 'value': datetimeNowUi}
@@ -164,8 +165,14 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                     indigo.devices[aeDevId].updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 
                     PLUGIN.globals['queues']['amazonEchoDeviceTimer'].put(aeDevId)  # Queue a message to set a timer to set device inactive after a short period of time
-
                     break
+
+            if PLUGIN.globals['amazonEchoDeviceFilterActive'] and not knownEchoaddress:
+                if addr[0] not in PLUGIN.globals['amazonEchoDevices'].values():
+                    if PLUGIN.globals['debug']['filter']:
+                        PLUGIN.responderLogger.debug("HttpdRequestHandler.handle called from SKIPPED address '{}'".format(str(addr[0])))
+                    return
+
 
             ahbDev = indigo.devices[self.server.alexaHueBridgeId]
             data = self.request.recv(1024)

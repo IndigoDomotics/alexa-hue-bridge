@@ -133,27 +133,25 @@ class GitHubPluginUpdater(object):
     # form a GET request to api.github.com and return the parsed JSON response
     def _GET(self, requestPath):
         self._debug('GET %s' % requestPath)
-
         headers = {
             'User-Agent': 'Indigo-Plugin-Updater',
             'Accept': 'application/vnd.github.v3+json'
         }
-
         data = None
-
-        conn = httplib.HTTPSConnection('api.github.com')
-        conn.request('GET', requestPath, None, headers)
-
-        resp = conn.getresponse()
-        self._debug('HTTP %d %s' % (resp.status, resp.reason))
-
-        if (resp.status == 200):
-            data = json.loads(resp.read())
-        elif (400 <= resp.status < 500):
-            error = json.loads(resp.read())
+        requestPath = 'https://api.github.com'+ requestPath
+        f = subprocess.Popen(["curl",  requestPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+        #'-H', str(headers), "-k",
+        out, err = f.communicate()
+        self._debug(u'HTTP Err result:'+unicode(err) )
+        self._debug(u'ReturnCode:{0}'.format(unicode(f.returncode)))
+        if (int(f.returncode) == 0):
+            data = json.loads(out)
+            self._debug(u'Json results:'+unicode(data))
+        elif (400 <= f.status < 500):
+            error = json.loads(out)
             self._error('%s' % error['message'])
         else:
-            self._error('Error: %s' % resp.reason)
+            self._error('Error: %s' % unicode(err))
 
         return data
 
@@ -310,7 +308,11 @@ class GitHubPluginUpdater(object):
 
         self._debug('Downloading zip file: %s' % zipball)
 
-        zipdata = urlopen(zipball).read()
+        # zipdata = urlopen(zipball).read()
+        f = subprocess.Popen(["curl", "-L",  zipball], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+        zipdata, err = f.communicate()
+        self._debug(u'HTTP Err result:'+unicode(err) )
+        self._debug(u'ReturnCode:{0}'.format(unicode(f.returncode)))
         zipfile = ZipFile(StringIO(zipdata))
 
         self._debug('Verifying zip file (%d bytes)...' % len(zipdata))

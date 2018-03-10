@@ -90,6 +90,7 @@ class Plugin(indigo.PluginBase):
         # Initialising Message
         self.generalLogger.info(u"Alexa-Hue Bridge initialising . . .")
 
+        self.globals['amazonEchoDeviceFilterActive'] = False  # True if non-Echo traffic should be ignored
         self.globals['amazonEchoDevices'] = {}
         self.globals['amazonEchoDeviceTimers'] = {}
 
@@ -173,6 +174,9 @@ class Plugin(indigo.PluginBase):
         else:
             prefsConfigUiValues["networkCheckURL"] = NETWORK_AVAILABLE_CHECK_REMOTE_SERVER
 
+        if "nonEchoFilter" not in prefsConfigUiValues:
+            prefsConfigUiValues["nonEchoFilter"] = False
+
         if "showDiscoveryInEventLog" not in prefsConfigUiValues:
             prefsConfigUiValues["showDiscoveryInEventLog"] = True
 
@@ -225,6 +229,10 @@ class Plugin(indigo.PluginBase):
                 self.globals['hostAddress'] = None
             self.generalLogger.info(u"Plugin Host IP Address is discovered as: '{}'".format(self.globals['hostAddress']))
 
+        self.globals['amazonEchoDeviceFilterActive'] = bool(valuesDict.get("nonEchoFilter", False))
+        if self.globals['amazonEchoDeviceFilterActive']:
+            self.generalLogger.info(u"non-Echo network traffic being filtered out")
+
         # Set Discovery Logging
         self.globals['showDiscoveryInEventLog'] = bool(valuesDict.get("showDiscoveryInEventLog", True))
         if self.globals['showDiscoveryInEventLog']:
@@ -251,6 +259,7 @@ class Plugin(indigo.PluginBase):
         self.globals['debug']['debugServer']      = logging.INFO  # For general debugging of the Web Server thread(s)
         self.globals['debug']['debugBroadcaster'] = logging.INFO  # For general debugging of the Broadcaster thread(s)
         self.globals['debug']['debugResponder']   = logging.INFO  # For general debugging of the Responder thread(s)
+        self.globals['debug']['filter'] = False  # For general debugging of filtered non-Echo network traffic 
 
         if not self.globals['debug']['debugEnabled']:
             self.plugin_file_handler.setLevel(logging.INFO)
@@ -261,6 +270,7 @@ class Plugin(indigo.PluginBase):
         debugServer      = bool(valuesDict.get("debugServer", False))
         debugBroadcaster = bool(valuesDict.get("debugBroadcaster", False))
         debugResponder   = bool(valuesDict.get("debugResponder", False))
+        debugFilter      = bool(valuesDict.get("debugFilteredTraffic", False))
         debugMethodTrace = bool(valuesDict.get("debugMethodTrace", False))
 
         if debugGeneral:
@@ -271,6 +281,8 @@ class Plugin(indigo.PluginBase):
             self.globals['debug']['debugBroadcaster'] = logging.DEBUG
         if debugResponder:
             self.globals['debug']['debugResponder'] = logging.DEBUG
+            if debugFilter:
+                self.globals['debug']['filter'] = True  # Only set if Responder Logging in effect
         if debugMethodTrace:
             self.globals['debug']['debugMethodTrace'] = logging.THREADDEBUG
 
@@ -288,6 +300,8 @@ class Plugin(indigo.PluginBase):
                 debugTypes.append('Broadcaster')
             if debugResponder:
                 debugTypes.append('Responder')
+            if debugFilter:
+                debugTypes.append('non-Echo Network Filter')
             if debugMethodTrace:
                 debugTypes.append('Method Trace')
             message = self.activeLoggingTypes(debugTypes)   

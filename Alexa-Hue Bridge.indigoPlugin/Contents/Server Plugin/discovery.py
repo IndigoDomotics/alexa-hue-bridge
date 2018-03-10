@@ -150,6 +150,14 @@ class Responder(threading.Thread):
                 while True:
                     try:
                         data, addr = sock.recvfrom(1024)
+
+                        # Following code discards non-Echo network traffic if option set in plugin config
+                        if PLUGIN.globals['amazonEchoDeviceFilterActive']:
+                            if addr[0] not in PLUGIN.globals['amazonEchoDevices'].values():
+                                if PLUGIN.globals['debug']['filter']:
+                                    PLUGIN.responderLogger.debug("Responder.respond called from SKIPPED address '{}'".format(str(addr[0])))
+                                continue
+
                         # Following code will only time out the Broadcaster Thread if PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] > 0 (valid values 0 thru 10 inclusive)
                         # A value of zero means 'always on'
                         if PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['discoveryExpiration'] and time.time() > end_time:
