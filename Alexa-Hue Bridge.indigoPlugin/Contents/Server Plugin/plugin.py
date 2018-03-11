@@ -589,11 +589,9 @@ class Plugin(indigo.PluginBase):
 
     def didDeviceCommPropertyChange(self, origDev, newDev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
-        self.generalLogger.debug(u"DID-DEVICE-COMM-PROPERTY-CHANGE: Old [{}] vs New [{}]".format(origDev.name, newDev.name))
+
         if newDev.deviceTypeId == EMULATED_HUE_BRIDGE_TYPEID and origDev.enabled and newDev.enabled:
-            # if newDev.pluginProps['port'] == "auto" or newDev.pluginProps['port'] != newDev.address:
-            #     self.generalLogger.debug(u'DID-DEVICE-COMM-PROPERTY-CHANGE: PORT AUTO OR CHANGED')
-            #     return True
+            self.generalLogger.debug(u"DID-DEVICE-COMM-PROPERTY-CHANGE: Old [{}] vs New [{}]".format(origDev.name, newDev.name))
             if 'discoveryExpiration' in origDev.pluginProps and 'discoveryExpiration' in newDev.pluginProps:
                 if origDev.pluginProps['discoveryExpiration'] != newDev.pluginProps['discoveryExpiration']:
                     self.generalLogger.debug(u"DID-DEVICE-COMM-PROPERTY-CHANGE [EXPIRE MINUTES]: Old [{}] vs New [{}]".format(origDev.pluginProps['discoveryExpiration'], newDev.pluginProps['discoveryExpiration']))
@@ -602,6 +600,7 @@ class Plugin(indigo.PluginBase):
             if self.globals['alexaHueBridge'][newDev.id]['forceDeviceStopStart']: # If a force device stop start requested turn off request and action 
                 self.globals['alexaHueBridge'][newDev.id]['forceDeviceStopStart'] = False
                 return True
+                
         return False
 
     def getDeviceConfigUiValues(self, pluginProps, typeId, ahbDevId):
@@ -633,6 +632,7 @@ class Plugin(indigo.PluginBase):
             pluginProps["alexaNameHueBridge"] = ""
             pluginProps["alexaNameActionDevice"] = "X"
             pluginProps["alexaNameIndigoDevice"] = ""
+            pluginProps["alexaNameIndigoDeviceDimAction"] = False
             pluginProps["alexaNameIndigoOnAction"] = ""
             pluginProps["alexaNameIndigoOffAction"] = ""
             pluginProps["alexaNameIndigoOnOffActionVariable"] = ""
@@ -644,6 +644,7 @@ class Plugin(indigo.PluginBase):
             pluginProps["actionOrDevice"] = "D"  # Default Device
 
             pluginProps["sourceDeviceMenu"] = "0"
+            pluginProps["sourceDeviceDimAction"] = False
             pluginProps["newAlexaName"] = ""
             pluginProps["sourceOnActionMenu"] = "0"  # NO ACTION
             pluginProps["sourceOffActionMenu"] = "0"  # NO ACTION
@@ -693,10 +694,11 @@ class Plugin(indigo.PluginBase):
                     self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey] = {}
                     # self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['hashKey'] = hashKey
                     self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['hashKey'] = alexaDeviceData['hashKey']
-                    self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['name']    = alexaDeviceData['name']
-                    self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['mode']    = alexaDeviceData['mode']
+                    self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['name'] = alexaDeviceData['name']
+                    self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['mode'] = alexaDeviceData['mode']
                     self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['devName'] = alexaDeviceData['devName']
-                    self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['devId']   = alexaDeviceData['devId']
+                    self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['devId'] = alexaDeviceData['devId']
+                    self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['devDimAction'] = alexaDeviceData.get('devDimAction', False)
 
                     self.globals['alexaHueBridge']['publishedHashKeys'][alexaDeviceData['hashKey']] = ahbDevId
 
@@ -764,6 +766,7 @@ class Plugin(indigo.PluginBase):
                                             publishedAlexaDevices[versionTwoAlexaDeviceNameKey]['mode'] = 'D'
                                             publishedAlexaDevices[versionTwoAlexaDeviceNameKey]['devName'] = dev.name
                                             publishedAlexaDevices[versionTwoAlexaDeviceNameKey]['devId'] = dev.id
+                                            publishedAlexaDevices[versionTwoAlexaDeviceNameKey]['devDimAction'] = False
 
                                             self.globals['alexaHueBridge'][ahbDevId]['hashKeys'][hashKey] = versionTwoAlexaDeviceNameKey
                                             
@@ -773,6 +776,7 @@ class Plugin(indigo.PluginBase):
                                             self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][versionTwoAlexaDeviceNameKey]['mode']    = 'D'
                                             self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][versionTwoAlexaDeviceNameKey]['devName'] = dev.name
                                             self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][versionTwoAlexaDeviceNameKey]['devId']   = dev.id
+                                            self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][versionTwoAlexaDeviceNameKey]['devIDimAction'] = False
 
                                             self.globals['alexaHueBridge']['publishedHashKeys'][hashKey] = ahbDevId
 
@@ -827,6 +831,7 @@ class Plugin(indigo.PluginBase):
                                 self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['mode']    = alexaDeviceData['mode']
                                 self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['devName'] = alexaDeviceData['devName']
                                 self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['devId']   = alexaDeviceData['devId']
+                                self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['devDimAction'] = alexaDeviceData.get('devDimAction', False)
                             elif alexaDeviceData['mode'] == 'A':  # Action
                                 self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey] = {}
                                 self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey]['name']            = alexaDeviceData['name']
@@ -1102,7 +1107,7 @@ class Plugin(indigo.PluginBase):
             alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId = valuesDict["alexaDevicesListGlobal"].split("|")
             # mode: 'A' = Action, 'D' = Device
             # Action has 4 ids: On,Off,DIM,VAR x 2
-            # Device has 1 id: device
+            # Device has 1 id: device and 1 Bool Dim Action
 
             alexaHueBridgeId = int(alexaHueBridgeId)
             if alexaHueBridgeId == 0:  # = (SELECT_FROM_ALEXA_DEVICE_LIST, "-- Select Alexa Device to Display Info --")
@@ -1146,6 +1151,8 @@ class Plugin(indigo.PluginBase):
                         
                         if actionDimId == 0:
                             valuesDict["alexaNameIndigoDimAction"] = 'NO ACTION'
+                        elif actionDimId == 1:
+                            valuesDict["alexaNameIndigoDimAction"] = 'HANDLE DIM AS ON/OFF'
                         else:
                             if actionDimId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
@@ -1168,6 +1175,7 @@ class Plugin(indigo.PluginBase):
                             valuesDict["alexaNameIndigoDevice"] = deviceName
                         else:
                             valuesDict["alexaNameIndigoDevice"] = 'Device #{} not found (\'{}\' )'.format(deviceId, deviceName)
+                        valuesDict["alexaNameIndigoDeviceDimAction"] = self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey].get('devDimAction', False)
 
                 else:
                     mode = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['mode'] 
@@ -1207,6 +1215,8 @@ class Plugin(indigo.PluginBase):
                         
                         if actionDimId == 0:
                             valuesDict["alexaNameIndigoDimAction"] = 'NO ACTION'
+                        elif actionDimId == 1:
+                            valuesDict["alexaNameIndigoDimAction"] = 'HANDLE DIM AS ON/OFF'
                         else:
                             if actionDimId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
@@ -1228,6 +1238,8 @@ class Plugin(indigo.PluginBase):
                             valuesDict["alexaNameIndigoDevice"] = deviceName
                         else:
                             valuesDict["alexaNameIndigoDevice"] = 'Device #{} not found (\'{}\' )'.format(deviceId, deviceName)
+                        valuesDict["alexaNameIndigoDeviceDimAction"] = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey].get('devDimAction', False)
+
                 valuesDict["alexaNameHueBridge"] = indigo.devices[int(alexaHueBridgeId)].name
 
         return valuesDict
@@ -1238,14 +1250,15 @@ class Plugin(indigo.PluginBase):
     def alexaDevicesListLocal(self, filter, valuesDict, typeId, ahbDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-        allocatedAlexaDevicesList = [(ALEXA_NEW_DEVICE, "-- Add New Alexa Device --")]
+        allocatedAlexaDevicesList = [(ALEXA_NEW_DEVICE, "ADD: New Alexa Device")]
 
 
         for alexaDeviceNameKey, alexaDeviceData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():
             alexaDeviceNameKey = alexaDeviceNameKey.lower().replace(',',' ').replace(';',' ')
             alexaDeviceName = alexaDeviceData['name'].replace(',',' ').replace(';',' ')
             alexaDeviceListKey = alexaDeviceNameKey + '|' + alexaDeviceName + '|' + str(ahbDevId)
-            allocatedAlexaDevicesList.append((alexaDeviceListKey, alexaDeviceName))
+            alexaDeviceNameDisplay = 'UPDATE: ' + alexaDeviceName
+            allocatedAlexaDevicesList.append((alexaDeviceListKey, alexaDeviceNameDisplay))
 
         allocatedAlexaDevicesList = sorted(allocatedAlexaDevicesList, key= lambda item: item[0])
         return allocatedAlexaDevicesList
@@ -1256,6 +1269,7 @@ class Plugin(indigo.PluginBase):
         if "alexaDevicesList" in valuesDict:
             alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId = valuesDict["alexaDevicesList"].split("|")
             alexaDeviceNameKey.replace(',',' ').replace(';',' ')
+            alexaDeviceName.replace('UPDATE: ', '')
             alexaDeviceName.replace(',',' ').replace(';',' ')
 
             alexaHueBridgeId = int(alexaHueBridgeId)
@@ -1263,6 +1277,7 @@ class Plugin(indigo.PluginBase):
                 valuesDict["newAlexaDevice"] = 'NEW'
                 valuesDict["actionOrDevice"] = "D"
                 valuesDict["sourceDeviceMenu"] = 0
+                valuesDict["sourceDeviceDimAction"] = False
                 valuesDict["sourceOnActionMenu"] = 0
                 valuesDict["sourceOffActionMenu"] = 0
                 valuesDict["sourceDimActionMenu"] = 0
@@ -1273,6 +1288,9 @@ class Plugin(indigo.PluginBase):
                 if mode == 'A':
                     valuesDict["actionOrDevice"] = "A"
                     valuesDict["updatedAlexaDeviceName"] = alexaDeviceName
+                    actionOnId = int(self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['actionOnId'])
+
+
                     actionOnId = int(self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['actionOnId'])
                     actionOffId = int(self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['actionOffId'])
                     variableOnOffId = int(self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['variableOnOffId'])
@@ -1302,7 +1320,7 @@ class Plugin(indigo.PluginBase):
                     valuesDict["actionOrDevice"] = "D"
                     valuesDict["updatedAlexaDeviceName"] = alexaDeviceName
                     valuesDict["sourceDeviceMenu"] = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['devId']
-                # valuesDict["alexaNameHueBridge"] = indigo.devices[int(alexaHueBridgeId)].name
+                    valuesDict["sourceDeviceDimAction"] = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey].get('devDimAction', False)
 
         return valuesDict
 
@@ -1317,13 +1335,9 @@ class Plugin(indigo.PluginBase):
         deviceId = valuesDict["sourceDeviceMenu"]
         # If the device id isn't empty (should never be)
         if deviceId == '0' or deviceId == '':
-
             pass
-
         else:
-
             dev = indigo.devices[int(deviceId)]
-
             if valuesDict["newAlexaName"]== '':
                 valuesDict["newAlexaName"] = dev.name
         return valuesDict
@@ -1409,6 +1423,7 @@ class Plugin(indigo.PluginBase):
                 publishedAlexaDevices[newAlexaNameKey]['mode'] = 'D' 
                 publishedAlexaDevices[newAlexaNameKey]['devId'] = devId 
                 publishedAlexaDevices[newAlexaNameKey]['devName'] = dev.name
+                publishedAlexaDevices[newAlexaNameKey]['devDimAction'] = bool(valuesDict["sourceDeviceDimAction"])
             else: # Assume 'A' = Action
                 publishedAlexaDevices[newAlexaNameKey]['mode'] = 'A' 
                 publishedAlexaDevices[newAlexaNameKey]['actionOnId']      = valuesDict["sourceOnActionMenu"]
@@ -1429,6 +1444,7 @@ class Plugin(indigo.PluginBase):
             valuesDict["updatedAlexaDeviceName"] = ''
             valuesDict["actionOrDevice"] = 'D'
             valuesDict["sourceDeviceMenu"] = 0
+            valuesDict["sourceDeviceDimAction"] = False
             valuesDict["sourceOnActionMenu"] = 0
             valuesDict["sourceOffActionMenu"] = 0
             valuesDict["sourceDimActionMenu"] = 0
@@ -1529,6 +1545,7 @@ class Plugin(indigo.PluginBase):
                 updatedAlexaDeviceData['mode'] = 'D' 
                 updatedAlexaDeviceData['devId'] = devId 
                 updatedAlexaDeviceData['devName'] = dev.name.replace(',',' ').replace(';',' ')
+                updatedAlexaDeviceData['devDimAction'] = bool(valuesDict["sourceDeviceDimAction"])
             else: # Assume 'A' = Action
                 updatedAlexaDeviceData['mode'] = 'A' 
                 updatedAlexaDeviceData['actionOnId']      = valuesDict["sourceOnActionMenu"]
@@ -1555,6 +1572,7 @@ class Plugin(indigo.PluginBase):
             valuesDict["updatedAlexaDeviceName"] = ''
             valuesDict["actionOrDevice"] = 'D'
             valuesDict["sourceDeviceMenu"] = 0
+            valuesDict["sourceDeviceDimAction"] = False
             valuesDict["sourceOnActionMenu"] = 0
             valuesDict["sourceOffActionMenu"] = 0
             valuesDict["sourceDimActionMenu"] = 0
@@ -1708,14 +1726,24 @@ class Plugin(indigo.PluginBase):
                     devId = int(alexaDevice['devId'])
                     dev = indigo.devices[devId]
                     name = dev.name
+                    devDimAction = alexaDevice['devDimAction']
                 except:
                     self.generalLogger.error(u"Request received from {}: Indigo Device with id {} doesn't exist for Alexa Device \"{}\" - Edit Alexa Hue Bridge \"{}\" and correct error.".format(client_name_address, devId, alexaDeviceName, ahbDev.name))
                     return
-                if isinstance(dev, indigo.DimmerDevice):
-                    self.generalLogger.info(u"Request received from {}: Setting brightness of Alexa device \"{}\" [\"{}\"] to {}".format(client_name_address, alexaDeviceName, name, brightness))
-                    indigo.dimmer.setBrightness(dev, value=brightness)
+
+                if devDimAction:
+                    if brightness > 0:
+                        turnOn = True
+                    else:
+                        turnOn = False
+                    self.turnOnOffDevice(client_name_address, ahbDevId, alexaDeviceNameKey, turnOn)
                 else:
-                    self.generalLogger.error(u"Request received from {}: Alexa Device \"{}\" [\"{}\"] doesn't support dimming.".format(client_name_address, alexaDeviceName, name))
+                    if isinstance(dev, indigo.DimmerDevice):
+                        self.generalLogger.info(u"Request received from {}: Setting brightness of Alexa device \"{}\" [\"{}\"] to {}".format(client_name_address, alexaDeviceName, name, brightness))
+                        indigo.dimmer.setBrightness(dev, value=brightness)
+                    else:
+                        self.generalLogger.error(u"Request received from {}: Alexa Device \"{}\" [\"{}\"] doesn't support dimming.".format(client_name_address, alexaDeviceName, name))
+
             elif alexaDevice['mode'] == 'A':  # Action 
                 dimVarId = int(alexaDevice['variableDimId'])
                 actionDimId = int(alexaDevice['actionDimId'])

@@ -100,9 +100,10 @@ class Httpd(threading.Thread):
         while self.retryLimit:  # This gets forced to zero (False) if retry limit hit - thereby ending thread
             try:
                 PLUGIN.serverLogger.debug("Httpd.run SocketServer.ThreadingTCPServer")
+
+                SocketServer.ThreadingTCPServer.allow_reuse_address = True
+                SocketServer.ThreadingTCPServer.request_queue_size = 32
                 self.server = SocketServer.ThreadingTCPServer((PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['host'], PLUGIN.globals['alexaHueBridge'][self.ahbDevId]['port']), HttpdRequestHandler)
-                self.server.allow_reuse_address = True
-                self.server.request_queue_size = 32
                 self.server.alexaHueBridgeId = self.ahbDevId
                 PLUGIN.serverLogger.debug("Httpd.run calling server.serve_forever()")
                 self.server.serve_forever()
@@ -167,12 +168,12 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                     PLUGIN.globals['queues']['amazonEchoDeviceTimer'].put(aeDevId)  # Queue a message to set a timer to set device inactive after a short period of time
                     break
 
+            # Following code discards non-Echo network traffic if option set in plugin config
             if PLUGIN.globals['amazonEchoDeviceFilterActive'] and not knownEchoaddress:
                 if addr[0] not in PLUGIN.globals['amazonEchoDevices'].values():
                     if PLUGIN.globals['debug']['filter']:
                         PLUGIN.responderLogger.debug("HttpdRequestHandler.handle called from SKIPPED address '{}'".format(str(addr[0])))
                     return
-
 
             ahbDev = indigo.devices[self.server.alexaHueBridgeId]
             data = self.request.recv(1024)
@@ -300,15 +301,14 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                     return
 
                 request = json.loads(request_data)
+                if "bri" in request:
+                    PLUGIN.setDeviceBrightness(self.client_name_address, ahbDevId, alexaDeviceNameKey, int(round((float(request["bri"]) * 100.0 ) / 255.0)))  # 2017-AUG-15
+                elif "on" in request:
+                    # ON == TRUE, OFF == FALSE
+                    PLUGIN.turnOnOffDevice(self.client_name_address, ahbDevId, alexaDeviceNameKey, request["on"])
                 list = []
                 for key in request:
-                    # Do something for each key here, then return success
                     list.append({"success":{key:request[key]}})
-                    if key.lower() == "on":
-                        # ON == TRUE, OFF == FALSE
-                        PLUGIN.turnOnOffDevice(self.client_name_address, ahbDevId, alexaDeviceNameKey, request[key])
-                    if key.lower() == "bri":
-                        PLUGIN.setDeviceBrightness(self.client_name_address, ahbDevId, alexaDeviceNameKey, int(round((float(request[key]) * 100.0 ) / 255.0)))  # 2017-AUG-15
                 return json.dumps(list)
         except StandardError, e:
             PLUGIN.serverLogger.error(u"StandardError detected in put_response for device '{}'. Line '{}' has error='{}'".format(ahbDev.name, sys.exc_traceback.tb_lineno, e))
