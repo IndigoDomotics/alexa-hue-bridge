@@ -1726,7 +1726,7 @@ class Plugin(indigo.PluginBase):
                     devId = int(alexaDevice['devId'])
                     dev = indigo.devices[devId]
                     name = dev.name
-                    devDimAction = alexaDevice['devDimAction']
+                    devDimAction = alexaDevice.get('devDimAction', False)
                 except:
                     self.generalLogger.error(u"Request received from {}: Indigo Device with id {} doesn't exist for Alexa Device \"{}\" - Edit Alexa Hue Bridge \"{}\" and correct error.".format(client_name_address, devId, alexaDeviceName, ahbDev.name))
                     return
