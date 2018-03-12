@@ -22,8 +22,6 @@ import threading
 import time
 import traceback
 
-from constants import *
-
 FILE_LIST = ["/description.xml", "/index.html", "/hue_logo_0.png", "/hue_logo_3.png"]
 
 DESCRIPTION_XML = """<?xml version="1.0"?>
@@ -79,6 +77,7 @@ ICON_SMALL = "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAB3RJTUUH3AgNBw8DcO
 ICON_BIG = "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"
 
 PLUGIN = None
+
 
 class Httpd(threading.Thread):
     def __init__(self, plugin, ahbDevId):
@@ -148,198 +147,192 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
 
     def handle(self): 
         try:
-            client_ip = self.client_address[0]
-            client_port = self.client_address[1]
-            self.client_name_address = u"{}:{}".format(self.client_address[0],self.client_address[1])
-            knownEchoaddress = False
-            for aeDevId, aeIpAddress in PLUGIN.globals['amazonEchoDevices'].iteritems():
-                if aeIpAddress == self.client_address[0]:
-                    knownEchoaddress = True
-                    self.client_name_address = u"'{}':{}".format(indigo.devices[aeDevId].name, self.client_address[1])
-                    datetimeNowUi = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    keyValueList = [
-                        {'key': 'activityDetected', 'value': True, 'uiValue': 'Active'},
-                        {'key': 'lastActiveDateTime', 'value': datetimeNowUi}
-                    ]
-                    indigo.devices[aeDevId].updateStatesOnServer(keyValueList)
+            self.client_ip = self.client_address[0]
+            self.client_port = self.client_address[1]
+            self.client_name_address = u"{}:{}".format(self.client_ip, self.client_port)
 
-                    indigo.devices[aeDevId].updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+            # Following code checks to see whether device is a known Amazon Echo
+            self.knownEchoAddress = False
+            if self.client_ip in PLUGIN.globals['amazonEchoDevices']:
+                self.knownEchoAddress = True
+                self.aeDevId = PLUGIN.globals['amazonEchoDevices'][self.client_ip]
+                self.client_name_address = u"'{}':{}".format(indigo.devices[self.aeDevId].name, self.client_port)
+                self.datetimeNowUi = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.keyValueList = [
+                    {'key': 'activityDetected', 'value': True, 'uiValue': 'Active'},
+                    {'key': 'lastActiveDateTime', 'value': self.datetimeNowUi}
+                ]
+                indigo.devices[self.aeDevId].updateStatesOnServer(self.keyValueList)
+                indigo.devices[self.aeDevId].updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 
-                    PLUGIN.globals['queues']['amazonEchoDeviceTimer'].put(aeDevId)  # Queue a message to set a timer to set device inactive after a short period of time
-                    break
+                PLUGIN.globals['queues']['amazonEchoDeviceTimer'].put(self.aeDevId)  # Queue a message to set a timer to set device inactive after a short period of time
 
             # Following code discards non-Echo network traffic if option set in plugin config
-            if PLUGIN.globals['amazonEchoDeviceFilterActive'] and not knownEchoaddress:
-                if addr[0] not in PLUGIN.globals['amazonEchoDevices'].values():
+            if PLUGIN.globals['amazonEchoDeviceFilterActive'] and not self.knownEchoAddress:
+                if self.client_ip not in PLUGIN.globals['amazonEchoDevices']:
                     if PLUGIN.globals['debug']['filter']:
-                        PLUGIN.responderLogger.debug("HttpdRequestHandler.handle called from SKIPPED address '{}'".format(str(addr[0])))
+                        PLUGIN.responderLogger.debug("HttpdRequestHandler.handle called from SKIPPED address '{}'".format(str(self.client_ip)))
                     return
 
-            ahbDev = indigo.devices[self.server.alexaHueBridgeId]
-            data = self.request.recv(1024)
-            PLUGIN.serverLogger.debug(str("HttpdRequestHandler.handle invoked for '{}' by {} with data:\n{}\n\n".format(ahbDev.name, self.client_name_address, data)))
+            self.ahbDev = indigo.devices[self.server.alexaHueBridgeId]
+            self.data = self.request.recv(1024)
+            PLUGIN.serverLogger.debug(str("HttpdRequestHandler.handle invoked for '{}' by {} with data:\n{}\n\n".format(self.ahbDev.name, self.client_name_address, self.data)))
 
-            get_match = re.search(r'GET (.*?(/[^\s^/]*?))\s', data)
-            if get_match:
-                get_request_full=get_match.group(1).replace("..","")
-                self.send_headers(get_request_full)
-                self.request.sendall(self.get_response(self.server.alexaHueBridgeId, get_request_full))
-            put_match = re.search(r'PUT (.*?(/[^\s^/]*?))\s', data)
-            put_data_match = re.search(r'({.*})', data)
-            if put_match and put_data_match:
-                put_request_full = put_match.group(1).replace("..","")
-                put_data = put_data_match.group(1)
+            self.get_match = re.search(r'GET (.*?(/[^\s^/]*?))\s', self.data)
+            if self.get_match:
+                self.get_request_full = self.get_match.group(1).replace(".." ,"")
+                self.send_headers(self.get_request_full)
+                self.request.sendall(self.get_response(self.server.alexaHueBridgeId, self.client_name_address, self.get_request_full, ))
+            self.put_match = re.search(r'PUT (.*?(/[^\s^/]*?))\s', self.data)
+            self.put_data_match = re.search(r'({.*})', self.data)
+            if self.put_match and self.put_data_match:
+                self.put_request_full = self.put_match.group(1).replace(".." ,"")
+                self.put_data = self.put_data_match.group(1)
 
-                put_reponse_data = self.put_response(self.server.alexaHueBridgeId, put_request_full, put_data)
-                if put_reponse_data is not None:
+                self.put_reponse_data = self.put_response(self.server.alexaHueBridgeId, self.client_name_address, self.put_request_full, self.put_data)
+                if self.put_reponse_data is not None:
                     self.send_headers("file.json")
-                    self.request.sendall(put_reponse_data)
+                    self.request.sendall(self.put_reponse_data)
 
-                a = 1
-                b = 2
-                c = a + b
         except StandardError, e:
-            PLUGIN.serverLogger.error(u"StandardError detected in HttpdRequestHandler for '{}'. Line '{}' has error='{}'".format(ahbDev.name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.serverLogger.error(u"StandardError detected in HttpdRequestHandler for '{}'. Line '{}' has error='{}'".format('self.ahbDev.name', sys.exc_traceback.tb_lineno, e))
+            PLUGIN.serverLogger.error(u"StandardError detected in HttpdRequestHandler for '{}'. Line '{}' has error='{}'".format(self.ahbDev.name, sys.exc_traceback.tb_lineno, e))
 
-    def send_headers(self, file):
-        self.request.sendall("HTTP/1.1 200 OK\r\n")
-        self.request.sendall("Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n")
-        (type,encoding) = mimetypes.guess_type(file)
-        if type is None:
-            type = "application/json"
-        self.request.sendall("Content-type: "+type+"\r\n\r\n")
-        PLUGIN.serverLogger.debug("HttpdRequestHandler.send_headers: Sent content type: {}".format(type))
+    def send_headers(self, p1_file):
+        try:
+            self.request.sendall("HTTP/1.1 200 OK\r\n")
+            self.request.sendall("Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n")
+            (self.mimeType, self.mimeEncoding) = mimetypes.guess_type(p1_file)
+            if self.mimeType is None:
+                self.mimeType = "application/json"
+            self.request.sendall("Content-type: " + self.mimeType + "\r\n\r\n")
+            PLUGIN.serverLogger.debug("HttpdRequestHandler.send_headers: Sent content type: {}".format(self.mimeType))
+        except StandardError, e:
+            PLUGIN.serverLogger.error(u"StandardError detected in HttpdRequestHandler for '{}'. Line '{}' has error='{}'".format('self.ahbDev.name', sys.exc_traceback.tb_lineno, e))
 
     ########################################
     # Utility methods
     ########################################
-    def get_response(self, ahbDevId, request_string):
+    def get_response(self, p1_ahbDevId, p2_client_name_address, p3_request_string):
         try:
-            ahbDev = indigo.devices[ahbDevId]
-            PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, request string: {}".format(ahbDev.name, self.client_name_address, request_string))
+            self.ahbDev = indigo.devices[p1_ahbDevId]
+            PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, request string: {}".format(self.ahbDev.name, p2_client_name_address, p3_request_string))
 
             # get device list
-            get_match = re.search(r'(/[^\s^/]+)$',request_string)
-            if get_match:
-                request_file=get_match.group(1)
+            self.get_match = re.search(r'(/[^\s^/]+)$', p3_request_string)
+            if self.get_match:
+                self.request_file = self.get_match.group(1)
             else:
-                request_file=""
-            if request_file == "" or request_file == "/":
-                request_file = "/index.html"
-            PLUGIN.serverLogger.debug("hue_listener.get_response request file: " + request_file)
-            if re.search(r'/lights$',request_string):
-                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, discovery request, returning the full list of devices in Hue JSON format".format(ahbDev.name, self.client_name_address))
-                return self.getHueDeviceJSON(ahbDevId)
+                self.request_file = ""
+            if self.request_file == "" or self.request_file == "/":
+                self.request_file = "/index.html"
+            PLUGIN.serverLogger.debug("hue_listener.get_response request file: " + self.request_file)
+            if re.search(r'/lights$', p3_request_string):
+                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, discovery request, returning the full list of devices in Hue JSON format".format(self.ahbDev.name, p2_client_name_address))
+                return self.getHueDeviceJSON(p1_ahbDevId, p2_client_name_address)
 
             # Get individual device status - I'm actually not sure what the last two cases are for, but this is taken directly
             # from the source script so I just left it in.
-            get_device_match = re.search(r'/lights/([a-fA-F0-9]+)$',request_string)
-            if get_device_match:
-                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, found /lights/ in request string: {}".format(ahbDev.name, self.client_name_address, request_string))
-                return self.getHueDeviceJSON(ahbDevId, get_device_match.group(1))  # Hash key
-            elif request_file in FILE_LIST:
-                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}', serving from a local file: {}".format(ahbDev.name, request_file))
-                if request_file == "/description.xml":
-                    hostXml = PLUGIN.globals['alexaHueBridge'][ahbDevId]['host']
-                    portXml = PLUGIN.globals['alexaHueBridge'][ahbDevId]['port']
-                    uuidXml = PLUGIN.globals['alexaHueBridge'][ahbDevId]['uuid']
-                    desc_xml = DESCRIPTION_XML % {'host': hostXml, 'port': portXml, 'uuid': uuidXml}
-                    PLUGIN.serverLogger.debug("hue_listener.get_response for '{}', returning file description.xml with data:\n{}".format(ahbDev.name, desc_xml))
-                    return desc_xml
-                elif request_file == "/hue_logo_0.png":
+            self.get_device_match = re.search(r'/lights/([a-fA-F0-9]+)$', p3_request_string)
+            if self.get_device_match:
+                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}' from {}, found /lights/ in request string: {}".format(self.ahbDev.name, p2_client_name_address, p3_request_string))
+                return self.getHueDeviceJSON(p1_ahbDevId, p2_client_name_address, self.get_device_match.group(1))  # Hash key
+            elif self.request_file in FILE_LIST:
+                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}', serving from a local file: {}".format(self.ahbDev.name, self.request_file))
+                if self.request_file == "/description.xml":
+                    self.hostXml = PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['host']
+                    self.portXml = PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['port']
+                    self.uuidXml = PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['uuid']
+                    self.desc_xml = DESCRIPTION_XML % {'host': self.hostXml, 'port': self.portXml, 'uuid': self.uuidXml}
+                    PLUGIN.serverLogger.debug("hue_listener.get_response for '{}', returning file description.xml with data:\n{}".format(self.ahbDev.name, self.desc_xml))
+                    return self.desc_xml
+                elif self.request_file == "/hue_logo_0.png":
                     return ICON_SMALL.decode('base64')
-                elif request_file == "/hue_logo_3.png":
+                elif self.request_file == "/hue_logo_3.png":
                     return ICON_BIG.decode('base64')
-                elif request_file == "/index.html":
+                elif self.request_file == "/index.html":
                     return INDEX_HTML
                 else:
                     return "HTTP/1.1 404 Not Found"
-            elif re.search(r'/api/[^/]+$',request_string):
-                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}',  found /api/ in request string: {}".format(ahbDev.name, request_string))
+            elif re.search(r'/api/[^/]+$', p3_request_string):
+                PLUGIN.serverLogger.debug("hue_listener.get_response for '{}',  found /api/ in request string: {}".format(self.ahbDev.name, p3_request_string))
                 return "{}"
             else:
                 return "{}"
         except StandardError, e:
-            PLUGIN.serverLogger.error(u"StandardError detected in get_response for '{}'. Line '{}' has error='{}'".format(ahbDev.name, sys.exc_traceback.tb_lineno, e))
+            PLUGIN.serverLogger.error(u"StandardError detected in get_response for '{}'. Line '{}' has error='{}'".format('self.ahbDev.name', sys.exc_traceback.tb_lineno, e))
 
     ########################################
-    def put_response(self, ahbDevId, request_string,request_data):
+    def put_response(self, p1_ahbDevId, p2_client_name_address, p3_request_string, p4_request_data):
         try:
-            ahbDev = indigo.devices[ahbDevId]
-            PLUGIN.serverLogger.debug("put_response for '{}', request_string:\n{}\nrequest_data:\n{}\n\n".format(ahbDev.name, request_string, request_data))
+            self.ahbDev = indigo.devices[p1_ahbDevId]
+            PLUGIN.serverLogger.debug("put_response for '{}', p3_request_string:\n{}\np4_request_data:\n{}\n\n".format(self.ahbDev.name, p3_request_string, p4_request_data))
 
-            put_device_match = re.search(r'/lights/([a-fA-F0-9]+)/state$',request_string)
-            if put_device_match:
-                alexaDeviceHashedKey = str(put_device_match.group(1))
+            self.put_device_match = re.search(r'/lights/([a-fA-F0-9]+)/state$', p3_request_string)
+            if self.put_device_match:
+                self.alexaDeviceHashedKey = str(self.put_device_match.group(1))
 
-                # if alexaDeviceHashedKey == "c3202b3cd2301f75d371c0c660d1c06ecb49f4198036ff7c085810fef5a7f57d":  # TESTING
-                #     alexaDeviceHashedKey = 420025267  # TESTING
-
-                if str(alexaDeviceHashedKey).isdigit():
+                if str(self.alexaDeviceHashedKey).isdigit():
                     try:
-                        name = indigo.devices[int(alexaDeviceHashedKey)].name
+                        self.name = indigo.devices[int(self.alexaDeviceHashedKey)].name
                     except: 
-                        name = "unknown device with ID {}".format(alexaDeviceHashedKey)
-                    PLUGIN.serverLogger.error(u"Unable to process Alexa request on '{}' : Alexa key {} is not a valid hash key for '{}'".format(ahbDev.name, alexaDeviceHashedKey, name))
+                        self.name = "unknown device with ID {}".format(self.alexaDeviceHashedKey)
+                    PLUGIN.serverLogger.error(u"Unable to process Alexa request on '{}' : Alexa key {} is not a valid hash key for '{}'".format(self.ahbDev.name, self.alexaDeviceHashedKey, self.name))
                     return
 
-                if alexaDeviceHashedKey not in PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys']:
-                    PLUGIN.serverLogger.error(u"Alexa-Hue Bridge '{}' does not publish a device/action with Hash Key '{}'".format(ahbDev.name, alexaDeviceHashedKey))
-                    if alexaDeviceHashedKey in PLUGIN.globals['alexaHueBridge']['publishedHashKeys']:
-                        PLUGIN.serverLogger.error(u"Device/Action with Hash Key '{}' is published by Alexa-Hue Bridge '{}'".format(alexaDeviceHashedKey, indigo.devices[PLUGIN.globals['alexaHueBridge']['publishedHashKeys'][alexaDeviceHashedKey]].name))
+                if self.alexaDeviceHashedKey not in PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['hashKeys']:
+                    PLUGIN.serverLogger.error(u"Alexa-Hue Bridge '{}' does not publish a device/action with Hash Key '{}'".format(self.ahbDev.name, self.alexaDeviceHashedKey))
+                    if self.alexaDeviceHashedKey in PLUGIN.globals['alexaHueBridge']['publishedHashKeys']:
+                        PLUGIN.serverLogger.error(u"Device/Action with Hash Key '{}' is published by Alexa-Hue Bridge '{}'".format(self.alexaDeviceHashedKey, indigo.devices[PLUGIN.globals['alexaHueBridge']['publishedHashKeys'][self.alexaDeviceHashedKey]].name))
                         PLUGIN.serverLogger.error(u"Re-run discovery to correct this problem.")
 
                     return
                 else:
-                    alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
+                    self.alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['hashKeys'][self.alexaDeviceHashedKey]
 
-                disableAlexaVariableId = PLUGIN.globals['alexaHueBridge'][ahbDevId]['disableAlexaVariableId']
+                self.disableAlexaVariableId = PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['disableAlexaVariableId']
 
-                if disableAlexaVariableId in indigo.variables and indigo.variables[disableAlexaVariableId].value == 'true':
-                    if not PLUGIN.globals['alexaHueBridge'][ahbDevId]['hideDisableAlexaVariableMessages']:
-                        PLUGIN.serverLogger.info(u"Alexa-Hue Bridge '{}' Alexa commands disabled (by variable): Alexa command for device/ action '{}' ignored.".format(ahbDev.name, alexaDeviceNameKey))
+                if self.disableAlexaVariableId in indigo.variables and indigo.variables[self.disableAlexaVariableId].value == 'true':
+                    if not PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['hideDisableAlexaVariableMessages']:
+                        PLUGIN.serverLogger.info(u"Alexa-Hue Bridge '{}' Alexa commands disabled (by variable): Alexa command for device/ action '{}' ignored.".format(self.ahbDev.name, self.alexaDeviceNameKey))
                     return
 
-                request = json.loads(request_data)
-                if "bri" in request:
-                    PLUGIN.setDeviceBrightness(self.client_name_address, ahbDevId, alexaDeviceNameKey, int(round((float(request["bri"]) * 100.0 ) / 255.0)))  # 2017-AUG-15
-                elif "on" in request:
+                self.requestData = json.loads(p4_request_data)
+                if "bri" in self.requestData:
+                    PLUGIN.setDeviceBrightness(p2_client_name_address, p1_ahbDevId, self.alexaDeviceNameKey, int(round((float(self.requestData["bri"]) * 100.0) / 255.0)))  # 2017-AUG-15
+                elif "on" in self.requestData:
                     # ON == TRUE, OFF == FALSE
-                    PLUGIN.turnOnOffDevice(self.client_name_address, ahbDevId, alexaDeviceNameKey, request["on"])
-                list = []
-                for key in request:
-                    list.append({"success":{key:request[key]}})
-                return json.dumps(list)
+                    PLUGIN.turnOnOffDevice(p2_client_name_address, p1_ahbDevId, self.alexaDeviceNameKey, self.requestData["on"])
+                self.list = []
+                for self.key in self.requestData:
+                    self.list.append({"success":{self.key:self.requestData[self.key]}})
+                return json.dumps(self.list)
         except StandardError, e:
-            PLUGIN.serverLogger.error(u"StandardError detected in put_response for device '{}'. Line '{}' has error='{}'".format(ahbDev.name, sys.exc_traceback.tb_lineno, e))
-
+            PLUGIN.serverLogger.error(u"StandardError detected in put_response for device '{}'. Line '{}' has error='{}'".format(self.ahbDev.name, sys.exc_traceback.tb_lineno, e))
 
     ########################################
     # This is the method that's called to build the member device list. Note
     # that valuesDict is read-only so any changes you make to it will be discarded.
     ########################################
-    def getHueDeviceJSON(self, ahbDevId, alexaDeviceHashedKey=None):
+    def getHueDeviceJSON(self, p1_ahbDevId, p2_client_name_address, p3_alexaDeviceHashedKey=None):
         try:
-            self.ahbDevName = indigo.devices[ahbDevId].name
-            PLUGIN.serverLogger.debug(u"getHueDeviceJSON invoked for '{}' with #Key '{}'".format(self.ahbDevName, alexaDeviceHashedKey))
-            if alexaDeviceHashedKey:
-                # if alexaDeviceHashedKey == "c3202b3cd2301f75d371c0c660d1c06ecb49f4198036ff7c085810fef5a7f57d":  # TESTING
-                #     alexaDeviceHashedKey = 420025261  # TESTING
-
-                if str(alexaDeviceHashedKey).isdigit():
+            self.ahbDevName = indigo.devices[p1_ahbDevId].name
+            PLUGIN.serverLogger.debug(u"getHueDeviceJSON invoked for '{}' with #Key '{}'".format(self.ahbDevName, p3_alexaDeviceHashedKey))
+            if p3_alexaDeviceHashedKey:
+                if str(p3_alexaDeviceHashedKey).isdigit():
                     try:
-                        name = indigo.devices[int(alexaDeviceHashedKey)].name
+                        self.name = indigo.devices[int(p3_alexaDeviceHashedKey)].name
                     except: 
-                        name = "unknown device with ID {}".format(alexaDeviceHashedKey)
-                    PLUGIN.serverLogger.error(u"Unable to process Alexa request for '{}' : Alexa key {} is not a valid hash key for '{}'".format(self.ahbDevName, alexaDeviceHashedKey, name))
+                        self.name = "unknown device with ID {}".format(p3_alexaDeviceHashedKey)
+                    PLUGIN.serverLogger.error(u"Unable to process Alexa request for '{}' : Alexa key {} is not a valid hash key for '{}'".format(self.ahbDevName, p3_alexaDeviceHashedKey, self.name))
                     return json.dumps({})
 
                 # Return the JSON for a single device
-                alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
-                PLUGIN.serverLogger.debug(u"getHueDeviceJSON single-device invocation for '{}' and called with Alexa Device Hash Key [Name]: {} [{}]".format(self.ahbDevName, alexaDeviceHashedKey, alexaDeviceNameKey))
-                deviceDict = self._createDeviceDict('access', ahbDevId, alexaDeviceHashedKey, False)
-                PLUGIN.serverLogger.debug(u"'{}' json data: \n{}".format(self.ahbDevName, json.dumps(deviceDict, indent=4)))
-                return json.dumps(deviceDict)
+                self.alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['hashKeys'][p3_alexaDeviceHashedKey]
+                PLUGIN.serverLogger.debug(u"getHueDeviceJSON single-device invocation for '{}' and called with Alexa Device Hash Key [Name]: {} [{}]".format(self.ahbDevName, p3_alexaDeviceHashedKey, self.alexaDeviceNameKey))
+                self.deviceDict = self._createDeviceDict('access', p1_ahbDevId, p3_alexaDeviceHashedKey, False)
+                PLUGIN.serverLogger.debug(u"'{}' json data: \n{}".format(self.ahbDevName, json.dumps(self.deviceDict, indent=4)))
+                return json.dumps(self.deviceDict)
             else:
                 if PLUGIN.globals['showDiscoveryInEventLog']:
                     PLUGIN.globals['discoveryId'] += 1
@@ -348,71 +341,71 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                     PLUGIN.serverLogger.debug(u"getHueDeviceJSON all-devices invocation for '{}: Discovery Count = {}".format(self.ahbDevName, self.discoveryId))
                 # Return the JSON for all devices - called when discovering devices
                 PLUGIN.serverLogger.debug(u"getHueDeviceJSON all-devices invocation for '{}'".format(self.ahbDevName))
-                deviceListDict = self._createFullDeviceDict(ahbDevId)
-                PLUGIN.serverLogger.debug('deviceListDict: {}'.format(str(deviceListDict)))
-                PLUGIN.serverLogger.debug(u"'{}' json data: \n{}".format(self.ahbDevName, json.dumps(deviceListDict, indent=4)))
+                self.deviceListDict = self._createFullDeviceDict(p1_ahbDevId)
+                PLUGIN.serverLogger.debug('deviceListDict: {}'.format(str(self.deviceListDict)))
+                PLUGIN.serverLogger.debug(u"'{}' json data: \n{}".format(self.ahbDevName, json.dumps(self.deviceListDict, indent=4)))
                 if PLUGIN.globals['showDiscoveryInEventLog']:
-                    PLUGIN.globals['queues']['discoveryLogging'].put([self.discoveryId, self.client_name_address, self.ahbDevName, PLUGIN.globals['discoveryLists'][self.discoveryId]])
+                    PLUGIN.globals['queues']['discoveryLogging'].put([self.discoveryId, p2_client_name_address, self.ahbDevName, PLUGIN.globals['discoveryLists'][self.discoveryId]])
                 PLUGIN.serverLogger.debug(u"getHueDeviceJSON invocation completed for '{}'".format(self.ahbDevName))
-                return json.dumps(deviceListDict)
+                return json.dumps(self.deviceListDict)
         except Exception, e:
             PLUGIN.serverLogger.error(u"getHueDeviceJSON exception: \n{}".format(str(traceback.format_exc(10))))
 
     ################################################################################
     # Utility methods to create the Hue dicts that will be converted to JSON
     ################################################################################
-    def _createDeviceDict(self, function, ahbDevId, alexaDeviceHashedKey, isShowDiscoveryInEventLog):
+    def _createDeviceDict(self, p1_function, p2_ahbDevId, p3_alexaDeviceHashedKey, p4_isShowDiscoveryInEventLog):
         PLUGIN.serverLogger.debug(u"_createDeviceDict called")
 
         try:
-            ahbDev = indigo.devices[ahbDevId]
-            ahbDevName = ahbDev.name
-            publishedAlexaDevices =  self.jsonLoadsProcess(ahbDev.pluginProps['alexaDevices'])
+            self.ahbDev = indigo.devices[p2_ahbDevId]
+            self.ahbDevName = self.ahbDev.name
+            self.publishedAlexaDevices = self.jsonLoadsProcess(self.ahbDev.pluginProps['alexaDevices'])
 
-            alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['hashKeys'][alexaDeviceHashedKey]
-            if alexaDeviceNameKey in publishedAlexaDevices:
-                alexaDeviceData = publishedAlexaDevices[alexaDeviceNameKey]
-                alexaDeviceName = alexaDeviceData['name']
-                if alexaDeviceData['mode'] == 'D':  # Device
-                    devId = int(alexaDeviceData['devId'])
-                    if devId in indigo.devices:
-                        dev = indigo.devices[devId]
-                        onState = dev.onState
-                        reachable = dev.enabled
-                        brightness = dev.states.get("brightness", 255)
-                        uniqueId = alexaDeviceHashedKey
+            self.alexaDeviceNameKey = PLUGIN.globals['alexaHueBridge'][p2_ahbDevId]['hashKeys'][p3_alexaDeviceHashedKey]
+            if self.alexaDeviceNameKey in self.publishedAlexaDevices:
+                self.alexaDeviceData = self.publishedAlexaDevices[self.alexaDeviceNameKey]
+                self.alexaDeviceName = self.alexaDeviceData['name']
+                if self.alexaDeviceData['mode'] == 'D':  # Device
+                    self.devId = int(self.alexaDeviceData['devId'])
+                    if self.devId in indigo.devices:
+                        self.dev = indigo.devices[self.devId]
+                        self.onState = self.dev.onState
+                        self.reachable = self.dev.enabled
+                        self.brightness = self.dev.states.get("brightness", 255)
+                        self.uniqueId = p3_alexaDeviceHashedKey
                     else:
-                        PLUGIN.serverLogger.error(u"Unable to {} '{}' from '{}', associated device #{} not found".format(function, alexaDeviceName, ahbDevName, devId))
+                        PLUGIN.serverLogger.error(u"Unable to {} '{}' from '{}', associated device #{} not found".format(p1_function, self.alexaDeviceName, self.ahbDevName, self.devId))
                         return {}
-                elif alexaDeviceData['mode'] == 'A':  # Action
-                    onOffVariableId = int(alexaDeviceData["variableOnOffId"])
-                    if onOffVariableId != 0:
-                        if onOffVariableId in indigo.variables:
-                            onState = bool(indigo.variables[onOffVariableId].value)
+                elif self.alexaDeviceData['mode'] == 'A':  # Action
+                    self.onOffVariableId = int(self.alexaDeviceData["variableOnOffId"])
+                    if self.onOffVariableId != 0:
+                        if self.onOffVariableId in indigo.variables:
+                            self.onState = bool(indigo.variables[self.onOffVariableId].value)
                         else:
-                            PLUGIN.serverLogger.error(u"Unable to {} '{}' from '{}', associated On/Off variable #{} not found".format(function, alexaDeviceName, ahbDevName, onOffVariableId))
+                            PLUGIN.serverLogger.error(u"Unable to {} '{}' from '{}', associated On/Off variable #{} not found".format(p1_function, self.alexaDeviceName, self.ahbDevName, self.onOffVariableId))
                             return {}
                     else:
-                        onState = True  # Default to On ???
-                    reachable = True
-                    dimVariableId = int(alexaDeviceData["variableDimId"])
-                    if dimVariableId != 0:
-                        if dimVariableId in indigo.variables:                        
-                            brightness = int(indigo.variables[dimVariableId].value)
+                        self.onState = True  # Default to On ???
+                    self.reachable = True
+                    self.dimVariableId = int(self.alexaDeviceData["variableDimId"])
+                    if self.dimVariableId != 0:
+                        if self.dimVariableId in indigo.variables:                        
+                            self.brightness = int(indigo.variables[self.dimVariableId].value)
                         else:
-                            PLUGIN.serverLogger.error(u"Unable to {} '{}' from '{}', associated Dim variable #{} not found".format(function, alexaDeviceName, ahbDevName, dimVariableId))
+                            PLUGIN.serverLogger.error(u"Unable to {} '{}' from '{}', associated Dim variable #{} not found".format(p1_function, self.alexaDeviceName, self.ahbDevName, self.dimVariableId))
                             return {}
                     else:
-                        brightness = 255  # Default to 255 (max brightness)
-                    uniqueId = alexaDeviceHashedKey
+                        self.brightness = 255  # Default to 255 (max brightness)
+                    self.uniqueId = p3_alexaDeviceHashedKey
                 else:
                     return {}
             else:
-                PLUGIN.serverLogger.error(u"_createDeviceDict: alexaDeviceNameKey '{}' not in published devices; HashKey='{}".format(alexaDeviceNameKey, alexaDeviceHashedKey))
+                PLUGIN.serverLogger.error(u"_createDeviceDict: alexaDeviceNameKey '{}' not in published devices; HashKey='{}".format(self.alexaDeviceNameKey, p3_alexaDeviceHashedKey))
                 return {}
 
-            if isShowDiscoveryInEventLog:
-                PLUGIN.globals['discoveryLists'][self.discoveryId].append(alexaDeviceName)
+            if p4_isShowDiscoveryInEventLog:
+                PLUGIN.globals['discoveryLists'][self.discoveryId].append(self.alexaDeviceName)
 
             return {
                 "pointsymbol": {
@@ -426,11 +419,11 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                     "8": "none",
                 },
                 "state": {
-                    "on": onState,
+                    "on": self.onState,
                     "xy": [0.4589, 0.4103],
                     "alert": "none",
-                    "reachable": reachable,
-                    "bri": brightness,
+                    "reachable": self.reachable,
+                    "bri": self.brightness,
                     "hue": 14924,
                     "colormode": "hs",
                     "ct": 365,
@@ -438,9 +431,9 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
                     "sat": 143
                 },
                 "swversion": "6601820",
-                "name": alexaDeviceName, 
+                "name": self.alexaDeviceName, 
                 "manufacturername": "Philips",
-                "uniqueid": uniqueId,
+                "uniqueid": self.uniqueId,
                 "type": "Extended color light",
                 "modelid": "LCT001"
             }
@@ -449,40 +442,39 @@ class HttpdRequestHandler(SocketServer.BaseRequestHandler):
         except Exception, e:
             PLUGIN.serverLogger.error(u"_createDeviceDict exception: \n{}".format(str(traceback.format_exc(10))))
 
-
-    def _createFullDeviceDict(self, ahbDevId):
+    def _createFullDeviceDict(self, p1_ahbDevId):
         PLUGIN.serverLogger.debug(u"_createFullDeviceDict called")
-        returnDict = dict()
-        PLUGIN.serverLogger.debug(u"_createFullDeviceDict: publishedAlexaDevices: \n{}".format(str(PLUGIN.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'])))
+        self.returnDict = dict()
+        PLUGIN.serverLogger.debug(u"_createFullDeviceDict: publishedAlexaDevices: \n{}".format(str(PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['publishedAlexaDevices'])))
 
-        ahbDev = indigo.devices[ahbDevId]
-        publishedAlexaDevices =  self.jsonLoadsProcess(ahbDev.pluginProps['alexaDevices'])
+        self.ahbDev = indigo.devices[p1_ahbDevId]
+        self.publishedAlexaDevices = self.jsonLoadsProcess(self.ahbDev.pluginProps['alexaDevices'])
 
-        for alexaDeviceNameKey, AlexaDeviceData in publishedAlexaDevices.iteritems():
-            alexaDeviceHashKey = PLUGIN.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'][alexaDeviceNameKey]['hashKey']
-            newDeviceDict = self._createDeviceDict('publish', ahbDevId, alexaDeviceHashKey, PLUGIN.globals['showDiscoveryInEventLog'])
-            PLUGIN.serverLogger.debug(u"_createFullDeviceDict: new device added: \n{}".format(str(newDeviceDict)))
-            returnDict[alexaDeviceHashKey] = newDeviceDict
-        return returnDict
+        for self.alexaDeviceNameKey, self.AlexaDeviceData in self.publishedAlexaDevices.iteritems():
+            self.alexaDeviceHashKey = PLUGIN.globals['alexaHueBridge'][p1_ahbDevId]['publishedAlexaDevices'][self.alexaDeviceNameKey]['hashKey']
+            self.newDeviceDict = self._createDeviceDict('publish', p1_ahbDevId, self.alexaDeviceHashKey, PLUGIN.globals['showDiscoveryInEventLog'])
+            PLUGIN.serverLogger.debug(u"_createFullDeviceDict: new device added: \n{}".format(str(self.newDeviceDict)))
+            self.returnDict[self.alexaDeviceHashKey] = self.newDeviceDict
+        return self.returnDict
 
     ########################################
     # This method is called to load the stored json data and make sure the Alexa Name keys are valid before returning data
     # i.e. remove leading/trailing spaces, remove caharcters ',', ';', replace multiple concurrent spaces with one space, force to lower case
     ########################################
-    def jsonLoadsProcess(self, dataToLoad):
+    def jsonLoadsProcess(self, p1_dataToLoad):
 
-        publishedAlexaDevices = json.loads(dataToLoad)
+        self.publishedAlexaDevices = json.loads(p1_dataToLoad)
 
-        alexaDeviceNameKeyList = []
-        for alexaDeviceNameKey, alexaDeviceData in publishedAlexaDevices.iteritems():
-            alexaDeviceNameKeyList.append(alexaDeviceNameKey)
+        self.alexaDeviceNameKeyList = []
+        for self.alexaDeviceNameKey, self.alexaDeviceData in self.publishedAlexaDevices.iteritems():
+            self.alexaDeviceNameKeyList.append(self.alexaDeviceNameKey)
 
-        for alexaDeviceNameKey in alexaDeviceNameKeyList:
-            alexaDeviceNameKeyProcessed = ' '. join((alexaDeviceNameKey.strip().lower().replace(',',' ').replace(';',' ')).split())
-            if alexaDeviceNameKeyProcessed != alexaDeviceNameKey:
-                publishedAlexaDevices[alexaDeviceNameKeyProcessed] = publishedAlexaDevices.pop(alexaDeviceNameKey)
+        for self.alexaDeviceNameKey in self.alexaDeviceNameKeyList:
+            self.alexaDeviceNameKeyProcessed = ' '. join((self.alexaDeviceNameKey.strip().lower().replace(',', ' ').replace(';', ' ')).split())
+            if self.alexaDeviceNameKeyProcessed != self.alexaDeviceNameKey:
+                self.publishedAlexaDevices[self.alexaDeviceNameKeyProcessed] = self.publishedAlexaDevices.pop(self.alexaDeviceNameKey)
 
-        return publishedAlexaDevices
+        return self.publishedAlexaDevices
 
 
 

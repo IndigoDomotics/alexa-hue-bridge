@@ -400,7 +400,8 @@ class Plugin(indigo.PluginBase):
 
             aeDev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
             
-            self.globals['amazonEchoDevices'][aeDev.id] = aeDev.address
+            if aeDev.address != '- none -':
+                self.globals['amazonEchoDevices'][aeDev.address] = aeDev.id
 
         except StandardError, e:
             self.generalLogger.error(u"StandardError detected in deviceStartComm [AE] for '{}'. Line '{}' has error='{}'".format(indigo.devices[aeDev.id].name, sys.exc_traceback.tb_lineno, e))
@@ -565,25 +566,27 @@ class Plugin(indigo.PluginBase):
         except StandardError, e:
             self.generalLogger.error(u"StandardError detected in deviceStartComm [AHB] for '{}'. Line '{}' has error='{}'".format(indigo.devices[ahbDev.id].name, sys.exc_traceback.tb_lineno, e))
 
-    def deviceStopComm(self, ahbDev):
+    def deviceStopComm(self, dev):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         try:
-            if ahbDev.deviceTypeId != EMULATED_HUE_BRIDGE_TYPEID:
-                return
+            stoppedId = dev.id
+            stoppedAddress = dev.address
+            stoppedName = dev.name
 
-            stoppedId = ahbDev.id
-            stoppedName = ahbDev.name
-
-            if 'webServer' in self.globals['alexaHueBridge'][stoppedId]:
-                if self.globals['alexaHueBridge'][stoppedId]['webServer']:
-                    self.globals['alexaHueBridge'][stoppedId]['webServer'].stop()
-            if 'broadcaster' in self.globals['alexaHueBridge'][stoppedId]:
-                if self.globals['alexaHueBridge'][stoppedId]['broadcaster']:
-                    self.globals['alexaHueBridge'][stoppedId]['broadcaster'].stop()
-            if 'responder' in self.globals['alexaHueBridge'][stoppedId]:
-                if self.globals['alexaHueBridge'][stoppedId]['responder']:
-                    self.globals['alexaHueBridge'][stoppedId]['responder'].stop()
+            if dev.deviceTypeId == ECHO_DEVICE_TYPEID:
+                if dev.address in self.globals['amazonEchoDevices']:
+                    del self.globals['amazonEchoDevices'][stoppedAddress]
+            elif dev.deviceTypeId == EMULATED_HUE_BRIDGE_TYPEID:
+                if 'webServer' in self.globals['alexaHueBridge'][stoppedId]:
+                    if self.globals['alexaHueBridge'][stoppedId]['webServer']:
+                        self.globals['alexaHueBridge'][stoppedId]['webServer'].stop()
+                if 'broadcaster' in self.globals['alexaHueBridge'][stoppedId]:
+                    if self.globals['alexaHueBridge'][stoppedId]['broadcaster']:
+                        self.globals['alexaHueBridge'][stoppedId]['broadcaster'].stop()
+                if 'responder' in self.globals['alexaHueBridge'][stoppedId]:
+                    if self.globals['alexaHueBridge'][stoppedId]['responder']:
+                        self.globals['alexaHueBridge'][stoppedId]['responder'].stop()
         except StandardError, e:
             self.generalLogger.error(u"StandardError detected in deviceStopComm for '{}'. Line '{}' has error='{}'".format(stoppedName, sys.exc_traceback.tb_lineno, e))
 
@@ -917,7 +920,9 @@ class Plugin(indigo.PluginBase):
     def closedAeDeviceConfigUi(self, valuesDict, userCancelled, typeId, aeDevId):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
         try:
-            self.globals['amazonEchoDevices'][aeDevId] = valuesDict.get("address", '- none -')
+            echoAddress = valuesDict.get("address", '- none -')
+            if echoAddress != '- none -':
+                self.globals['amazonEchoDevices'][echoAddress] = aeDevId
             return valuesDict
 
         except StandardError, e:
@@ -981,8 +986,8 @@ class Plugin(indigo.PluginBase):
                         self.generalLogger.info(u"A device ({}) that was published has been deleted - you'll probably want use the Alexa app to forget that device.".format(dev.name))
                         self.refreshDeviceList(ahbDevId)
         elif dev.deviceTypeId == ECHO_DEVICE_TYPEID:
-            if dev.id in self.globals['amazonEchoDevices']:
-                del self.globals['amazonEchoDevices'][dev.id]
+            if dev.address in self.globals['amazonEchoDevices']:
+                del self.globals['amazonEchoDevices'][dev.address]
 
         super(Plugin, self).deviceDeleted(dev)
 
