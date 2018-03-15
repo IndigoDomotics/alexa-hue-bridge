@@ -49,23 +49,6 @@
 
     <Field id="separator-5" type="separator"/>  
 
-    <Field type="checkbox" id="updateCheck" defaultValue="true" tooltip="Tick to turn on checking for new Alexa-Hue Bridge plugin version">
-        <Label>Check for updates:</Label>
-        <Description>Enable to check for new version of Alexa-Hue Bridge plugin.</Description>
-    </Field>
-    <Field id="help-5" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
-        <Label>^ Use Update Check to check for a new release of the Alexa-Hue Bridge plugin on Github. Use plugin menu to update plugin. Set check frequency in field below.</Label>
-    </Field>
-    <Field id="checkFrequency" type="menu" defaultValue="DAILY" enabledBindingId="updateCheck" tooltip="Select update check frequency">
-        <Label>Check Frequency:</Label>
-        <List>
-            <Option value="DAILY">Check every day</Option>
-            <Option value="WEEKLY">Check every week</Option>
-        </List>
-    </Field>
-
-    <Field id="separator-6" type="separator"/>  
-
     <Field type="checkbox" id="debugEnabled" default="false">
         <Label>Debugging:</Label>
         <Description>Enable debugging options.</Description>

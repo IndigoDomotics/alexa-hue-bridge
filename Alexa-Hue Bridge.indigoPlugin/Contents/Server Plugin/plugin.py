@@ -24,7 +24,6 @@ import uuid
 
 from amazon_echo_device_timer import ThreadAmazonEchoDeviceTimer
 from constants import *
-from ghpu import GitHubPluginUpdater
 from discovery import Broadcaster, Responder
 from discovery_logging import ThreadDiscoveryLogging
 from hue_listener import Httpd
@@ -111,9 +110,6 @@ class Plugin(indigo.PluginBase):
                     pass
         self.generalLogger.debug(u"PORTLIST @Plugin INIT: {}".format(self.globals['portList']))
 
-        # Initialise dictionary for update checking
-        self.globals['update'] = {}
-
         # Set Plugin Config Values
         self.closedPrefsConfigUi(pluginPrefs, False)
 
@@ -124,26 +120,9 @@ class Plugin(indigo.PluginBase):
     def __del__(self):
         indigo.PluginBase.__del__(self)
 
-    def updatePlugin(self):
-        self.globals['update']['updater'].update()
-
-    def checkForUpdates(self):
-        self.globals['update']['updater'].checkForUpdate()
-
-    def forceUpdate(self):
-        self.globals['update']['updater'].update(currentVersion='0.0.0')
-
-    def checkRateLimit(self):
-        limiter = self.globals['update']['updater'].getRateLimit()
-        self.generalLogger.info("RateLimit limit:{d[0]} remaining:{d[1]} resetAt:{d[2]}".format(d=limiter))
-
 
     def startup(self):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
-
-        # Set-up update checker
-        self.globals['update']['updater'] = GitHubPluginUpdater(self)
-        self.globals['update']['nextCheckTime'] = time()
  
         self.generalLogger.info(u"Alexa-Hue Bridge initialization complete")
 
@@ -202,16 +181,6 @@ class Plugin(indigo.PluginBase):
             return
 
         self.globals['networkAvailable']['checkUrl'] = valuesDict.get("networkCheckURL", NETWORK_AVAILABLE_CHECK_REMOTE_SERVER)
-
-        self.globals['update']['check'] = bool(valuesDict.get("updateCheck", False))
-        self.globals['update']['checkFrequency'] = valuesDict.get("checkFrequency", 'DAILY')
-
-
-        if self.globals['update']['checkFrequency'] == 'WEEKLY':
-            self.globals['update']['checkTimeIncrement'] = (7 * 24 * 60 * 60)  # In seconds
-        else:
-            # DAILY 
-            self.globals['update']['checkTimeIncrement'] = (24 * 60 * 60)  # In seconds
 
         # Set Host IP Address
         self.globals['overriddenHostIpAddress'] = ''  # Assume not overridden
@@ -323,7 +292,7 @@ class Plugin(indigo.PluginBase):
     def runConcurrentThread(self):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
-        # This thread is used to detect plugin close down and check for updates
+        # This thread is used to detect plugin close down
         try:
             self.sleep(5) # in seconds - Allow startup to complete
 
@@ -362,16 +331,6 @@ class Plugin(indigo.PluginBase):
             self.globals['networkAvailable']['online'] = True  # Used by runConcurrent Thread which is waiting for this to go True
 
             while True:
-                if self.globals['networkAvailable']['online'] and self.globals['update']['check']:
-                    if time() > self.globals['update']['nextCheckTime']:
-                        if not 'checkTimeIncrement' in self.globals['update']:
-                            self.globals['update']['checkTimeIncrement'] = (24 * 60 * 60)  # One Day In seconds
-                        self.globals['update']['nextCheckTime'] = time() + self.globals['update']['checkTimeIncrement']
-                        self.generalLogger.info(u"Alexa-Hue Bridge checking for Plugin update")
-                        self.globals['update']['updater'].checkForUpdate()
-
-                        nextCheckTime = strftime('%A, %Y-%b-%d at %H:%M', localtime(self.globals['update']['nextCheckTime']))
-                        self.generalLogger.info(u"Alexa-Hue Bridge next update check scheduled for: {}".format(nextCheckTime))
                 self.sleep(60) # in seconds
 
         except self.StopThread:
