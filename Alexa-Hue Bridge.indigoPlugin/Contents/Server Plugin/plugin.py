@@ -429,7 +429,7 @@ class Plugin(indigo.PluginBase):
                 if ahbDev.address is None or ahbDev.address == '' or int(ahbDev.address) != int(port):
                     port_changed = True
             except:
-                self.generalLogger.error("Alexa-Hue Bridge '{}' at address {} either has an invalid address or invalid port {} - specify in Device Config".format(ahbDev.name, ahbDev.address, port))
+                self.generalLogger.error(u"Alexa-Hue Bridge '{}' at address {} either has an invalid address or invalid port {} - specify in Device Config".format(ahbDev.name, ahbDev.address, port))
                 return
 
             self.globals['alexaHueBridge'][ahbDev.id]['port'] = port
@@ -755,7 +755,7 @@ class Plugin(indigo.PluginBase):
                 elif numberPublished == 1:
                     numberPublishedUI = 'one Alexa Device'
                 else:
-                    numberPublishedUI = str("{} Alexa Devices".format(numberPublished))
+                    numberPublishedUI = str("u{} Alexa Devices".format(numberPublished))
 
                 if numberPublished <= DEVICE_LIMIT:
                     self.generalLogger.info(u"'{}' has {} published".format(self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))
@@ -915,7 +915,7 @@ class Plugin(indigo.PluginBase):
             elif numberPublished == 1:
                 numberPublishedUI = 'one Alexa Device'
             else:
-                numberPublishedUI = str("{} Alexa Devices".format(numberPublished))
+                numberPublishedUI = str("u{} Alexa Devices".format(numberPublished))
 
             if numberPublished <= DEVICE_LIMIT:
                 self.generalLogger.info(u"'{}' updated and now has {} published".format(self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))
@@ -1023,7 +1023,7 @@ class Plugin(indigo.PluginBase):
                 variableName = indigo.variables[disableAlexaVariableId].name
             else:
                 variableName = 'VARIABLE IS MISSING'
-            disableAlexa_dict.append((str(disableAlexaVariableId), "-- INVALID: {} --".format(variableName)))
+            disableAlexa_dict.append((str(disableAlexaVariableId), u"-- INVALID: {} --".format(variableName)))
         for variable in indigo.variables.iter():
             if variable.value.lower() == 'true' or variable.value.lower() == 'false':
                 variable_found = (str(variable.id), str(variable.name))
@@ -1048,7 +1048,7 @@ class Plugin(indigo.PluginBase):
                 alexaDeviceName = alexaDeviceData['name'].replace(',',' ').replace(';',' ')
                 self.globals['alexaDevicesListGlobal'][alexaDeviceNameKey] = int(alexaHueBridgeId)
                 alexaDeviceListKey = alexaDeviceNameKey + '|' + alexaDeviceName + '|' + str(alexaHueBridgeId)
-                alexaDeviceListKey = str('{}|{}|{}'.format(alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId))
+                alexaDeviceListKey = str(u'{}|{}|{}'.format(alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId))
                 allocatedAlexaDevicesListGlobal.append((alexaDeviceListKey, alexaDeviceName))
 
         for alexaDeviceNameKey, alexaDeviceData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():
@@ -1095,7 +1095,7 @@ class Plugin(indigo.PluginBase):
                             if actionOnId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoOnAction"] = indigo.actionGroups[actionOnId].name
                             else:
-                                valuesDict["alexaNameIndigoOnAction"] = 'Action #{} not found'.format(actionOnId)
+                                valuesDict[u"alexaNameIndigoOnAction"] = 'Action #{} not found'.format(actionOnId)
                         
                         if actionOffId == 0:
                             valuesDict["alexaNameIndigoOffAction"] = 'NO ACTION'
@@ -1111,7 +1111,7 @@ class Plugin(indigo.PluginBase):
                             if variableOnOffId in indigo.variables:
                                 valuesDict["alexaNameIndigoOnOffActionVariable"] = indigo.variables[variableOnOffId].name
                             else:
-                                valuesDict["alexaNameIndigoOnOffActionVariable"] = 'Variable #{} not found'.format(variableOnOffId)
+                                valuesDict[u"alexaNameIndigoOnOffActionVariable"] = 'Variable #{} not found'.format(variableOnOffId)
                         
                         if actionDimId == 0:
                             valuesDict["alexaNameIndigoDimAction"] = 'NO ACTION'
@@ -1121,7 +1121,7 @@ class Plugin(indigo.PluginBase):
                             if actionDimId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
                             else:
-                                valuesDict["alexaNameIndigoDimAction"] = 'Action #{} not found'.format(actionDimId)
+                                valuesDict[u"alexaNameIndigoDimAction"] = 'Action #{} not found'.format(actionDimId)
                         
                         if variableDimId == 0:
                             valuesDict["alexaNameIndigoDimActionVariable"] = 'NO VARIABLE'
@@ -1129,7 +1129,7 @@ class Plugin(indigo.PluginBase):
                             if variableDimId in indigo.variables:
                                 valuesDict["alexaNameIndigoDimActionVariable"] = indigo.variables[variableDimId].name
                             else:
-                                valuesDict["alexaNameIndigoDimActionVariable"] = 'Variable #{} not found'.format(variableDimId)
+                                valuesDict[u"alexaNameIndigoDimActionVariable"] = 'Variable #{} not found'.format(variableDimId)
 
                     else:
                         valuesDict["alexaNameActionDevice"] = "D"
@@ -1138,7 +1138,7 @@ class Plugin(indigo.PluginBase):
                         if deviceId in indigo.devices:
                             valuesDict["alexaNameIndigoDevice"] = deviceName
                         else:
-                            valuesDict["alexaNameIndigoDevice"] = 'Device #{} not found (\'{}\' )'.format(deviceId, deviceName)
+                            valuesDict[u"alexaNameIndigoDevice"] = 'Device #{} not found (\'{}\' )'.format(deviceId, deviceName)
                         valuesDict["alexaNameIndigoDeviceDimAction"] = self.globals['alexaHueBridge']['publishedOtherAlexaDevices'][alexaHueBridgeId][alexaDeviceNameKey].get('devDimAction', False)
 
                 else:
@@ -1159,7 +1159,7 @@ class Plugin(indigo.PluginBase):
                             if actionOnId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoOnAction"] = indigo.actionGroups[actionOnId].name
                             else:
-                                valuesDict["alexaNameIndigoOnAction"] = 'Action #{} not found'.format(actionOnId)
+                                valuesDict[u"alexaNameIndigoOnAction"] = 'Action #{} not found'.format(actionOnId)
 
                         if actionOffId == 0:
                             valuesDict["alexaNameIndigoOffAction"] = 'NO ACTION'
@@ -1167,7 +1167,7 @@ class Plugin(indigo.PluginBase):
                             if actionOffId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoOffAction"] = indigo.actionGroups[actionOffId].name
                             else:
-                                valuesDict["alexaNameIndigoOffAction"] = 'Action #{} not found'.format(actionOffId)
+                                valuesDict[u"alexaNameIndigoOffAction"] = 'Action #{} not found'.format(actionOffId)
                         
                         if variableOnOffId == 0:
                             valuesDict["alexaNameIndigoOnOffActionVariable"] = 'NO VARIABLE'
@@ -1175,7 +1175,7 @@ class Plugin(indigo.PluginBase):
                             if variableOnOffId in indigo.variables:
                                 valuesDict["alexaNameIndigoOnOffActionVariable"] = indigo.variables[variableOnOffId].name
                             else:
-                                valuesDict["alexaNameIndigoOnOffActionVariable"] = 'Variable #{} not found'.format(variableOnOffId)
+                                valuesDict[u"alexaNameIndigoOnOffActionVariable"] = 'Variable #{} not found'.format(variableOnOffId)
                         
                         if actionDimId == 0:
                             valuesDict["alexaNameIndigoDimAction"] = 'NO ACTION'
@@ -1185,7 +1185,7 @@ class Plugin(indigo.PluginBase):
                             if actionDimId in indigo.actionGroups:
                                 valuesDict["alexaNameIndigoDimAction"] = indigo.actionGroups[actionDimId].name
                             else:
-                                valuesDict["alexaNameIndigoDimAction"] = 'Action #{} not found'.format(actionDimId)
+                                valuesDict[u"alexaNameIndigoDimAction"] = 'Action #{} not found'.format(actionDimId)
                         
                         if variableDimId == 0:
                             valuesDict["alexaNameIndigoDimActionVariable"] = 'NO VARIABLE'
@@ -1193,7 +1193,7 @@ class Plugin(indigo.PluginBase):
                             if variableDimId in indigo.variables:
                                 valuesDict["alexaNameIndigoDimActionVariable"] = indigo.variables[variableDimId].name
                             else:
-                                valuesDict["alexaNameIndigoDimActionVariable"] = 'Variable #{} not found'.format(variableDimId)
+                                valuesDict[u"alexaNameIndigoDimActionVariable"] = 'Variable #{} not found'.format(variableDimId)
                     else:
                         valuesDict["alexaNameActionDevice"] = "D"
                         deviceName = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey]['devName'].replace(',',' ').replace(';',' ')
@@ -1201,7 +1201,7 @@ class Plugin(indigo.PluginBase):
                         if deviceId in indigo.devices:
                             valuesDict["alexaNameIndigoDevice"] = deviceName
                         else:
-                            valuesDict["alexaNameIndigoDevice"] = 'Device #{} not found (\'{}\' )'.format(deviceId, deviceName)
+                            valuesDict[u"alexaNameIndigoDevice"] = 'Device #{} not found (\'{}\' )'.format(deviceId, deviceName)
                         valuesDict["alexaNameIndigoDeviceDimAction"] = self.globals['alexaHueBridge'][alexaHueBridgeId]['publishedAlexaDevices'][alexaDeviceNameKey].get('devDimAction', False)
 
                 valuesDict["alexaNameHueBridge"] = indigo.devices[int(alexaHueBridgeId)].name
@@ -1313,7 +1313,7 @@ class Plugin(indigo.PluginBase):
         self.methodTracer.threaddebug(u"CLASS: Plugin")
 
         if len(self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices']) >= DEVICE_LIMIT:
-            errorText = "You can't publish any more Alexa Devices - you've reached the maximum of {} imposed by the plugin on behalf of Amazon Alexa.".format(DEVICE_LIMIT)
+            errorText = u"You can't publish any more Alexa Devices - you've reached the maximum of {} imposed by the plugin on behalf of Amazon Alexa.".format(DEVICE_LIMIT)
             self.generalLogger.error(errorText)
             errorsDict = indigo.Dict()
             errorsDict["showAlertText"] = errorText
@@ -1350,12 +1350,12 @@ class Plugin(indigo.PluginBase):
             if ahbDevId == alexaHueBridgeId:
                 errorsDict = indigo.Dict()
                 errorsDict["newAlexaName"] = "Duplicate Alexa Name"
-                errorsDict["showAlertText"] = "Alexa Device Name '{}' is already allocated on this Alexa-Hue Bridge".format(newAlexaName)
+                errorsDict["showAlertText"] = u"Alexa Device Name '{}' is already allocated on this Alexa-Hue Bridge".format(newAlexaName)
             else: 
                 alexaHueBridgeName = indigo.devices[alexaHueBridgeId].name
                 errorsDict = indigo.Dict()
                 errorsDict["newAlexaName"] = "Duplicate Alexa Name"
-                errorsDict["showAlertText"] = "Alexa Device Name '{}' is already allocated on Alexa-Hue Bridge '{}'".format(newAlexaName, alexaHueBridgeName)
+                errorsDict["showAlertText"] = u"Alexa Device Name '{}' is already allocated on Alexa-Hue Bridge '{}'".format(newAlexaName, alexaHueBridgeName)
             return valuesDict, errorsDict
 
         if valuesDict["actionOrDevice"] == 'D':
@@ -1363,7 +1363,7 @@ class Plugin(indigo.PluginBase):
             if devId == 0:
                 errorsDict = indigo.Dict()
                 errorsDict["newAlexaName"] = "Indigo Device not selected"
-                errorsDict["showAlertText"] = "No Indigo device selected for Alexa Device Name '{}'".format(newAlexaName)
+                errorsDict["showAlertText"] = u"No Indigo device selected for Alexa Device Name '{}'".format(newAlexaName)
                 return valuesDict, errorsDict
         else: # Assume 'A' = Action
             actionOnId = int(valuesDict["sourceOnActionMenu"])
@@ -1371,7 +1371,7 @@ class Plugin(indigo.PluginBase):
             if actionOnId == 0 or actionOffId == 0:
                 errorsDict = indigo.Dict()
                 errorsDict["newAlexaName"] = "Indigo Actions not selected for On or Off or both"
-                errorsDict["showAlertText"] = "Indigo Actions not selected for On or Off or both, for Alexa Device Name '{}'".format(newAlexaName)
+                errorsDict["showAlertText"] = u"Indigo Actions not selected for On or Off or both, for Alexa Device Name '{}'".format(newAlexaName)
                 return valuesDict, errorsDict
 
 
@@ -1469,7 +1469,7 @@ class Plugin(indigo.PluginBase):
             if devId == 0:
                 errorsDict = indigo.Dict()
                 errorsDict["updatedAlexaDeviceName"] = "Indigo Device not selected"
-                errorsDict["showAlertText"] = "No Indigo device selected for Alexa Device Name '{}'".format(updatedAlexaDeviceName)
+                errorsDict["showAlertText"] = u"No Indigo device selected for Alexa Device Name '{}'".format(updatedAlexaDeviceName)
                 return valuesDict, errorsDict
         else: # Assume 'A' = Action
             actionOnId = int(valuesDict["sourceOnActionMenu"])
@@ -1477,7 +1477,7 @@ class Plugin(indigo.PluginBase):
             if actionOnId == 0 or actionOffId == 0:
                 errorsDict = indigo.Dict()
                 errorsDict["updatedAlexaDeviceName"] = "Indigo Actions not selected for On or Off or both"
-                errorsDict["showAlertText"] = "Indigo Actions not selected for On or Off or both, for Alexa Device Name '{}'".format(updatedAlexaDeviceName)
+                errorsDict["showAlertText"] = u"Indigo Actions not selected for On or Off or both, for Alexa Device Name '{}'".format(updatedAlexaDeviceName)
                 return valuesDict, errorsDict
 
         alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId = valuesDict["alexaDevicesList"].split("|")
@@ -1488,12 +1488,12 @@ class Plugin(indigo.PluginBase):
                 if ahbDevId == alexaHueBridgeId:
                     errorsDict = indigo.Dict()
                     errorsDict["updatedAlexaDeviceName"] = "Duplicate Alexa Name"
-                    errorsDict["showAlertText"] = "Alexa Device Name '{}' is already allocated on this Alexa-Hue Bridge".format(updatedAlexaDeviceName)
+                    errorsDict["showAlertText"] = u"Alexa Device Name '{}' is already allocated on this Alexa-Hue Bridge".format(updatedAlexaDeviceName)
                 else: 
                     alexaHueBridgeName = indigo.devices[alexaHueBridgeId].name
                     errorsDict = indigo.Dict()
                     errorsDict["updatedAlexaDeviceName"] = "Duplicate Alexa Name"
-                    errorsDict["showAlertText"] = "Alexa Device Name '{}' is already allocated on Alexa-Hue Bridge '{}'".format(updatedAlexaDeviceName, alexaHueBridgeName)
+                    errorsDict["showAlertText"] = u"Alexa Device Name '{}' is already allocated on Alexa-Hue Bridge '{}'".format(updatedAlexaDeviceName, alexaHueBridgeName)
                 return valuesDict, errorsDict
 
 
@@ -1597,12 +1597,12 @@ class Plugin(indigo.PluginBase):
                     if alexaData['devId'] in indigo.devices:
                         dev = indigo.devices[alexaData['devId']]
                         if dev.name != alexaDeviceName:
-                            listName += " = {}".format(dev.name)
+                            listName += u" = {}".format(dev.name)
                     else:
                         listName += " = MISSING!"
                 else:  # Assume 'A' = Action
                     listName += " = ACTIONS"
-                alexaDeviceListKey = "{}|{}".format(alexaDeviceNameKey, alexaDeviceName)
+                alexaDeviceListKey = u"{}|{}".format(alexaDeviceNameKey, alexaDeviceName)
                 returnList.append((alexaDeviceListKey, listName))
         returnList = sorted(returnList, key= lambda item: item[0])
         return returnList
