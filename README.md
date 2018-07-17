@@ -11,5 +11,5 @@ Version 3 adds the ability to directly control Indigo Actions in addition to Ind
 It is **strongly recommended** to read the [Wiki Documentation][4] to familiarise yourself with the new way of working which is substantially different to earlier plugin versions (V1 and V2).
 
 [1]: https://www.indigodomo.com
-[4]: http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:virtual_devices_interface#virtual_on_off_devices
+[4]: https://github.com/IndigoDomotics/alexa-hue-bridge/wiki
 [6]: https://github.com/IndigoDomotics/alexa-hue-bridge/releases
