@@ -30,24 +30,33 @@
 
     <Field id="separator-3" type="separator"/>
 
+     <Field type="checkbox" id="autoCreateDevicesFromPluginVersion2" default="true" alwaysUseInDialogHeightCalc="true">
+        <Label>Auto Create:</Label>
+    </Field>
+    <Field id="help-3" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
+        <Label>^ Enable to automatically create Version 3 devices from Version 2 on initial install. See wiki plugin documentation (link in Indigo Store): Installation and setup - Migration from Version 2. Default is True.</Label>
+    </Field>
+
+    <Field id="separator-4" type="separator"/>
+
      <Field type="checkbox" id="nonEchoFilter" default="false" alwaysUseInDialogHeightCalc="true">
         <Label>Non-Echo Filter :</Label>
     </Field>
-    <Field id="help-3" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
+    <Field id="help-4" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
         <Label>^ Enable the non-Echo Filter to filter out network traffic that doesn't come from an Echo. If you enable this, YOU MUST DEFINE INDIGO ECHO DEVICES to refect the Echos you have in use, otherwise the plugin won't receive any messages from the Echos as it won't know about them. Using the filter will reduce the network load on the plugin and may help to make it run more effectively.</Label>
     </Field>
 
-    <Field id="separator-4" type="separator" visibleBindingValue="true"/> 
+    <Field id="separator-5" type="separator" visibleBindingValue="true"/> 
 
      <Field id="showDiscoveryInEventLog" type="checkbox" default="true" alwaysUseInDialogHeightCalc="true">
         <Label>Log Discovery:</Label>
         <Description>Log Alexa discovery requests in Event Log.</Description>
     </Field>
-    <Field id="help-4" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" visibleBindingId="debugEnabled" visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+    <Field id="help-5" type="label" fontColor="darkgray" fontSize="small" alignWithControl="true" alwaysUseInDialogHeightCalc="true">
         <Label>^ If you tick this box, then the Alexa-Hue Bridge will log discovery requests from Alexa to the Event Log, showing all devices published. This can result in a lot of log entries!</Label>
     </Field>
 
-    <Field id="separator-5" type="separator"/>  
+    <Field id="separator-6" type="separator"/>  
 
     <Field type="checkbox" id="debugEnabled" default="false">
         <Label>Debugging:</Label>

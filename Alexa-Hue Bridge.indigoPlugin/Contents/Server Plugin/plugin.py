@@ -159,6 +159,9 @@ class Plugin(indigo.PluginBase):
         if "showDiscoveryInEventLog" not in prefsConfigUiValues:
             prefsConfigUiValues["showDiscoveryInEventLog"] = True
 
+        if "autoCreateDevicesFromPluginVersion2" not in prefsConfigUiValues:
+            prefsConfigUiValues["autoCreateDevicesFromPluginVersion2"] = True
+
         return prefsConfigUiValues
 
     def validatePrefsConfigUi(self, valuesDict):
@@ -197,6 +200,8 @@ class Plugin(indigo.PluginBase):
                 self.generalLogger.error("Computer has no host name specified. Check the Sharing system preference and restart the plugin once the name is resolved.")
                 self.globals['hostAddress'] = None
             self.generalLogger.info(u"Plugin Host IP Address is discovered as: '{}'".format(self.globals['hostAddress']))
+
+        self.globals['autoCreateDevicesFromPluginVersion2'] = bool(valuesDict.get("autoCreateDevicesFromPluginVersion2", True))
 
         self.globals['amazonEchoDeviceFilterActive'] = bool(valuesDict.get("nonEchoFilter", False))
         if self.globals['amazonEchoDeviceFilterActive']:
@@ -577,8 +582,10 @@ class Plugin(indigo.PluginBase):
             if 'publishedAlexaDevices' not in self.globals['alexaHueBridge'][ahbDevId]:
                 self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'] = {}
 
-            self.retrieveOtherPublishedDevices(ahbDevId)  # List Alexa devices in other Alexa-Hue Bridges        
-            self.retrievePublishedDevices(pluginProps, ahbDevId, False, True)  # List Alexa devices in this Alexa-Hue Bridge + don't output info message + Check for V2 definitions
+            self.retrieveOtherPublishedDevices(ahbDevId)  # List Alexa devices in other Alexa-Hue Bridges
+
+
+            self.retrievePublishedDevices(pluginProps, ahbDevId, False, self.globals['autoCreateDevicesFromPluginVersion2'])  # List Alexa devices in this Alexa-Hue Bridge + don't output info message + Check for V2 definitions (if option set in plugin config)
 
             # Set default values for Edit Device Settings... (ConfigUI)
             pluginProps["autoStartDiscovery"] = pluginProps.get("autoStartDiscovery", True)
