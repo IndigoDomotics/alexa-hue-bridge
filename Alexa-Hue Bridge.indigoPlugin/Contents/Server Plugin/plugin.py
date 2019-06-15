@@ -1033,7 +1033,8 @@ class Plugin(indigo.PluginBase):
             disableAlexa_dict.append((str(disableAlexaVariableId), u"-- INVALID: {} --".format(variableName)))
         for variable in indigo.variables.iter():
             if variable.value.lower() == 'true' or variable.value.lower() == 'false':
-                variable_found = (str(variable.id), str(variable.name))
+                variable_found = (str(variable.id), u'{}'.format(variable.name))
+                # variable_found = (str(variable.id), str(variable.name))
                 disableAlexa_dict.append(variable_found)
         myArray = disableAlexa_dict
         return myArray
