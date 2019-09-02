@@ -25,7 +25,7 @@
 
 
     <Device type="relay" id="emulatedHueBridge">
-        <Name>Emulated Hue Bridge [Devices]</Name>
+        <Name>Emulated Hue Bridge [Alexa Devices]</Name>
         <ConfigUI>
             <Field type="textfield" id="port" defaultValue="auto" hidden="false">
                 <Label>Port:</Label>

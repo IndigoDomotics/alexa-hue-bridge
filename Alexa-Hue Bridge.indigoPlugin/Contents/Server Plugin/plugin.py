@@ -108,6 +108,12 @@ class Plugin(indigo.PluginBase):
                     self.globals['portList'].append(int(dev.address))  # Do this regardless whether device enabled or not
                 except:
                     pass
+                # Fix to make model names consistent #
+                if dev.model != EMULATED_HUE_BRIDGE_MODEL:
+                    dev.model = EMULATED_HUE_BRIDGE_MODEL
+                    dev.replaceOnServer()
+
+
         self.generalLogger.debug(u"PORTLIST @Plugin INIT: {}".format(self.globals['portList']))
 
         # Set Plugin Config Values
@@ -1056,7 +1062,7 @@ class Plugin(indigo.PluginBase):
                 alexaDeviceName = alexaDeviceData['name'].replace(',',' ').replace(';',' ')
                 self.globals['alexaDevicesListGlobal'][alexaDeviceNameKey] = int(alexaHueBridgeId)
                 alexaDeviceListKey = alexaDeviceNameKey + '|' + alexaDeviceName + '|' + str(alexaHueBridgeId)
-                alexaDeviceListKey = str(u'{}|{}|{}'.format(alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId))
+                alexaDeviceListKey = u'{}|{}|{}'.format(alexaDeviceNameKey, alexaDeviceName, alexaHueBridgeId)
                 allocatedAlexaDevicesListGlobal.append((alexaDeviceListKey, alexaDeviceName))
 
         for alexaDeviceNameKey, alexaDeviceData in self.globals['alexaHueBridge'][ahbDevId]['publishedAlexaDevices'].iteritems():

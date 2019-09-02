@@ -1,7 +1,3 @@
 <?xml version="1.0"?>
 <MenuItems>
-  <MenuItem id="checkRateLimit" hidden="true">
-    <Name>Check Rate Limit</Name>
-    <CallbackMethod>checkRateLimit</CallbackMethod>
-  </MenuItem>
 </MenuItems>

@@ -15,6 +15,7 @@ ACTION_TYPE = "action-type"
 # DEVICE_LIMIT = 5 #  TESTING (30-JUL-2017)
 DEVICE_LIMIT = 20 # Imposed by the built-in Hue support in Alexa
 EMULATED_HUE_BRIDGE_TYPEID = 'emulatedHueBridge'  # See definition in Devices.xml
+EMULATED_HUE_BRIDGE_MODEL = 'Emulated Hue Bridge [Alexa Devices]'  # See definition in Devices.xml 
 ECHO_DEVICE_TYPEID = 'echoDevice'  # See definition in Devices.xml
 ECHO_DEVICE_TIMER_LIMIT = 15.0  # In seconds - the amount of time an Echo device will show active after a command is received
 
