@@ -768,7 +768,7 @@ class Plugin(indigo.PluginBase):
                 elif numberPublished == 1:
                     numberPublishedUI = 'one Alexa Device'
                 else:
-                    numberPublishedUI = str("u{} Alexa Devices".format(numberPublished))
+                    numberPublishedUI = u"{} Alexa Devices".format(numberPublished)
 
                 if numberPublished <= DEVICE_LIMIT:
                     self.generalLogger.info(u"'{}' has {} published".format(self.globals['alexaHueBridge'][ahbDevId]['hubName'], numberPublishedUI))

@@ -179,8 +179,9 @@ class Responder(threading.Thread):
                 # This is the exception thrown when someone else has bound to the UPNP port, so write some errors and
                 # stop the thread (which really isn't needed, but it logs a nice stop debug message).
                 if e.errno == errno.EADDRINUSE:
+                    
                     PLUGIN.responderLogger.error(u"'{}' Responder startup failed because another app or plugin is using the UPNP port.".format(indigo.devices[self.ahbDevId].name))
-                    PLUGIN.responderLogger.error(u"Open a terminal window and type 'sudo lsof -i :{}}' to see a list of processes that have bound to that port and quit those applications.".format(UPNP_PORT))
+                    PLUGIN.responderLogger.error(u"Open a terminal window and type 'sudo lsof -i :{}' to see a list of processes that have bound to that port and quit those applications.".format(UPNP_PORT))
                     self.stop()
                 elif e.errno == errno.EADDRNOTAVAIL:
                     PLUGIN.responderLogger.error(u"'{}' Responder startup failed because host address is not available.".format(indigo.devices[self.ahbDevId].name))
